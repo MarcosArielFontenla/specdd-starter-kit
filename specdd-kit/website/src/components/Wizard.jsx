@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import kitFiles from '../data/kit-files.json';
 import { generateFiles } from './generators.js';
@@ -22,6 +22,8 @@ export default function Wizard() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState(initial);
   const [error, setError] = useState('');
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setReady(true); }, []);
 
   const set = (patch) => setData((d) => ({ ...d, ...patch }));
 
@@ -57,7 +59,7 @@ export default function Wizard() {
   }
 
   return (
-    <main className="wizard">
+    <main className="wizard" data-ready={ready ? 'true' : 'false'}>
       <h1>SDD Kit Wizard</h1>
       <div className="steps">
         {STEPS.map((s, i) => <span key={s} className={i === step ? 'active' : ''}>{i + 1}. {s}</span>)}

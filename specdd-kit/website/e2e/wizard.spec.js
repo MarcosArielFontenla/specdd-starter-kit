@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('wizard walks steps and downloads a scaffold ZIP', async ({ page }) => {
   await page.goto('/');
+  await page.locator('main.wizard[data-ready="true"]').waitFor();
   await expect(page.getByTestId('step-title')).toHaveText('Welcome');
 
   await page.getByTestId('next-btn').click(); // -> Project
