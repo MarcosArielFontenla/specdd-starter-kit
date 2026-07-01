@@ -2,6 +2,10 @@ node_modules/
 dist/
 .astro/
 
+# playwright artifacts
+test-results/
+playwright-report/
+
 # generated wizard bundles
 specdd-kit/website/src/data/kit-files.json
 
