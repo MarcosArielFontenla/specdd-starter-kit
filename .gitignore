@@ -28,3 +28,6 @@ npm-debug.log*
 
 *.tmp
 *.orig
+
+# source prompt (kept out of the repo by request)
+PROMPT_SPECDDSTARTERKIT.md
