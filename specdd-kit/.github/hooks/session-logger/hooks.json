@@ -1,0 +1,6 @@
+{
+  "hooks": {
+    "SessionStart": [{ "command": "bash .github/hooks/session-logger/on-session-start.sh" }],
+    "SessionEnd": [{ "command": "bash .github/hooks/session-logger/on-session-end.sh" }]
+  }
+}
