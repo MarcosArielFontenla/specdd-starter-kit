@@ -7,7 +7,7 @@ description: Launch the specdd-kit wizard (install deps, bundle, dev server, ope
 
 Launch the **specdd-kit** wizard locally.
 
-1. Verify Node.js 18+ is installed (`node --version`).
+1. Verify Node.js 20+ is installed (`node --version`).
 2. Change to `specdd-kit/website`.
 3. Install dependencies: `npm install`.
 4. Bundle the kit files: `npm run bundle-kit`.
