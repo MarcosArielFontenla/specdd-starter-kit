@@ -1,10 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Wizard from '../components/Wizard.jsx';
 import '../styles/wizard.css';
 ---
 <Layout title="SDD Kit Wizard">
-  <main class="wizard">
-    <h1>SDD Kit Wizard</h1>
-    <p data-testid="placeholder">Wizard mounts here.</p>
-  </main>
+  <Wizard client:load />
 </Layout>
