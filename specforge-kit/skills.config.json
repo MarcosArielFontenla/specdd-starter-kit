@@ -1,0 +1,7 @@
+{
+  "source": "local",
+  "remote": {
+    "baseUrl": "https://example.invalid/specforge-skills",
+    "manifest": "manifest.json"
+  }
+}
