@@ -1,0 +1,27 @@
+trigger:
+  branches:
+    include:
+      - main
+{{#if envDev}}
+      - develop
+{{/if}}
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+  - script: |
+      npm ci
+      {{app.buildCommand}}
+    displayName: Build
+  - script: |
+      aws s3 sync {{app.outputDir}} s3://{{bucketName}} --delete
+      aws cloudfront create-invalidation --distribution-id $(CLOUDFRONT_DISTRIBUTION_ID) --paths "/*"
+    displayName: Deploy
+    env:
+      AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+      AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+      AWS_DEFAULT_REGION: {{region}}

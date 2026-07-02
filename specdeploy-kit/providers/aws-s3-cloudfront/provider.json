@@ -1,0 +1,24 @@
+{
+  "id": "aws-s3-cloudfront",
+  "label": "AWS S3 + CloudFront",
+  "description": "Private S3 bucket behind a CloudFront distribution (Terraform)",
+  "supportsApi": false,
+  "ci": ["github-actions", "azure-pipelines"],
+  "fields": [
+    { "key": "bucketName", "label": "S3 bucket name", "type": "text", "required": true,
+      "pattern": "^[a-z0-9.-]{3,63}$", "help": "Globally unique." },
+    { "key": "region", "label": "AWS region", "type": "select",
+      "options": ["us-east-1", "eu-west-1", "eu-central-1", "sa-east-1"], "default": "us-east-1" }
+  ],
+  "secrets": [
+    { "name": "AWS_ACCESS_KEY_ID", "description": "CI deploy user access key (prefer OIDC in production — see runbook)", "where": "GitHub Actions secrets / AzDO variable group (secret)" },
+    { "name": "AWS_SECRET_ACCESS_KEY", "description": "CI deploy user secret key", "where": "GitHub Actions secrets / AzDO variable group (secret)" },
+    { "name": "CLOUDFRONT_DISTRIBUTION_ID", "description": "Output of terraform apply", "where": "GitHub Actions secrets / AzDO variable group" }
+  ],
+  "artifacts": [
+    { "template": "github-actions.yml", "output": ".github/workflows/deploy.yml", "when": "ci:github-actions" },
+    { "template": "azure-pipelines.yml", "output": "azure-pipelines.yml", "when": "ci:azure-pipelines" },
+    { "template": "main.tf", "output": "infra/main.tf" },
+    { "template": "runbook.md", "output": "docs/deploy-runbook.md" }
+  ]
+}
