@@ -1,0 +1,11 @@
+{
+  "name": "specddstarterkit",
+  "private": true,
+  "engines": { "node": ">=20.0.0" },
+  "workspaces": [
+    "packages/ui",
+    "specdd-kit/website",
+    "specforge-kit/website",
+    "specdeploy-kit/website"
+  ]
+}

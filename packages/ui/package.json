@@ -1,0 +1,15 @@
+{
+  "name": "@specdd/ui",
+  "version": "1.0.0",
+  "description": "Boreal UI shared by the SpecDD wizards (Stepper + design tokens + wizard styles)",
+  "type": "module",
+  "exports": {
+    "./stepper": "./src/Stepper.jsx",
+    "./styles/boreal-tokens.css": "./styles/boreal-tokens.css",
+    "./styles/wizard.css": "./styles/wizard.css"
+  },
+  "peerDependencies": {
+    "lucide-react": "^0.400.0",
+    "react": "^18.3.0"
+  }
+}
