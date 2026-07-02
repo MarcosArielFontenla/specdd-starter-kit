@@ -3,53 +3,54 @@ name: CI
 on:
   push:
     branches: [main]
-    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', '.github/workflows/ci.yml']
+    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
   pull_request:
     branches: [main]
-    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', '.github/workflows/ci.yml']
+    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
 
 jobs:
   specdd-kit-build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: specdd-kit/website
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: npm run bundle-kit
-      - run: npm run test:unit
-      - run: npm run build
+      - run: npm ci
+      - run: npm run bundle-kit -w sdd-kit-wizard
+      - run: npm run test:unit -w sdd-kit-wizard
+      - run: npm run build -w sdd-kit-wizard
 
   specforge-kit-build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: specforge-kit/website
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: npm run bundle-skills
-      - run: npm run test:unit
-      - run: npm run build
+      - run: npm ci
+      - run: npm run bundle-skills -w specforge-wizard
+      - run: npm run test:unit -w specforge-wizard
+      - run: npm run build -w specforge-wizard
 
   specdeploy-kit-build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: specdeploy-kit/website
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: npm run bundle-providers
-      - run: npm run test:unit
-      - run: npm run build
+      - run: npm ci
+      - run: npm run bundle-providers -w specdeploy-wizard
+      - run: npm run test:unit -w specdeploy-wizard
+      - run: npm run build -w specdeploy-wizard
+
+  platform-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run build -w specdd-platform

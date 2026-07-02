@@ -8,9 +8,8 @@ Generate a role-specific (BA/QA/Dev/UX) Copilot scaffold in minutes.
 
 ## Run the wizard
 ```powershell
-cd specforge-kit\website
-npm install
-npm run dev
+npm install                       # once, at the repo root (npm workspaces)
+npm run dev -w specforge-wizard   # serves on :4322
 ```
 Open the Astro URL, pick a persona, fill the role inputs, and download the scaffold ZIP.
 

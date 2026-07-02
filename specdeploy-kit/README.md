@@ -26,9 +26,8 @@ descriptor + templates. Adding one requires no wizard changes — see
 ## Quick start
 
 ```powershell
-cd specdeploy-kit\website
-npm install
-npm run dev
+npm install                        # once, at the repo root (npm workspaces)
+npm run dev -w specdeploy-wizard   # serves on :4323
 ```
 
 Open http://localhost:4323, complete the 6 steps, download the ZIP and extract it at the

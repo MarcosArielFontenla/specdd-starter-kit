@@ -6,9 +6,8 @@ optional MCP config (Figma for UX, Playwright for QA).
 
 ## Run
 ```powershell
-cd specforge-kit\website
-npm install
-npm run dev
+npm install                       # once, at the repo root (npm workspaces)
+npm run dev -w specforge-wizard   # serves on :4322
 ```
 Open the Astro URL, choose a persona, and download the scaffold ZIP. Extract it at your project root.
 

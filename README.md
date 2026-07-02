@@ -16,9 +16,7 @@ wizards and GitHub Copilot prompts/instructions.
 
 ## Design
 
-All three wizards use the **Boreal Design System** (`Boreal Design System/`) — a dark, frosted-glass
-theme (glacier/ember palette, Bricolage Grotesque / Hanken Grotesk / Space Mono) with a
-left sidebar-stepper layout.
+All three wizards and the platform portal use the **Boreal Design System** (single source: `packages/ui`, the `@specdd/ui` workspace package).
 
 ## SDD flow
 
@@ -27,14 +25,17 @@ left sidebar-stepper layout.
 ## Quick start
 
 ```powershell
-cd specdd-kit\website
-npm install
-npm run dev
+npm install                       # once, at the repo root (npm workspaces)
+npm run dev -w specdd-platform    # portal with the three wizards
 ```
 
-Then open the Astro URL, complete the 8-step wizard, and download your scaffold ZIP.
-Extract it at the root of your project so VS Code / GitHub Copilot auto-loads
-`.github/copilot-instructions.md`, `.github/instructions/*` and `.github/prompts/*`.
+Then open http://localhost:4320 — the landing links to the three wizards
+(`/specdd`, `/specforge`, `/specdeploy`). Complete a wizard and download your ZIP.
+
+Each kit also runs standalone: `npm run dev -w sdd-kit-wizard` (4321),
+`npm run dev -w specforge-wizard` (4322), `npm run dev -w specdeploy-wizard` (4323).
+Demo note: the portal's own deploy pipeline can be generated with the SpecDeploy wizard
+(dogfooding).
 
 ## References
 

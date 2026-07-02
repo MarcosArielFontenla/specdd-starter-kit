@@ -6,7 +6,7 @@ cada una merece su propio ciclo spec → plan → implementación.
 
 ## Producto / adopción
 
-1. **Portal unificado ("SpecDD Platform")** — hoy los wizards son sitios Astro separados
+1. ✅ (Iteración 5) **Portal unificado ("SpecDD Platform")** — hoy los wizards son sitios Astro separados
    que se levantan por separado. Un shell único con landing + los 3 wizards como rutas
    cambia la percepción de producto, simplifica la demo y el hosting de la herramienta.
 2. **Org profiles** — `org-profile.json` por empresa que pre-configure stack, gobernanza,
@@ -20,7 +20,7 @@ cada una merece su propio ciclo spec → plan → implementación.
 
 ## Ingeniería / mantenibilidad
 
-4. **Paquete UI compartido (`@specdd/ui`)** — `Stepper.jsx`, `boreal-tokens.css` y
+4. ✅ (Iteración 5) **Paquete UI compartido (`@specdd/ui`)** — `Stepper.jsx`, `boreal-tokens.css` y
    `wizard.css` son byte-idénticos entre kits (duplicación deliberada según el spec Boreal).
    Con `specdeploy-kit` habrá 3 copias: punto de quiebre para extraer el paquete
    (workspace npm) y des-duplicar también `Layout.astro`, configs y `MCP_SERVERS`.

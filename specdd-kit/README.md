@@ -43,9 +43,8 @@ you have to hunt down and delete.
 ## Run the wizard
 
 ```powershell
-cd specdd-kit\website
-npm install
-npm run dev
+npm install                     # once, at the repo root (npm workspaces)
+npm run dev -w sdd-kit-wizard   # serves on :4321
 ```
 
 Open the local Astro URL that's printed in the terminal, walk through the 8 steps

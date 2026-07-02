@@ -8,17 +8,16 @@
 ## Run the wizard
 
 ```powershell
-cd specdeploy-kit\website
-npm install
-npm run dev        # bundles providers automatically (predev), serves on :4323
+npm install                        # once, at the repo root (npm workspaces)
+npm run dev -w specdeploy-wizard   # bundles providers automatically (predev), serves on :4323
 ```
 
 ## Tests
 
 ```powershell
-npm run test:unit  # renderer, bundler, generators + full provider matrix
-npm test           # Playwright e2e (npx playwright install chromium first, once)
-npm run build      # production build
+npm run test:unit -w specdeploy-wizard  # renderer, bundler, generators + full provider matrix
+npm test -w specdeploy-wizard           # Playwright e2e (npx playwright install chromium first, once)
+npm run build -w specdeploy-wizard      # production build
 ```
 
 ## Using the generated ZIP
