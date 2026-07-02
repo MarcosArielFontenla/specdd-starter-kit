@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import skills from '../data/skills.json';
 import { generateFiles } from './generators.js';
-import Stepper from './Stepper.jsx';
+import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
 const STEPS = ['Welcome', 'Persona', 'Role', 'Context', 'Governance', 'Review'];

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "SpecForge Wizard - collect role-specific inputs and generate a Copilot-ready spec scaffold",
   "type": "module",
+  "exports": { "./wizard": "./src/components/Wizard.jsx" },
   "engines": { "node": ">=20.0.0" },
   "scripts": {
     "bundle-skills": "node scripts/bundle-skills.js",
@@ -17,6 +18,7 @@
     "test:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@specdd/ui": "*",
     "@astrojs/react": "^4.0.0",
     "astro": "^5.3.0",
     "jszip": "^3.10.1",
