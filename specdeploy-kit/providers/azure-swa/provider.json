@@ -1,0 +1,27 @@
+{
+  "id": "azure-swa",
+  "label": "Azure Static Web Apps",
+  "description": "Azure SWA with optional managed Functions API",
+  "supportsApi": true,
+  "ci": ["github-actions", "azure-pipelines"],
+  "fields": [
+    { "key": "appName", "label": "Static Web App name", "type": "text", "required": true,
+      "pattern": "^[a-z0-9-]{2,60}$", "help": "Azure resource name (lowercase, digits, dashes)." },
+    { "key": "resourceGroup", "label": "Resource group", "type": "text", "required": true,
+      "pattern": "^[\\w-]{1,90}$" },
+    { "key": "region", "label": "Region", "type": "select",
+      "options": ["westeurope", "eastus2", "centralus", "eastasia"], "default": "westeurope" },
+    { "key": "sku", "label": "SKU", "type": "select", "options": ["Free", "Standard"], "default": "Free" }
+  ],
+  "secrets": [
+    { "name": "AZURE_STATIC_WEB_APPS_API_TOKEN",
+      "description": "SWA deployment token",
+      "where": "GitHub → Settings → Secrets and variables → Actions, or AzDO → Pipelines → Library (variable group, mark secret)" }
+  ],
+  "artifacts": [
+    { "template": "github-actions.yml", "output": ".github/workflows/deploy.yml", "when": "ci:github-actions" },
+    { "template": "azure-pipelines.yml", "output": "azure-pipelines.yml", "when": "ci:azure-pipelines" },
+    { "template": "main.bicep", "output": "infra/main.bicep" },
+    { "template": "runbook.md", "output": "docs/deploy-runbook.md" }
+  ]
+}
