@@ -5,6 +5,10 @@ services:
     ports:
       - "{{port}}:80"
 {{#if api}}
+    depends_on:
+      - api
+{{/if}}
+{{#if api}}
   api:
     image: node:20-alpine
     working_dir: /srv/api

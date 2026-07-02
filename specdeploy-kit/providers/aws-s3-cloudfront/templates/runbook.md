@@ -22,6 +22,8 @@ Note the outputs: `distribution_id` (goes into the `CLOUDFRONT_DISTRIBUTION_ID` 
 |--------|---------|--------------------|
 {{secretsTable}}
 
+> Azure Pipelines: create the secrets in a variable group named `specdeploy-secrets` (Pipelines → Library) — the generated `azure-pipelines.yml` links that group by name.
+
 > Production hardening: prefer GitHub OIDC + `role-to-assume` over long-lived access keys
 > (`aws-actions/configure-aws-credentials` supports both).
 

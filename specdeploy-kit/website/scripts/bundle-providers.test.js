@@ -102,3 +102,23 @@ test('fails when ci contains an unsupported entry', () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('fails when a field key is reserved', () => {
+  const root = mkdtempSync(join(tmpdir(), 'prov-'));
+  try {
+    makeProvider(root, 'fake-cloud', { ...validDesc, fields: [{ key: 'api', label: 'API', type: 'text' }] }, validTemplates);
+    assert.throws(() => readProviders(root), /reserved/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('fails when a field type is not text or select', () => {
+  const root = mkdtempSync(join(tmpdir(), 'prov-'));
+  try {
+    makeProvider(root, 'fake-cloud', { ...validDesc, fields: [{ key: 'mode', label: 'Mode', type: 'date' }] }, validTemplates);
+    assert.throws(() => readProviders(root), /type must be text or select/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -43,3 +43,10 @@ cada una merece su propio ciclo spec → plan → implementación.
    backend + credenciales por cliente.
 10. **GitLab CI y script local** en la matriz de `specdeploy-kit`; targets containerizados
     genéricos (K8s / ECS / Cloud Run).
+11. **Semántica real de entornos dev/prod** — hoy `envDev` solo agrega `develop` al trigger
+    sin un target separado; implementar targets por entorno (jobs de deploy por ambiente) y
+    el mecanismo de aprobación de AzP vía `environments` (hoy el approval gate solo se
+    documenta en el runbook, no se materializa en el pipeline).
+12. **Migración a `cache_policy_id` en CloudFront** — el Terraform de `aws-s3-cloudfront`
+    usa el bloque legacy `forwarded_values`; migrar a `cache_policy_id` / origin request
+    policies (recomendación actual de AWS).

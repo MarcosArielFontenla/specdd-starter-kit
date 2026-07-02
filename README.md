@@ -16,7 +16,7 @@ wizards and GitHub Copilot prompts/instructions.
 
 ## Design
 
-Both wizards use the **Boreal Design System** (`Boreal Design System/`) — a dark, frosted-glass
+All three wizards use the **Boreal Design System** (`Boreal Design System/`) — a dark, frosted-glass
 theme (glacier/ember palette, Bricolage Grotesque / Hanken Grotesk / Space Mono) with a
 left sidebar-stepper layout.
 

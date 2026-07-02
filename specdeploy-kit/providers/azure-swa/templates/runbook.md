@@ -20,6 +20,8 @@ az deployment group create --resource-group {{resourceGroup}} --template-file in
 |--------|---------|--------------------|
 {{secretsTable}}
 
+> Azure Pipelines: create the secrets in a variable group named `specdeploy-secrets` (Pipelines → Library) — the generated `azure-pipelines.yml` links that group by name.
+
 Get the deployment token:
 
 ```bash
@@ -34,7 +36,7 @@ Push to `main` (or run the pipeline manually). The pipeline builds with
 The API in `{{app.apiDir}}` is deployed as managed Azure Functions.
 {{/if}}
 {{#if envDev}}
-Pushes to `develop` also deploy (dev environment).
+Pushes to `develop` also trigger a deploy (same target — separate dev targets are on the roadmap).
 {{/if}}
 
 ## 4. Verify & rollback

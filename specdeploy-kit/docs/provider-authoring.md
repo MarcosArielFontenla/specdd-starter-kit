@@ -42,6 +42,7 @@ Rules enforced by `bundle-providers` (build fails with a clear message otherwise
 - Every artifact's `template` file must exist under `templates/`.
 - `fields` need `key`/`label`/`type`; `select` fields need `options`.
 - `secrets` need `name`/`description`/`where`. **Names only — never values.**
+- Field keys must not shadow template context keys (app, appSlug, api, apiUnsupported, ci, ciGithub, ciAzp, envDev, approvalGate, providerLabel, kitVersion, secretsTable); field type must be text or select.
 
 ## 2. Templates
 

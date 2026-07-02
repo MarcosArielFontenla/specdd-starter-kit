@@ -19,6 +19,8 @@ npx wrangler pages project create {{projectName}}
 |--------|---------|--------------------|
 {{secretsTable}}
 
+> Azure Pipelines: create the secrets in a variable group named `specdeploy-secrets` (Pipelines → Library) — the generated `azure-pipelines.yml` links that group by name.
+
 Create the API token at Cloudflare Dashboard → My Profile → API Tokens (permission: Pages → Edit).
 
 ## 3. First deploy

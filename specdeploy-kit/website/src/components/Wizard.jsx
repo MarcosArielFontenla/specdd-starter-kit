@@ -48,11 +48,12 @@ export default function Wizard() {
   }
 
   function selectProvider(id) {
+    if (id === data.providerId) return;
     const p = providers[id];
     const fields = {};
     for (const f of p.fields || []) fields[f.key] = f.default ?? (f.type === 'select' ? f.options[0] : '');
     const kept = data.ci.filter((c) => p.ci.includes(c));
-    set({ providerId: id, providerFields: fields, ci: kept.length ? kept : [p.ci[0]] });
+    set({ providerId: id, providerFields: fields, ci: kept.length ? kept : [p.ci[0]], ack: false });
   }
 
   function fieldError(f) {

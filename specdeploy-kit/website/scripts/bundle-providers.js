@@ -2,6 +2,8 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSy
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const RESERVED_FIELD_KEYS = ['app', 'appSlug', 'api', 'apiUnsupported', 'ci', 'ciGithub', 'ciAzp', 'envDev', 'approvalGate', 'providerLabel', 'kitVersion', 'secretsTable'];
+
 export function validateDescriptor(folderName, desc) {
   const fail = (msg) => { throw new Error(`bundle-providers: ${folderName}: ${msg}`); };
   if (!desc.id || desc.id !== folderName) fail(`id must equal folder name ("${folderName}")`);
@@ -17,6 +19,8 @@ export function validateDescriptor(folderName, desc) {
   for (const f of desc.fields || []) {
     if (!f.key || !f.label || !f.type) fail('every field needs key, label and type');
     if (f.key && !/^[a-zA-Z]\w*$/.test(f.key)) fail(`field key "${f.key}" must match ^[a-zA-Z]\\w*$`);
+    if (RESERVED_FIELD_KEYS.includes(f.key)) fail(`field key ${f.key} is reserved (would shadow template context)`);
+    if (!(f.type === 'text' || f.type === 'select')) fail(`field ${f.key} type must be text or select`);
     if (f.type === 'select' && (!Array.isArray(f.options) || f.options.length === 0)) fail(`select field ${f.key} needs options`);
   }
   for (const s of desc.secrets || []) {
