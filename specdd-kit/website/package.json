@@ -2,6 +2,7 @@
   "name": "sdd-kit-wizard",
   "version": "1.0.0",
   "type": "module",
+  "exports": { "./wizard": "./src/components/Wizard.jsx" },
   "engines": { "node": ">=20.0.0" },
   "scripts": {
     "bundle-kit": "node scripts/bundle-kit.js",
@@ -16,6 +17,7 @@
     "test:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@specdd/ui": "*",
     "@astrojs/react": "^4.0.0",
     "astro": "^5.3.0",
     "jszip": "^3.10.1",

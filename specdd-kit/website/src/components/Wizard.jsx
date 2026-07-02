@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import kitFiles from '../data/kit-files.json';
 import { generateFiles } from './generators.js';
-import Stepper from './Stepper.jsx';
+import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
 const STEPS = ['Welcome', 'Project', 'Tech Stack', 'Principles', 'MCP Tools', 'Agent & LLM', 'Security', 'Preview / Download'];
