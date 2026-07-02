@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Stat bar" subtitle="Expedition data bar in glass" viewport="700x140" -->
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;background:var(--ink-950);font-family:var(--font-body);padding:22px;}
+  .bar{display:flex;background:var(--surface-glass);backdrop-filter:blur(var(--blur-glass));border:1px solid var(--border-glass);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden;}
+  .stat{flex:1;padding:18px 20px;border-right:1px solid var(--border-soft);}
+  .stat:last-child{border:0;}
+  .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg3);}
+  .v{font-family:var(--font-display);font-weight:800;font-size:34px;color:var(--fg1);letter-spacing:-.02em;margin-top:8px;line-height:1;}
+  .v b{color:var(--ember-500);font-weight:800;}
+  svg{width:15px;height:15px;color:var(--glacier-300);vertical-align:-2px;margin-right:4px;}
+</style></head>
+<body>
+  <div class="bar">
+    <div class="stat"><div class="k"><i data-lucide="route"></i> Rutas activas</div><div class="v">12</div></div>
+    <div class="stat"><div class="k"><i data-lucide="footprints"></i> Viajeros</div><div class="v">2.400<b>+</b></div></div>
+    <div class="stat"><div class="k"><i data-lucide="thermometer-snowflake"></i> Mínima</div><div class="v">−31<b>°C</b></div></div>
+    <div class="stat"><div class="k"><i data-lucide="star"></i> Valoración</div><div class="v">4,9</div></div>
+  </div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>lucide.createIcons();</script>
+</body></html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Chips, tags & data pills" subtitle="Filters, mono data chips, status tags" viewport="700x140" -->
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;background:var(--ink-900);font-family:var(--font-body);padding:26px 24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+  .chip{display:inline-flex;align-items:center;gap:7px;border-radius:var(--radius-pill);padding:8px 15px;font-size:13px;font-weight:500;border:1px solid var(--border-glass);background:var(--surface-glass-light);color:var(--fg1);}
+  .chip.active{background:var(--glacier-500);border-color:var(--glacier-400);color:#fff;}
+  .chip.data{font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;color:var(--ice-200);}
+  .chip.ember{background:rgba(232,136,76,.14);border-color:rgba(232,136,76,.4);color:var(--ember-400);}
+  .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--glacier-300);border:1px solid var(--border-soft);border-radius:6px;padding:5px 9px;}
+  svg{width:15px;height:15px;}
+</style></head>
+<body>
+  <span class="chip active">Todas</span>
+  <span class="chip">Lagos helados</span>
+  <span class="chip">Cuevas de hielo</span>
+  <span class="chip data"><i data-lucide="thermometer-snowflake"></i> −24°C</span>
+  <span class="chip data"><i data-lucide="map-pin"></i> 53.5°N</span>
+  <span class="chip ember"><i data-lucide="flame"></i> Plazas limitadas</span>
+  <span class="tag">DIFICULTAD 3/5</span>
+  <span class="tag">DIC–MAR</span>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>lucide.createIcons();</script>
+</body></html>

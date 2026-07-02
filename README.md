@@ -13,6 +13,12 @@ wizards and GitHub Copilot prompts/instructions.
 | [`specdd-kit`](specdd-kit/) | SDD starter-kit wizard: generates a Copilot-ready scaffold ZIP (context, prompts, instructions, templates, MCP config). | ✅ Iteration 1 |
 | [`specforge-kit`](specforge-kit/) | Role-based scaffold wizard (BA/QA/Dev/UX): generates persona-specific prompts, instructions, skills, context, and optional Figma/Playwright MCP config. | ✅ Iteration 2 |
 
+## Design
+
+Both wizards use the **Boreal Design System** (`Boreal Design System/`) — a dark, frosted-glass
+theme (glacier/ember palette, Bricolage Grotesque / Hanken Grotesk / Space Mono) with a
+left sidebar-stepper layout.
+
 ## SDD flow
 
 `constitution → specify → plan → tasks → implement`

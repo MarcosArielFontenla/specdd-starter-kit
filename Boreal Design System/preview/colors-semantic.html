@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Colors" name="Semantic & text tokens" subtitle="Status colors + fg1/2/3 text roles" viewport="700x175" -->
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;background:var(--ink-900);font-family:var(--font-body);padding:22px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.02);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:9px 12px;}
+  .dot{width:22px;height:22px;border-radius:6px;flex:none;}
+  .l1{font-family:var(--font-mono);font-size:11px;color:var(--fg1);}
+  .l2{font-family:var(--font-mono);font-size:10px;color:var(--fg3);}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="item"><div class="dot" style="background:var(--success)"></div><div><div class="l1">success</div><div class="l2">aurora-500</div></div></div>
+    <div class="item"><div class="dot" style="background:var(--warning)"></div><div><div class="l1">warning</div><div class="l2">ember-500</div></div></div>
+    <div class="item"><div class="dot" style="background:var(--danger)"></div><div><div class="l1">danger</div><div class="l2">#E5705F</div></div></div>
+    <div class="item"><div class="dot" style="background:var(--info)"></div><div><div class="l1">info</div><div class="l2">glacier-400</div></div></div>
+    <div class="item"><div class="dot" style="background:var(--fg1)"></div><div><div class="l1">fg1 / primary</div><div class="l2">#F3F9FC</div></div></div>
+    <div class="item"><div class="dot" style="background:var(--fg2)"></div><div><div class="l1">fg2 / secondary</div><div class="l2">72% frost</div></div></div>
+    <div class="item"><div class="dot" style="background:var(--fg3)"></div><div><div class="l1">fg3 / tertiary</div><div class="l2">50% ice</div></div></div>
+    <div class="item"><div class="dot" style="background:var(--link)"></div><div><div class="l1">link</div><div class="l2">glacier-300</div></div></div>
+  </div>
+</body></html>

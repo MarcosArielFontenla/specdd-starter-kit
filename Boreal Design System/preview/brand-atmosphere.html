@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Hero atmosphere & nav" subtitle="Frosted nav + aurora/sunrise hero motif" viewport="700x280" -->
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;font-family:var(--font-body);}
+  .stage{position:relative;height:280px;background:var(--grad-night);overflow:hidden;}
+  .stage::before{content:"";position:absolute;inset:0;background:var(--grad-aurora);opacity:.85;}
+  .stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:55%;background:var(--grad-sunrise);}
+  .nav{position:absolute;top:16px;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;background:var(--surface-glass);backdrop-filter:blur(var(--blur-glass));border:1px solid var(--border-glass);border-radius:var(--radius-pill);padding:10px 16px;z-index:3;}
+  .nav .l{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:800;color:#fff;letter-spacing:1px;font-size:16px;}
+  .nav img{width:24px;height:24px;}
+  .nav .links{display:flex;gap:18px;font-size:13px;color:rgba(255,255,255,.8);}
+  .nav .cta{background:var(--ember-500);color:var(--fg-on-accent);font-weight:600;font-size:13px;padding:8px 15px;border-radius:999px;}
+  .hero{position:absolute;left:28px;bottom:26px;z-index:3;}
+  .eye{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ice-200);}
+  .h{font-family:var(--font-display);font-weight:800;font-size:46px;color:#fff;letter-spacing:-.03em;line-height:.98;margin:10px 0 0;text-wrap:balance;}
+  .h b{color:var(--ember-400);}
+</style></head>
+<body>
+  <div class="stage">
+    <div class="nav">
+      <span class="l"><img src="../assets/logo-boreal-mark.svg">BOREAL</span>
+      <span class="links"><span>Rutas</span><span>Temporada</span><span>Nosotros</span></span>
+      <span class="cta">Reservar</span>
+    </div>
+    <div class="hero">
+      <div class="eye">EXPEDICIÓN 01 · BAIKAL</div>
+      <h1 class="h">El lago se vuelve <b>cristal</b>.</h1>
+    </div>
+  </div>
+</body></html>
