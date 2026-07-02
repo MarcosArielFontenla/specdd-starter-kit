@@ -10,6 +10,7 @@ wizards and GitHub Copilot prompts/instructions.
 
 | Kit | Purpose | Status |
 |-----|---------|--------|
+| [`platform`](platform/) | SpecDD Platform — unified portal: Boreal landing + the three wizards mounted at /specdd, /specforge and /specdeploy (npm workspaces, shared @specdd/ui). | ✅ Iteration 5 |
 | [`specdd-kit`](specdd-kit/) | SDD starter-kit wizard: generates a Copilot-ready scaffold ZIP (context, prompts, instructions, templates, MCP config). | ✅ Iteration 1 |
 | [`specforge-kit`](specforge-kit/) | Role-based scaffold wizard (BA/QA/Dev/UX): generates persona-specific prompts, instructions, skills, context, and optional Figma/Playwright MCP config. | ✅ Iteration 2 |
 | [`specdeploy-kit`](specdeploy-kit/) | Infrastructure-agnostic deploy wizard: generates CI/CD pipelines, IaC and a runbook for 6 providers (Azure SWA, Cloudflare, AWS, Vercel, Netlify, on-prem Docker). Providers are data — see `specdeploy-kit/docs/provider-authoring.md`. | ✅ Iteration 3 |

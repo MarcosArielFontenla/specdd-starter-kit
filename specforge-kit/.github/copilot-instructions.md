@@ -3,8 +3,9 @@
 > This is the kit's own **default** instructions file — the guardrails that apply
 > when you're working inside `specforge-kit` itself, or as a starting point before
 > a project has customized its own. **When you run the wizard**
-> (`cd website && npm install && npm run dev`), pick a persona (BA/QA/Dev/UX),
-> fill the role inputs, and download a scaffold, the wizard **overlays** this file
+> (`npm install` at the repo root, then `npm run dev -w specforge-wizard`), pick a
+> persona (BA/QA/Dev/UX), fill the role inputs, and download a scaffold, the
+> wizard **overlays** this file
 > with a **project- and persona-specific version** generated from your answers
 > (project name, chosen persona, primary agent/model, tech stack, and security
 > classification) — see `renderCopilotInstructions` in
