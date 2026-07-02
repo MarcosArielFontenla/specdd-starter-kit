@@ -1,9 +1,41 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const FLOW = ['constitution', 'specify', 'plan', 'tasks', 'implement'];
 ---
 <Layout title="SpecDD Platform">
   <section class="p-hero">
+    <p class="p-eyebrow">Spec-Driven Development</p>
     <h1>SpecDD Platform</h1>
-    <p class="p-lead">Landing coming in the next task.</p>
+    <p class="p-lead">Specifications are the source of truth. Code is the output.</p>
   </section>
+
+  <section class="p-cards">
+    <a class="p-card" href="/specdd" data-testid="card-specdd">
+      <h2>SpecDD Kit</h2>
+      <p>Generate a Copilot-ready SDD scaffold — context, prompts, instructions, agents, templates and MCP config — as a ZIP for your project.</p>
+      <span class="p-card__cta">Open wizard →</span>
+    </a>
+    <a class="p-card" href="/specforge" data-testid="card-specforge">
+      <h2>SpecForge</h2>
+      <p>Role-based scaffolds for BA, QA, Dev and UX — persona prompts, skills, context and optional Figma/Playwright MCP config.</p>
+      <span class="p-card__cta">Open wizard →</span>
+    </a>
+    <a class="p-card" href="/specdeploy" data-testid="card-specdeploy">
+      <h2>SpecDeploy</h2>
+      <p>Infrastructure-agnostic deploy artifacts — CI/CD pipeline, IaC and a runbook for your stack. Providers are data, not code.</p>
+      <span class="p-card__cta">Open wizard →</span>
+    </a>
+  </section>
+
+  <section class="p-flow" aria-label="SDD flow">
+    {FLOW.map((step, i) => (
+      <>
+        <span class="p-flow__step">{step}</span>
+        {i < FLOW.length - 1 && <span class="p-flow__arrow">→</span>}
+      </>
+    ))}
+  </section>
+
+  <footer class="p-footer">SpecDD Platform — the three wizards also run standalone; see the repo README.</footer>
 </Layout>
