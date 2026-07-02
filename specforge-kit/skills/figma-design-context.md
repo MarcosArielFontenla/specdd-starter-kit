@@ -19,22 +19,19 @@ When a feature already has a Figma file (a stakeholder handoff, an existing desi
    {
      "servers": {
        "figma": {
-         "type": "stdio",
          "command": "npx",
-         "args": ["-y", "figma-mcp-server"],
+         "args": ["-y", "figma-developer-mcp", "--stdio"],
          "env": {
-           "FIGMA_API_TOKEN": "${input:figma-api-token}",
-           "FIGMA_FILE_URL": "${input:figma-file-url}"
+           "FIGMA_API_KEY": "${input:figma_key}"
          }
        }
      },
      "inputs": [
-       { "id": "figma-api-token", "type": "promptString", "description": "Figma personal access token", "password": true },
-       { "id": "figma-file-url", "type": "promptString", "description": "Figma file URL to extract design context from" }
+       { "id": "figma_key", "type": "promptString", "description": "Figma personal access token", "password": true }
      ]
    }
    ```
-   Never replace `${input:...}` with a literal token or file URL in a committed file — the token and URL are supplied at runtime.
+   This matches the `figma` server the specforge wizard generates (`figma-developer-mcp --stdio`, key `${input:figma_key}`); add the `inputs` entry so VS Code prompts for the token at runtime. Never replace `${input:...}` with a literal token in a committed file — the token is supplied at runtime.
 3. With the MCP tool connected, request the file's page/frame structure first (names and hierarchy) before pulling full node detail, to scope what's actually relevant to the current feature rather than the whole file.
 4. Extract, for each frame relevant to the feature: frame name, component instances used, and any variant/state shown (e.g., a button frame showing default/hover/disabled) — this maps directly to `ux-stage-generator` states.
 5. Extract design tokens (color styles, text styles, spacing/effect styles) referenced by the relevant frames, and pass them to `ux-design-system-enforcer` to check against the project's named design system rather than treating the Figma file itself as the system of record.
