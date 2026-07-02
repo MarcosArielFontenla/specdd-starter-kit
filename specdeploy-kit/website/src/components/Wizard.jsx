@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import providers from '../data/providers.json';
 import { generateFiles, slugify } from './generators.js';
-import Stepper from './Stepper.jsx';
+import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download, Copy, TriangleAlert } from 'lucide-react';
 
 const STEPS = ['Welcome', 'App', 'Target', 'CI/CD', 'Security', 'Review'];

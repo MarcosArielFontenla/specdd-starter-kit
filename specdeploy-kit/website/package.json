@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "SpecDeploy Wizard - generate infrastructure-agnostic deployment artifacts (pipelines, IaC, runbook)",
   "type": "module",
+  "exports": { "./wizard": "./src/components/Wizard.jsx" },
   "engines": { "node": ">=20.0.0" },
   "scripts": {
     "bundle-providers": "node scripts/bundle-providers.js",
@@ -17,6 +18,7 @@
     "test:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@specdd/ui": "*",
     "@astrojs/react": "^4.0.0",
     "astro": "^5.3.0",
     "jszip": "^3.10.1",
