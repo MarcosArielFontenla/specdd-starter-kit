@@ -9,6 +9,7 @@ playwright-report/
 # generated wizard bundles
 specdd-kit/website/src/data/kit-files.json
 specforge-kit/website/src/data/skills.json
+specdeploy-kit/website/src/data/providers.json
 
 .env
 .env.*

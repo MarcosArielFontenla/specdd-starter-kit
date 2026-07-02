@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches: [main]
-    paths: ['specdd-kit/**', 'specforge-kit/**', '.github/workflows/ci.yml']
+    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', '.github/workflows/ci.yml']
   pull_request:
     branches: [main]
-    paths: ['specdd-kit/**', 'specforge-kit/**', '.github/workflows/ci.yml']
+    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', '.github/workflows/ci.yml']
 
 jobs:
   specdd-kit-build:
@@ -36,5 +36,20 @@ jobs:
           node-version: '20'
       - run: npm install
       - run: npm run bundle-skills
+      - run: npm run test:unit
+      - run: npm run build
+
+  specdeploy-kit-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: specdeploy-kit/website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run bundle-providers
       - run: npm run test:unit
       - run: npm run build
