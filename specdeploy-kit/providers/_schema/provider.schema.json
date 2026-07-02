@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "specdeploy provider descriptor",
+  "description": "Contract for providers/<id>/provider.json. The wizard renders `fields` dynamically; `artifacts` map templates to output paths with optional `when` conditions.",
+  "type": "object",
+  "required": ["id", "label", "description", "supportsApi", "ci", "artifacts"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Must equal the provider folder name." },
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "supportsApi": { "type": "boolean", "description": "Whether the generated pipeline deploys the optional API folder." },
+    "ci": { "type": "array", "minItems": 1, "items": { "enum": ["github-actions", "azure-pipelines"] } },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "label", "type"],
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-zA-Z][\\w]*$" },
+          "label": { "type": "string" },
+          "type": { "enum": ["text", "select"] },
+          "required": { "type": "boolean" },
+          "pattern": { "type": "string", "description": "JS RegExp source validated by the wizard." },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "default": { "type": "string" },
+          "help": { "type": "string" }
+        }
+      }
+    },
+    "secrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "where"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "description": { "type": "string" },
+          "where": { "type": "string" }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["template", "output"],
+        "properties": {
+          "template": { "type": "string", "description": "File name inside templates/." },
+          "output": { "type": "string", "description": "Path inside the generated ZIP." },
+          "when": { "type": "string", "description": "Condition: `ci:<id>` | `api` | `!api` | `field.<key>:<value>`. Combine with `&&`." }
+        }
+      }
+    }
+  }
+}
