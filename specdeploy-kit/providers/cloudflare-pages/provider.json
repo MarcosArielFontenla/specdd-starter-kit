@@ -1,0 +1,20 @@
+{
+  "id": "cloudflare-pages",
+  "label": "Cloudflare Pages",
+  "description": "Static hosting on Cloudflare Pages via Wrangler",
+  "supportsApi": false,
+  "ci": ["github-actions", "azure-pipelines"],
+  "fields": [
+    { "key": "projectName", "label": "Pages project name", "type": "text", "required": true,
+      "pattern": "^[a-z0-9-]+$", "help": "Created once with `wrangler pages project create` (see runbook)." }
+  ],
+  "secrets": [
+    { "name": "CLOUDFLARE_API_TOKEN", "description": "API token with Pages:Edit permission", "where": "GitHub Actions secrets / AzDO variable group (secret)" },
+    { "name": "CLOUDFLARE_ACCOUNT_ID", "description": "Cloudflare account id", "where": "GitHub Actions secrets / AzDO variable group" }
+  ],
+  "artifacts": [
+    { "template": "github-actions.yml", "output": ".github/workflows/deploy.yml", "when": "ci:github-actions" },
+    { "template": "azure-pipelines.yml", "output": "azure-pipelines.yml", "when": "ci:azure-pipelines" },
+    { "template": "runbook.md", "output": "docs/deploy-runbook.md" }
+  ]
+}

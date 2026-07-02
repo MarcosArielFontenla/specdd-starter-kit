@@ -1,0 +1,24 @@
+trigger:
+  branches:
+    include:
+      - main
+{{#if envDev}}
+      - develop
+{{/if}}
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+  - script: |
+      npm ci
+      {{app.buildCommand}}
+    displayName: Build
+  - script: npx wrangler pages deploy {{app.outputDir}} --project-name={{projectName}}
+    displayName: Deploy
+    env:
+      CLOUDFLARE_API_TOKEN: $(CLOUDFLARE_API_TOKEN)
+      CLOUDFLARE_ACCOUNT_ID: $(CLOUDFLARE_ACCOUNT_ID)
