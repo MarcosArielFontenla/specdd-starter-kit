@@ -11,7 +11,7 @@ wizards and GitHub Copilot prompts/instructions.
 | Kit | Purpose | Status |
 |-----|---------|--------|
 | [`specdd-kit`](specdd-kit/) | SDD starter-kit wizard: generates a Copilot-ready scaffold ZIP (context, prompts, instructions, templates, MCP config). | ✅ Iteration 1 |
-| `specforge-kit` | Role-based scaffolds (BA/QA/Dev/UX). | 🔜 Iteration 2 |
+| [`specforge-kit`](specforge-kit/) | Role-based scaffold wizard (BA/QA/Dev/UX): generates persona-specific prompts, instructions, skills, context, and optional Figma/Playwright MCP config. | ✅ Iteration 2 |
 
 ## SDD flow
 
