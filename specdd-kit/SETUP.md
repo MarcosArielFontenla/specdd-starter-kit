@@ -21,7 +21,7 @@ This guide walks a new project through adopting `specdd-kit`, in order:
 Context is the shared understanding every spec is written against — read once,
 referenced by every `/specdd-*` prompt afterward.
 
-1. Run the wizard (`cd specdd-kit\website && npm install && npm run dev`) and
+1. Run the wizard (from the repo root: `npm install && npm run dev -w sdd-kit-wizard`) and
    complete the **Project**, **Tech Stack**, and **Principles** steps, or edit the
    generated `context/project.md`, `context/tech-stack.md`, and
    `context/constitution.md` directly after extracting the ZIP.
