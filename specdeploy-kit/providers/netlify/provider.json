@@ -1,0 +1,20 @@
+{
+  "id": "netlify",
+  "label": "Netlify",
+  "description": "Deploy via Netlify CLI (Git integration is the recommended alternative)",
+  "supportsApi": false,
+  "ci": ["github-actions"],
+  "fields": [
+    { "key": "siteName", "label": "Netlify site name", "type": "text", "required": true,
+      "pattern": "^[a-z0-9-]+$" }
+  ],
+  "secrets": [
+    { "name": "NETLIFY_AUTH_TOKEN", "description": "Personal access token", "where": "GitHub Actions secrets" },
+    { "name": "NETLIFY_SITE_ID", "description": "Site ID (Site settings → General)", "where": "GitHub Actions secrets" }
+  ],
+  "artifacts": [
+    { "template": "github-actions.yml", "output": ".github/workflows/deploy.yml", "when": "ci:github-actions" },
+    { "template": "netlify.toml", "output": "netlify.toml" },
+    { "template": "runbook.md", "output": "docs/deploy-runbook.md" }
+  ]
+}

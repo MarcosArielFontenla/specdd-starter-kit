@@ -1,0 +1,4 @@
+{
+  "buildCommand": "{{app.buildCommand}}",
+  "outputDirectory": "{{app.outputDir}}"
+}

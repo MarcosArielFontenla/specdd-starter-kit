@@ -1,0 +1,21 @@
+{
+  "id": "vercel",
+  "label": "Vercel",
+  "description": "Deploy via Vercel CLI (Git integration is the recommended alternative)",
+  "supportsApi": false,
+  "ci": ["github-actions"],
+  "fields": [
+    { "key": "projectName", "label": "Vercel project name", "type": "text", "required": true,
+      "pattern": "^[a-z0-9-]+$" }
+  ],
+  "secrets": [
+    { "name": "VERCEL_TOKEN", "description": "Personal/CI token", "where": "GitHub Actions secrets" },
+    { "name": "VERCEL_ORG_ID", "description": "From `vercel link` (.vercel/project.json)", "where": "GitHub Actions secrets" },
+    { "name": "VERCEL_PROJECT_ID", "description": "From `vercel link` (.vercel/project.json)", "where": "GitHub Actions secrets" }
+  ],
+  "artifacts": [
+    { "template": "github-actions.yml", "output": ".github/workflows/deploy.yml", "when": "ci:github-actions" },
+    { "template": "vercel.json", "output": "vercel.json" },
+    { "template": "runbook.md", "output": "docs/deploy-runbook.md" }
+  ]
+}

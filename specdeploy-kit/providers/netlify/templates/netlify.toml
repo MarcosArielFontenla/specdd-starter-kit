@@ -1,0 +1,3 @@
+[build]
+  command = "{{app.buildCommand}}"
+  publish = "{{app.outputDir}}"
