@@ -1,0 +1,32 @@
+trigger:
+  branches:
+    include:
+      - main
+{{#if envDev}}
+      - develop
+{{/if}}
+
+pool:
+{{#if server_nginx}}
+  vmImage: ubuntu-latest
+{{/if}}
+{{#if server_iis}}
+  vmImage: windows-latest
+{{/if}}
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+  - script: |
+      npm ci
+      {{app.buildCommand}}
+    displayName: Build site
+  - task: Docker@2
+    displayName: Build and push image
+    inputs:
+      command: buildAndPush
+      repository: {{appSlug}}-web
+      dockerfile: Dockerfile
+      containerRegistry: onprem-registry
+      tags: latest

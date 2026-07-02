@@ -1,0 +1,6 @@
+# escape=`
+# Windows containers only. Build the site first: npm ci && {{app.buildCommand}}
+FROM mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022
+COPY {{app.outputDir}}/ C:/inetpub/wwwroot/
+COPY deploy/web.config C:/inetpub/wwwroot/web.config
+EXPOSE 80

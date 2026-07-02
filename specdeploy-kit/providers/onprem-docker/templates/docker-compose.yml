@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    image: {{registry}}/{{appSlug}}-web:latest
+    ports:
+      - "{{port}}:80"
+{{#if api}}
+  api:
+    image: node:20-alpine
+    working_dir: /srv/api
+    volumes:
+      - ./{{app.apiDir}}:/srv/api
+    command: sh -c "npm ci && npm start"
+    expose:
+      - "3000"
+{{/if}}

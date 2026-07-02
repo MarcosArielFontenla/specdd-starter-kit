@@ -93,3 +93,25 @@ test('generateFiles includes api artifact when api is enabled, and both pipeline
 test('generateFiles throws on unknown provider', () => {
   assert.throws(() => generateFiles(fixture, { ...baseInput, providerId: 'nope' }), /unknown provider/);
 });
+
+test('onprem-docker iis variant swaps Dockerfile and server config (real provider)', async () => {
+  const { readProviders } = await import('../../scripts/bundle-providers.js');
+  const { join, dirname } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const providersDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'providers');
+  const providers = readProviders(providersDir);
+  const input = {
+    app: { name: 'Intranet', preset: 'vite', buildCommand: 'npm run build', outputDir: 'dist', api: 'none', apiDir: 'api' },
+    providerId: 'onprem-docker',
+    providerFields: { server: 'iis', registry: 'registry.company.com', port: '8080' },
+    ci: ['github-actions'],
+    envs: 'prod',
+    approvalGate: false,
+    ack: true,
+  };
+  const out = generateFiles(providers, input);
+  assert.match(out['Dockerfile'], /iis/i);
+  assert.ok('deploy/web.config' in out);
+  assert.ok(!('deploy/nginx.conf' in out));
+  assert.match(out['.github/workflows/deploy.yml'], /windows-latest/);
+});

@@ -1,0 +1,28 @@
+{
+  "id": "onprem-docker",
+  "label": "On-prem: Docker",
+  "description": "Containerized static site (Nginx on Linux or IIS on Windows) pushed to a private registry",
+  "supportsApi": true,
+  "ci": ["github-actions", "azure-pipelines"],
+  "fields": [
+    { "key": "server", "label": "Web server", "type": "select", "options": ["nginx", "iis"], "default": "nginx",
+      "help": "nginx = Linux containers; iis = Windows containers (Windows hosts only)." },
+    { "key": "registry", "label": "Container registry host", "type": "text", "required": true,
+      "pattern": "^[\\w.-]+(:\\d+)?$", "help": "e.g. registry.company.com or localhost:5000" },
+    { "key": "port", "label": "Host port", "type": "text", "default": "8080", "pattern": "^\\d+$" }
+  ],
+  "secrets": [
+    { "name": "REGISTRY_USERNAME", "description": "Registry login user", "where": "GitHub Actions secrets / AzDO variable group" },
+    { "name": "REGISTRY_PASSWORD", "description": "Registry login password/token", "where": "GitHub Actions secrets / AzDO variable group (secret)" }
+  ],
+  "artifacts": [
+    { "template": "Dockerfile.nginx", "output": "Dockerfile", "when": "field.server:nginx" },
+    { "template": "Dockerfile.iis", "output": "Dockerfile", "when": "field.server:iis" },
+    { "template": "nginx.conf", "output": "deploy/nginx.conf", "when": "field.server:nginx" },
+    { "template": "web.config", "output": "deploy/web.config", "when": "field.server:iis" },
+    { "template": "docker-compose.yml", "output": "docker-compose.yml" },
+    { "template": "github-actions.yml", "output": ".github/workflows/deploy.yml", "when": "ci:github-actions" },
+    { "template": "azure-pipelines.yml", "output": "azure-pipelines.yml", "when": "ci:azure-pipelines" },
+    { "template": "runbook.md", "output": "docs/deploy-runbook.md" }
+  ]
+}

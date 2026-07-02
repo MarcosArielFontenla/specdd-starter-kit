@@ -1,0 +1,28 @@
+name: Build and push {{app.name}} image
+
+on:
+  push:
+    branches: [main{{#if envDev}}, develop{{/if}}]
+  workflow_dispatch:
+
+jobs:
+  build-push:
+    runs-on: {{#if server_nginx}}ubuntu-latest{{/if}}{{#if server_iis}}windows-latest{{/if}}
+{{#if approvalGate}}
+    environment: production
+{{/if}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build site
+        run: |
+          npm ci
+          {{app.buildCommand}}
+      - name: Log in to registry
+        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login {{registry}} -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+      - name: Build image
+        run: docker build -t {{registry}}/{{appSlug}}-web:latest .
+      - name: Push image
+        run: docker push {{registry}}/{{appSlug}}-web:latest
