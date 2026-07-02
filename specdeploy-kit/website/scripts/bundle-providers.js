@@ -5,17 +5,23 @@ import { fileURLToPath } from 'node:url';
 export function validateDescriptor(folderName, desc) {
   const fail = (msg) => { throw new Error(`bundle-providers: ${folderName}: ${msg}`); };
   if (!desc.id || desc.id !== folderName) fail(`id must equal folder name ("${folderName}")`);
+  if (desc.id && !/^[a-z0-9-]+$/.test(desc.id)) fail('id must match ^[a-z0-9-]+$');
   if (!desc.label) fail('label is required');
   if (!desc.description) fail('description is required');
   if (typeof desc.supportsApi !== 'boolean') fail('supportsApi must be boolean');
   if (!Array.isArray(desc.ci) || desc.ci.length === 0) fail('ci must be a non-empty array');
+  for (const c of desc.ci || []) {
+    if (c !== 'github-actions' && c !== 'azure-pipelines') fail('ci entries must be github-actions or azure-pipelines');
+  }
   if (!Array.isArray(desc.artifacts) || desc.artifacts.length === 0) fail('artifacts must be a non-empty array');
   for (const f of desc.fields || []) {
     if (!f.key || !f.label || !f.type) fail('every field needs key, label and type');
+    if (f.key && !/^[a-zA-Z]\w*$/.test(f.key)) fail(`field key "${f.key}" must match ^[a-zA-Z]\\w*$`);
     if (f.type === 'select' && (!Array.isArray(f.options) || f.options.length === 0)) fail(`select field ${f.key} needs options`);
   }
   for (const s of desc.secrets || []) {
     if (!s.name || !s.description || !s.where) fail('every secret needs name, description and where');
+    if (s.name && !/^[A-Z][A-Z0-9_]*$/.test(s.name)) fail(`secret name "${s.name}" must match ^[A-Z][A-Z0-9_]*$`);
   }
   for (const a of desc.artifacts) {
     if (!a.template || !a.output) fail('every artifact needs template and output');
