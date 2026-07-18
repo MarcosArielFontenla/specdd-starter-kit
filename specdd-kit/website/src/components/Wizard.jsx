@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import kitFiles from '../data/kit-files.json';
-import { generateFiles } from './generators.js';
+import { generateScaffold } from './generators.js';
 import { stepsFor, errorFor as stepError, TOOLS, OWASP_CONTROLS } from './steps.js';
 import ChipInput from './ChipInput.jsx';
+import IngestStep from './IngestStep.jsx';
 import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const MCP_OPTIONS = ['github', 'sonarqube', 'context7', 'postgresql', 'playwrigh
 
 const initial = {
   scenario: 'greenfield',
+  analysis: null, existingPaths: [],
   project: { name: '', description: '', problem: '' },
   personas: [], outcomes: { user: '', business: '' },
   constraints: { business: '', technical: '' },
@@ -46,13 +48,39 @@ export default function Wizard() {
   }
   function back() { setError(''); setStep((s) => Math.max(s - 1, 0)); }
   function jump(i) { if (i <= maxVisited) { setError(''); setStep(i); } }
+  function chooseScenario(scenario) {
+    set({ scenario });
+    setMaxVisited((m) => Math.min(m, 1)); // steps after Scenario differ per branch — revisit them
+  }
+  function applyAnalysis(analysis, existingPaths) {
+    setData((d) => ({
+      ...d,
+      analysis, existingPaths,
+      project: {
+        ...d.project,
+        name: analysis.projectName || d.project.name,
+        description: analysis.description || d.project.description,
+      },
+      stack: {
+        ...d.stack,
+        frontend: analysis.stack.frontend || d.stack.frontend,
+        backend: analysis.stack.backend || d.stack.backend,
+        testing: analysis.stack.testing || d.stack.testing,
+        database: analysis.stack.database || d.stack.database,
+        languages: analysis.stack.languages.length ? analysis.stack.languages : d.stack.languages,
+      },
+      domains: analysis.domains.length ? analysis.domains : d.domains,
+      entities: analysis.entities.length ? analysis.entities : d.entities,
+    }));
+  }
 
   const last = step === steps.length - 1;
-  const files = last ? generateFiles(kitFiles, data) : {};
+  const needsScaffold = last || stepName === 'Ingest & Analyze';
+  const { files, skipped } = needsScaffold ? generateScaffold(kitFiles, data) : { files: {}, skipped: [] };
 
   async function download() {
     const zip = new JSZip();
-    for (const [path, contents] of Object.entries(generateFiles(kitFiles, data))) zip.file(path, contents);
+    for (const [path, contents] of Object.entries(generateScaffold(kitFiles, data).files)) zip.file(path, contents);
     const blob = await zip.generateAsync({ type: 'blob' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -81,15 +109,21 @@ export default function Wizard() {
             <div className="b-cards">
               <button type="button" data-testid="scenario-greenfield"
                 className={`b-card ${data.scenario === 'greenfield' ? 'b-card--active' : ''}`}
-                onClick={() => set({ scenario: 'greenfield' })}>
+                onClick={() => chooseScenario('greenfield')}>
                 <strong>Greenfield</strong>
                 <p>New project — pour in all the context you have and get a fully personalized harness scaffold.</p>
               </button>
-              <button type="button" data-testid="scenario-brownfield" className="b-card" disabled>
+              <button type="button" data-testid="scenario-brownfield"
+                className={`b-card ${data.scenario === 'brownfield' ? 'b-card--active' : ''}`}
+                onClick={() => chooseScenario('brownfield')}>
                 <strong>Brownfield</strong>
-                <p>Existing project — the wizard will analyze your codebase. Coming soon.</p>
+                <p>Existing project — pick your folder and the wizard analyzes it in your browser to pre-fill the flow.</p>
               </button>
             </div>
+          )}
+
+          {stepName === 'Ingest & Analyze' && (
+            <IngestStep data={data} skippedCount={skipped.length} onAnalyzed={applyAnalysis} />
           )}
 
           {stepName === 'Project' && (
@@ -225,6 +259,12 @@ export default function Wizard() {
                       <pre className="b-preview">{items.join('\n')}</pre>
                     </details>
                   ))}
+                  {skipped.length > 0 && (
+                    <details data-testid="skipped-group" open>
+                      <summary>Skipped — already exist in your project ({skipped.length})</summary>
+                      <pre className="b-preview">{skipped.join('\n')}</pre>
+                    </details>
+                  )}
                 </div>
               </>
             );
