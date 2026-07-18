@@ -7,7 +7,8 @@ export default function IngestStep({ data, skippedCount, onAnalyzed }) {
   const [busy, setBusy] = useState(false);
 
   async function onPick(e) {
-    const files = Array.from(e.target.files || []);
+    const inputEl = e.target;
+    const files = Array.from(inputEl.files || []);
     if (!files.length) return;
     setBusy(true);
     try {
@@ -22,6 +23,7 @@ export default function IngestStep({ data, skippedCount, onAnalyzed }) {
       onAnalyzed(analysis, [...byPath.keys()]);
     } finally {
       setBusy(false);
+      inputEl.value = '';
     }
   }
 

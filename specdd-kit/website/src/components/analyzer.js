@@ -51,9 +51,9 @@ function shallowest(paths, name) {
 const setIf = (stack, field, value) => { if (!stack[field]) stack[field] = value; };
 
 export async function analyzeProject({ folderName, paths, readFile }) {
-  const truncated = paths.length > MAX_PATHS;
-  const capped = truncated ? paths.slice(0, MAX_PATHS) : paths;
-  const visible = capped.filter((p) => !isIgnored(p));
+  const visibleAll = paths.filter((p) => !isIgnored(p));
+  const truncated = visibleAll.length > MAX_PATHS;
+  const visible = truncated ? visibleAll.slice(0, MAX_PATHS) : visibleAll;
 
   const stack = { languages: [], frontend: '', backend: '', testing: '', database: '' };
   const manifestsFound = [];
@@ -106,7 +106,7 @@ export async function analyzeProject({ folderName, paths, readFile }) {
     domains: suggestDomains(visible),
     entities: suggestEntities(visible),
     manifestsFound,
-    fileCount: capped.length,
+    fileCount: visible.length,
     truncated,
   };
 }
@@ -131,7 +131,7 @@ export function suggestDomains(paths) {
     } else if (segs.length > 1) {
       candidate = segs[0];
     }
-    if (!candidate || candidate.startsWith('.') || NON_DOMAIN_NAMES.has(candidate.toLowerCase())) continue;
+    if (!candidate || candidate.startsWith('.') || NON_DOMAIN_NAMES.has(candidate.toLowerCase()) || /[|`]/.test(candidate)) continue;
     counts.set(candidate, (counts.get(candidate) || 0) + 1);
   }
   return [...counts.entries()]
@@ -151,7 +151,7 @@ export function suggestEntities(paths) {
     const base = segs[segs.length - 1].replace(/\.[^.]+$/, '');
     const parent = (segs[segs.length - 2] || '').toLowerCase();
     const suffixed = base.match(/^(.+)\.(entity|model)$/i);
-    if (suffixed) add(suffixed[1]);
+    if (suffixed && /^[A-Za-z][A-Za-z0-9_-]*$/.test(suffixed[1])) add(suffixed[1]);
     else if (ENTITY_DIRS.has(parent) && /^[A-Za-z][A-Za-z0-9_-]*$/.test(base) && !NON_ENTITY_BASENAMES.has(base.toLowerCase())) add(base);
   }
   return [...found].slice(0, 12);

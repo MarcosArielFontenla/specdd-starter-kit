@@ -76,6 +76,20 @@ test('path list over MAX_PATHS is truncated and flagged', async () => {
   assert.equal(a.fileCount, MAX_PATHS);
 });
 
+test('ignored dirs do not consume the path budget', async () => {
+  const noise = Array.from({ length: MAX_PATHS + 100 }, (_, i) => `node_modules/pkg/f${i}.js`);
+  const a = await analyzeProject({
+    folderName: 'noisy',
+    paths: [...noise, 'package.json', 'src/auth/login.js', 'src/auth/token.js'],
+    readFile: (p) => (p === 'package.json' ? Promise.resolve('{"name":"noisy-app","dependencies":{"react":"1"}}') : Promise.reject(new Error('no'))),
+  });
+  assert.equal(a.projectName, 'noisy-app');       // manifest survived the noise
+  assert.equal(a.stack.frontend, 'React');
+  assert.deepEqual(a.domains, ['auth']);
+  assert.equal(a.truncated, false);               // visible paths are far below the cap
+  assert.equal(a.fileCount, 3);
+});
+
 test('domains from src/* folders, infra names excluded, ordered by file count', () => {
   const paths = [
     'src/auth/login.js', 'src/auth/logout.js', 'src/auth/token.js',
@@ -110,4 +124,9 @@ test('entities are deduplicated and capped at 12', () => {
   const paths = Array.from({ length: 15 }, (_, i) => `models/entity${String(i).padStart(2, '0')}.py`);
   assert.equal(suggestEntities(paths).length, 12);
   assert.equal(suggestEntities(['models/user.py', 'src/x/User.entity.ts']).length, 1);
+});
+
+test('suggestions never contain markdown-table-breaking characters', () => {
+  assert.deepEqual(suggestDomains(['src/bad|name/a.js', 'src/ok/a.js', 'src/ok/b.js']), ['ok']);
+  assert.deepEqual(suggestEntities(['src/x/we|rd.entity.ts', 'src/x/Good.entity.ts']), ['Good']);
 });
