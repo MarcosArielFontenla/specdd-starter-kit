@@ -1,7 +1,7 @@
 // src/components/generators.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting } from './generators.js';
+import { generateFiles, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec } from './generators.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
@@ -92,4 +92,42 @@ test('routing has one row per domain and a fallback rule', () => {
   assert.match(routing, /\| Auth work \| \.agents\/skills\/auth\/SKILL\.md \|/);
   assert.match(routing, /\| Billing & Invoicing work \| \.agents\/skills\/billing-invoicing\/SKILL\.md \|/);
   assert.match(routing, /No match\?/);
+});
+
+test('skill skeleton has harness frontmatter with pointer-only drift policy', () => {
+  const skill = renderSkillSkeleton('Billing & Invoicing');
+  assert.match(skill, /name: billing-invoicing/);
+  assert.match(skill, /snapshotPath: \.agents\/cold-start\/snapshots\/billing-invoicing\.snapshot\.md/);
+  assert.match(skill, /driftPolicyPath: \.agents\/evals\/rubrics\/billing-invoicing\.yaml/);
+  assert.ok(!/driftPolicy:\n/.test(skill)); // pointer only — never inline
+});
+
+test('rubric starts at log_only with median aggregation', () => {
+  const rubric = renderRubric('Auth');
+  assert.match(rubric, /skill: auth/);
+  assert.match(rubric, /reviewTriggerAction: log_only/);
+  assert.match(rubric, /aggregation: median/);
+  assert.match(rubric, /ciFailConsecutiveWindows: 2/);
+});
+
+test('spec yaml is placeholder-status with placeholder checks and empty clarifications', () => {
+  const spec = renderSpecYaml('Invoice');
+  assert.match(spec, /entity: Invoice/);
+  assert.match(spec, /status: placeholder/);
+  assert.match(spec, /command: placeholder/);
+  assert.match(spec, /clarifications: \[\]/);
+  assert.match(spec, /reviewedBy: null/);
+});
+
+test('budget manifest has one task class per domain referencing real artifacts', () => {
+  const manifest = renderBudgetManifest(harnessInput);
+  assert.match(manifest, /budgetLines: 500/);
+  assert.match(manifest, /- name: Auth work/);
+  assert.match(manifest, /\.agents\/skills\/billing-invoicing\/SKILL\.md/);
+});
+
+test('features spec lists captured features as unchecked items', () => {
+  const spec = renderFeaturesSpec(harnessInput);
+  assert.match(spec, /- \[ \] User can sign up/);
+  assert.match(spec, /- \[ \] Monthly invoice generation/);
 });

@@ -229,3 +229,99 @@ ${rubricRows}
 | Telemetry | fallback | session_summary appended at session end per EVENTS.md |
 `;
 }
+
+export function renderSkillSkeleton(domain) {
+  const slug = slugify(domain);
+  return `---
+name: ${slug}
+version: 0.1.0
+snapshotPath: .agents/cold-start/snapshots/${slug}.snapshot.md
+snapshotVersion: 0.1.0
+driftPolicyPath: .agents/evals/rubrics/${slug}.yaml
+---
+
+# ${domain} — Skill
+
+> Skeleton generated at scaffold time. Fill each section with the domain's REAL rules
+> as they emerge — then bump \`version\` and regenerate the snapshot
+> (\`.agents/scripts/generate-snapshots.ps1 -Scaffold\` -> compress -> \`-Check\`).
+
+## Scope
+What ${domain} covers in this project, and what it explicitly does not.
+
+## Must rules
+<!-- Rules the agent must always follow in this domain. One imperative sentence each. -->
+
+## Never do
+<!-- Hard prohibitions. One sentence each. -->
+
+## Verification
+<!-- The command(s) that prove ${domain} work is correct (test runner filtered to this domain). -->
+`;
+}
+
+export function renderRubric(domain) {
+  const slug = slugify(domain);
+  return `skill: ${slug}
+criteria:
+  - id: rule-adherence
+    description: "Output follows the skill's Must rules and violates no Never rules"
+    weight: 1.0
+driftPolicy:
+  windowDays: 7
+  minRunsForTrend: 5
+  criterionDriftThreshold: 0.15
+  skillDriftThreshold: 0.10
+  baselineStrategy: first_N_runs
+  baselineRuns: 10
+  aggregation: median
+  ciFailConsecutiveWindows: 2
+  reviewTriggerAction: log_only
+  reviewWorkflow: skill-review
+`;
+}
+
+export function renderSpecYaml(entity) {
+  return `entity: ${entity}
+version: 0.1.0
+description: "Primary entity captured at scaffold time. Specify via the spec-first workflow."
+requirements: []
+designContract:
+  status: placeholder
+  reviewedBy: null
+  approvedAt: null
+  acceptanceChecks:
+    - id: ac-001
+      description: "Define the first acceptance criterion for ${entity} from its requirements"
+      command: placeholder
+      expectedExitCode: 0
+  checksWaiver: null
+clarifications: []
+`;
+}
+
+export function renderBudgetManifest(input) {
+  const classes = (input.domains || [])
+    .map((d) => `  - name: ${d} work
+    artifacts:
+      - .agents/orchestration/ROUTING.md
+      - .agents/skills/${slugify(d)}/SKILL.md`)
+    .join('\n');
+  return `# One entry per task pattern in the primer's fast-classification table.
+# The primer itself is always counted by validate-budget.ps1.
+budgetLines: 500
+taskClasses:
+${classes}
+`;
+}
+
+export function renderFeaturesSpec(input) {
+  const items = (input.features || []).map((f) => `- [ ] ${f}`).join('\n');
+  return `# Features Spec — ${input.project?.name || 'Project'}
+
+Initial feature list captured at scaffold time. Refine each into a full spec via
+\`.agents/workflows/spec-first-feature.md\` before implementation.
+
+${items}
+`;
+}
