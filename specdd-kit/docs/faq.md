@@ -45,13 +45,13 @@ with the team, since each one expands what an agent can do on your machine.
 ## Which agent should I use?
 
 **Does this kit require GitHub Copilot?**
-No. `.github/prompts/*.prompt.md`, `.github/instructions/*.instructions.md`, and
-`.github/agents/*.agent.md` are plain Markdown with light frontmatter — GitHub
-Copilot auto-loads them from `.github/`, but Claude Code, Cursor, and Gemini can
-all read and follow the same files. The wizard's **Agent & LLM** step just records
-which agent/model you're primarily using, so the generated
-`.github/copilot-instructions.md` names it explicitly; it doesn't gate which agent
-is technically allowed to use the rest of the scaffold.
+No. The scaffold is built around the vendor-neutral SpecDD Harness: every agent
+session starts from the root `AGENTS.md` primer, and each tool reaches it through
+a small pointer adapter. The wizard's **Agents & Tools** step is a multi-select —
+one adapter is generated per tool your team uses — and the Copilot-specific
+`.github/` content (prompts, instructions, agents) ships only when GitHub Copilot
+is among the selected tools. No choice gates which agent is technically allowed
+to use the rest of the scaffold.
 
 **What if my team uses more than one agent?**
 That's the expected case, not an edge case. Keep the prompts and instructions as
