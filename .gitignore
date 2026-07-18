@@ -33,3 +33,6 @@ npm-debug.log*
 
 # source prompt (kept out of the repo by request)
 PROMPT_SPECDDSTARTERKIT.md
+
+# private working documents (never committed)
+/_private/
