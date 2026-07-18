@@ -14,6 +14,15 @@ Cursor, Gemini), and a flat, practical governance model — no maturity levels, 
 Azure DevOps integration, no deploy pipeline. See `docs/specdd-methodology.md` for
 the full comparison.
 
+## The SpecDD Harness
+
+Generated scaffolds are structured around a vendor-neutral agent harness: a `.agents/`
+core (skills, specs, routing, evals, workflows, telemetry) reached by every AI coding
+tool through a ≤5-line pointer adapter, with a root `AGENTS.md` session primer.
+See [docs/harness.md](docs/harness.md). The harness validation scripts require
+PowerShell 7+ and the `powershell-yaml` module
+(`Install-Module powershell-yaml -Scope CurrentUser`).
+
 ## What the kit generates
 
 Running the wizard produces a ZIP containing:
