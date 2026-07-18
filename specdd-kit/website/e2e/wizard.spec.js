@@ -6,7 +6,7 @@ test('greenfield wizard walks all steps and downloads a harness scaffold ZIP', a
   await expect(page.getByTestId('step-title')).toHaveText('Welcome');
 
   await page.getByTestId('next-btn').click(); // -> Scenario
-  await expect(page.getByTestId('scenario-brownfield')).toBeDisabled();
+  await expect(page.getByTestId('scenario-brownfield')).toBeEnabled();
   await page.getByTestId('next-btn').click(); // -> Project (greenfield preselected)
 
   await page.getByTestId('next-btn').click(); // validation blocks (name empty)
