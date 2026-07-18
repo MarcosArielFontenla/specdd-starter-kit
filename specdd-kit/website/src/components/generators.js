@@ -100,3 +100,64 @@ export function generateFiles(baseFiles, input) {
   }
   return out;
 }
+
+export const slugify = (s) =>
+  s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+const ADAPTER_CONTENT = `<!-- Adapter file — do not add rules here. All rules live in the vendor-neutral core. -->
+Read the \`AGENTS.md\` file at the repository root and follow it completely before starting any task.
+`;
+
+const ADAPTER_PATHS = {
+  'GitHub Copilot': '.github/copilot-instructions.md',
+  'Claude Code': 'CLAUDE.md',
+  Gemini: 'GEMINI.md',
+  // Cursor and Codex read the root AGENTS.md natively — no adapter needed.
+};
+
+export function renderAdapter(tool) {
+  const path = ADAPTER_PATHS[tool];
+  return path ? { path, content: ADAPTER_CONTENT } : null;
+}
+
+export function renderPrimer(input, today) {
+  const name = input.project?.name || 'Project';
+  const desc = (input.project?.description || '').split(/\.\s|\n/)[0];
+  const stack = [input.stack?.frontend, input.stack?.backend].filter(Boolean).join(' + ') || 'n/a';
+  const rows = (input.domains || [])
+    .map((d) => `| ${d} work | .agents/skills/${slugify(d)}/SKILL.md |`)
+    .join('\n');
+  return `---
+version: 1.0.0
+lastUpdated: ${today}
+role: session-primer
+registry: .agents/REGISTRY.md
+---
+
+# ${name} — Agent Session Primer
+
+## What this is
+${desc}. Stack: ${stack}.
+Full artifact registry: \`.agents/REGISTRY.md\` (load only when modifying the harness itself).
+
+## Load order (always)
+1. \`.agents/orchestration/ROUTING.md\` — classify the task
+2. The skill ROUTING points to — its always-load sections only
+3. The spec for that domain — only if the task touches a primary entity
+
+## Never load at session start
+- Skills not selected by ROUTING for this task
+- Workflow files unless executing a named workflow
+- Telemetry events or decision logs
+
+## Fast task classification
+| Task pattern | Load |
+|--------------|------|
+${rows}
+| update .agents/ | .agents/REGISTRY.md |
+## Context budget
+<=500 injected lines per session. Exceeded? Stop, decompose the task, re-classify.
+## Session end (telemetry — best effort)
+Append one session_summary line to .agents/telemetry/events/[YYYY-MM].jsonl per .agents/telemetry/EVENTS.md.
+`;
+}
