@@ -68,6 +68,20 @@ body { margin: 0; background: var(--bg); color: var(--fg1); font-family: var(--f
 .b-check { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--w-regular); color: var(--fg2); }
 .b-check input[type="checkbox"] { width: auto; accent-color: var(--ember-500); }
 
+.b-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-3); background: var(--ink-900); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.b-chips input { flex: 1; min-width: 120px; border: 0 !important; background: transparent !important; padding: var(--space-1) !important; width: auto !important; }
+.b-chips input:focus { box-shadow: none !important; }
+.b-chip { font: inherit; font-size: var(--text-sm); border: 1px solid var(--border-glass); border-radius: var(--radius-pill); padding: 2px var(--space-3); background: var(--surface-glass-light); color: var(--fg1); cursor: pointer; transition: border-color var(--dur-fast) var(--ease-out); }
+.b-chip:hover { border-color: var(--ember-500); }
+
+.b-cards { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.b-card { flex: 1; min-width: 200px; text-align: left; padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--ink-900); color: var(--fg1); cursor: pointer; transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); }
+.b-card strong { display: block; font-family: var(--font-display); font-weight: var(--w-semibold); margin-bottom: var(--space-2); }
+.b-card p { margin: 0; color: var(--fg2); font-size: var(--text-sm); }
+.b-card:hover:not(:disabled) { border-color: var(--glacier-500); }
+.b-card--active { border-color: var(--ember-500); box-shadow: var(--shadow-ember); }
+.b-card:disabled { opacity: .5; cursor: not-allowed; }
+
 .b-personas { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .b-persona { flex: 1; min-width: 96px; padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--ink-900); color: var(--fg1); font-family: var(--font-display); font-weight: var(--w-semibold); cursor: pointer; transition: border-color var(--dur-fast), box-shadow var(--dur-base); }
 .b-persona:hover { border-color: var(--glacier-500); }

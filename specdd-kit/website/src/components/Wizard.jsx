@@ -2,22 +2,23 @@ import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import kitFiles from '../data/kit-files.json';
 import { generateFiles } from './generators.js';
+import { stepsFor, errorFor as stepError, TOOLS, OWASP_CONTROLS } from './steps.js';
+import ChipInput from './ChipInput.jsx';
 import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
-const STEPS = ['Welcome', 'Project', 'Tech Stack', 'Principles', 'MCP Tools', 'Agent & LLM', 'Security', 'Preview / Download'];
 const MCP_OPTIONS = ['github', 'sonarqube', 'context7', 'postgresql', 'playwright', 'figma'];
-const AGENTS = ['GitHub Copilot', 'Claude', 'Cursor', 'Gemini'];
 
 const initial = {
+  scenario: 'greenfield',
   project: { name: '', description: '', problem: '' },
   personas: [], outcomes: { user: '', business: '' },
   constraints: { business: '', technical: '' },
+  domains: [], entities: [], features: [],
   stack: { languages: [], frontend: '', backend: '', testing: '', database: '', infra: '', swagger: false, a11y: false },
   principles: ['Specifications are the source of truth'],
-  mcp: [], agent: { primary: 'GitHub Copilot', model: '' },
+  mcp: [], tools: ['GitHub Copilot'], model: '',
   security: { classification: 'internal', owaspControls: [] },
-  featuresSpec: '',
 };
 
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -32,30 +33,22 @@ export default function Wizard() {
 
   const set = (patch) => setData((d) => ({ ...d, ...patch }));
 
-  function isStepValid(i) {
-    if (i === 1) return data.project.name.trim() !== '' && data.project.description.trim() !== '';
-    if (i === 2) return data.stack.frontend.trim() !== '';
-    return true;
-  }
-  function errorFor(i) {
-    if (i === 1 && !data.project.name.trim()) return 'Project name is required.';
-    if (i === 1 && !data.project.description.trim()) return 'Description is required.';
-    if (i === 2 && !data.stack.frontend.trim()) return 'Frontend is required.';
-    return '';
-  }
-
+  const steps = stepsFor(data.scenario);
+  const stepName = steps[step];
+  const isStepValid = (i) => stepError(steps[i], data) === '';
   function next() {
-    const e = errorFor(step);
+    const e = stepError(stepName, data);
     if (e) { setError(e); return; }
     setError('');
-    const target = Math.min(step + 1, STEPS.length - 1);
+    const target = Math.min(step + 1, steps.length - 1);
     setStep(target);
     setMaxVisited((m) => Math.max(m, target));
   }
   function back() { setError(''); setStep((s) => Math.max(s - 1, 0)); }
   function jump(i) { if (i <= maxVisited) { setError(''); setStep(i); } }
 
-  const files = step === STEPS.length - 1 ? generateFiles(kitFiles, data) : {};
+  const last = step === steps.length - 1;
+  const files = last ? generateFiles(kitFiles, data) : {};
 
   async function download() {
     const zip = new JSZip();
@@ -69,24 +62,37 @@ export default function Wizard() {
     URL.revokeObjectURL(url);
   }
 
-  const last = step === STEPS.length - 1;
-
   return (
     <div className="b-shell" data-ready={ready ? 'true' : 'false'}>
       <aside className="b-sidebar">
         <div className="b-brand">SDD Kit Wizard</div>
-        <div className="b-sidebar__eyebrow">STEP {pad2(step + 1)} / {pad2(STEPS.length)}</div>
-        <Stepper steps={STEPS} current={step} isValid={isStepValid} maxVisited={maxVisited} onJump={jump} />
+        <div className="b-sidebar__eyebrow">STEP {pad2(step + 1)} / {pad2(steps.length)}</div>
+        <Stepper steps={steps} current={step} isValid={isStepValid} maxVisited={maxVisited} onJump={jump} />
       </aside>
 
       <main className="b-main">
-        <div className="b-main__eyebrow">STEP {pad2(step + 1)} · {STEPS[step].toUpperCase()}</div>
-        <h2 className="b-main__title" data-testid="step-title">{STEPS[step]}</h2>
+        <div className="b-main__eyebrow">STEP {pad2(step + 1)} · {stepName.toUpperCase()}</div>
+        <h2 className="b-main__title" data-testid="step-title">{stepName}</h2>
 
         <div className="b-main__body">
-          {step === 0 && <p className="b-lead">Generate a Spec-Driven Development scaffold in under 3 minutes. Click Next to start.</p>}
+          {stepName === 'Welcome' && <p className="b-lead">Generate a Spec-Driven Development scaffold in under 3 minutes. Click Next to start.</p>}
 
-          {step === 1 && (
+          {stepName === 'Scenario' && (
+            <div className="b-cards">
+              <button type="button" data-testid="scenario-greenfield"
+                className={`b-card ${data.scenario === 'greenfield' ? 'b-card--active' : ''}`}
+                onClick={() => set({ scenario: 'greenfield' })}>
+                <strong>Greenfield</strong>
+                <p>New project — pour in all the context you have and get a fully personalized harness scaffold.</p>
+              </button>
+              <button type="button" data-testid="scenario-brownfield" className="b-card" disabled>
+                <strong>Brownfield</strong>
+                <p>Existing project — the wizard will analyze your codebase. Coming soon.</p>
+              </button>
+            </div>
+          )}
+
+          {stepName === 'Project' && (
             <>
               <label>Project name *</label>
               <input data-testid="project-name" value={data.project.name}
@@ -97,10 +103,20 @@ export default function Wizard() {
               <label>Problem statement</label>
               <textarea value={data.project.problem}
                 onChange={(e) => set({ project: { ...data.project, problem: e.target.value } })} />
+              <ChipInput label="Personas" values={data.personas} onChange={(v) => set({ personas: v })}
+                placeholder="e.g. Admin — press Enter" testid="persona-input" />
+              <label>User outcome</label>
+              <input value={data.outcomes.user} onChange={(e) => set({ outcomes: { ...data.outcomes, user: e.target.value } })} />
+              <label>Business outcome</label>
+              <input value={data.outcomes.business} onChange={(e) => set({ outcomes: { ...data.outcomes, business: e.target.value } })} />
+              <label>Business constraints</label>
+              <input value={data.constraints.business} onChange={(e) => set({ constraints: { ...data.constraints, business: e.target.value } })} />
+              <label>Technical constraints</label>
+              <input value={data.constraints.technical} onChange={(e) => set({ constraints: { ...data.constraints, technical: e.target.value } })} />
             </>
           )}
 
-          {step === 2 && (
+          {stepName === 'Tech Stack' && (
             <>
               <label>Frontend *</label>
               <input value={data.stack.frontend}
@@ -117,7 +133,25 @@ export default function Wizard() {
             </>
           )}
 
-          {step === 3 && (
+          {stepName === 'Domains & Entities' && (
+            <>
+              <p className="b-lead">Domains become skills and routing rows; primary entities become spec placeholders.</p>
+              <ChipInput label="Domains * (1–8, e.g. auth, billing)" values={data.domains}
+                onChange={(v) => set({ domains: v })} placeholder="Type a domain, press Enter" testid="domain-input" />
+              <ChipInput label="Primary entities (e.g. User, Invoice)" values={data.entities}
+                onChange={(v) => set({ entities: v })} placeholder="Type an entity, press Enter" testid="entity-input" />
+            </>
+          )}
+
+          {stepName === 'Features' && (
+            <>
+              <label>Initial features (one per line)</label>
+              <textarea data-testid="features-input" value={data.features.join('\n')}
+                onChange={(e) => set({ features: e.target.value.split('\n').filter(Boolean) })} />
+            </>
+          )}
+
+          {stepName === 'Principles' && (
             <>
               <label>Principles (one per line)</label>
               <textarea value={data.principles.join('\n')}
@@ -125,7 +159,7 @@ export default function Wizard() {
             </>
           )}
 
-          {step === 4 && (
+          {stepName === 'MCP Tools' && (
             <>
               <label>MCP tools</label>
               {MCP_OPTIONS.map((m) => (
@@ -138,35 +172,63 @@ export default function Wizard() {
             </>
           )}
 
-          {step === 5 && (
+          {stepName === 'Agents & Tools' && (
             <>
-              <label>Primary agent</label>
-              <select value={data.agent.primary}
-                onChange={(e) => set({ agent: { ...data.agent, primary: e.target.value } })}>
-                {AGENTS.map((a) => <option key={a}>{a}</option>)}
-              </select>
-              <label>Default model</label>
-              <input value={data.agent.model}
-                onChange={(e) => set({ agent: { ...data.agent, model: e.target.value } })} />
+              <label>Team tools * (one pointer adapter is generated per tool)</label>
+              {TOOLS.map((t) => (
+                <label className="b-check" key={t}>
+                  <input type="checkbox" data-testid={`tool-${t.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                    checked={data.tools.includes(t)}
+                    onChange={(e) => set({ tools: e.target.checked ? [...data.tools, t] : data.tools.filter((x) => x !== t) })} />
+                  {t}
+                </label>
+              ))}
+              <label>Default model (informative)</label>
+              <input value={data.model} onChange={(e) => set({ model: e.target.value })} />
             </>
           )}
 
-          {step === 6 && (
+          {stepName === 'Security' && (
             <>
               <label>Data classification</label>
               <select value={data.security.classification}
                 onChange={(e) => set({ security: { ...data.security, classification: e.target.value } })}>
                 {['public', 'internal', 'confidential', 'restricted'].map((c) => <option key={c}>{c}</option>)}
               </select>
+              <label>OWASP focus controls</label>
+              {OWASP_CONTROLS.map((c) => (
+                <label className="b-check" key={c}>
+                  <input type="checkbox" checked={data.security.owaspControls.includes(c)}
+                    onChange={(e) => set({ security: { ...data.security, owaspControls: e.target.checked ? [...data.security.owaspControls, c] : data.security.owaspControls.filter((x) => x !== c) } })} />
+                  {c}
+                </label>
+              ))}
             </>
           )}
 
-          {step === 7 && (
-            <>
-              <p className="b-lead">{Object.keys(files).length} files ready.</p>
-              <pre className="b-preview" data-testid="preview">{Object.keys(files).sort().join('\n')}</pre>
-            </>
-          )}
+          {stepName === 'Preview / Download' && (() => {
+            const paths = Object.keys(files).sort();
+            const isHarness = (p) => p === 'AGENTS.md' || p === 'CLAUDE.md' || p === 'GEMINI.md' || p.startsWith('.agents/');
+            const isCopilot = (p) => p.startsWith('.github/');
+            const groups = [
+              ['Harness core & adapters', paths.filter(isHarness)],
+              ['Copilot projection', paths.filter(isCopilot)],
+              ['Project content', paths.filter((p) => !isHarness(p) && !isCopilot(p))],
+            ].filter(([, items]) => items.length > 0);
+            return (
+              <>
+                <p className="b-lead">{paths.length} files ready.</p>
+                <div data-testid="preview">
+                  {groups.map(([title, items]) => (
+                    <details key={title} open>
+                      <summary>{title} ({items.length})</summary>
+                      <pre className="b-preview">{items.join('\n')}</pre>
+                    </details>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {error && <p className="b-error" data-testid="error">{error}</p>}
