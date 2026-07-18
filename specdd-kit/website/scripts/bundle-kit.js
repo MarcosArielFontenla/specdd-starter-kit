@@ -3,7 +3,7 @@ import { join, relative, extname, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SKIP_DIRS = new Set(['website', 'node_modules', '.git', '.astro', '.idea', 'dist']);
-const ALLOW_EXT = new Set(['.md', '.json', '.yml', '.yaml', '.txt', '.sh']);
+const ALLOW_EXT = new Set(['.md', '.json', '.yml', '.yaml', '.txt', '.sh', '.ps1']);
 const ALLOW_NAMES = new Set(['.gitignore', '.gitkeep']);
 const EXCLUDE_DEFAULTS = new Set([
   'context/project.md',

@@ -32,3 +32,11 @@ test('bundleKit snapshots allowed files and skips excluded ones', () => {
   assert.deepEqual(written, result);
   rmSync(root, { recursive: true, force: true });
 });
+
+test('bundler includes .ps1 files', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'kit-ps1-'));
+  mkdirSync(join(dir, '.agents', 'scripts'), { recursive: true });
+  writeFileSync(join(dir, '.agents', 'scripts', 'validate-spec.ps1'), 'Write-Host "ok"');
+  const out = bundleKit(dir, join(dir, 'out.json'));
+  assert.ok('.agents/scripts/validate-spec.ps1' in out);
+});
