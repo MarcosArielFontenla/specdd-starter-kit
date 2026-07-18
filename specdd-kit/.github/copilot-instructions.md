@@ -4,15 +4,19 @@
 > when you're working inside `specdd-kit` itself, or as a starting point before a
 > project has customized its own. **When you run the wizard**
 > (`npm install` at the repo root, then `npm run dev -w sdd-kit-wizard`) and
-> download a scaffold, the wizard
-> overlays this file with a **project-specific version** generated from your
-> answers (project name, primary agent/model, tech stack, and security
-> classification) — see `renderCopilotInstructions` in
-> `website/src/components/generators.js`. That generated file replaces this one in
-> the ZIP; `bundle-kit.js` also excludes this path by default for the same reason
-> (the wizard's version is always the one that ships). Edit this file to change
-> the *default* every new project starts from; edit a project's own
-> `.github/copilot-instructions.md` to change guardrails for that project only.
+> download a scaffold, the wizard generates a vendor-neutral **SpecDD Harness**
+> for the project — a root `AGENTS.md` session primer plus a `.agents/` core
+> (skills, specs, routing, evals, workflows, telemetry). In the generated
+> scaffold, `.github/copilot-instructions.md` is a **≤5-line pointer adapter**
+> that hands off to that primer, not a full project-specific rewrite of this
+> file — and it (along with the rest of `.github/prompts/*.prompt.md` and
+> `.github/instructions/*.instructions.md`) only ships when GitHub Copilot is
+> among the tools selected in the wizard. That generated pointer file replaces
+> this one in the ZIP; `bundle-kit.js` also excludes this path by default for
+> the same reason (the wizard's version is always the one that ships). Edit
+> this file to change the *default* every new project starts from; edit a
+> project's own `.github/copilot-instructions.md` to change guardrails for
+> that project only.
 
 ## Spec-Driven Development (SDD)
 

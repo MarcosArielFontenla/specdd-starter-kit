@@ -29,11 +29,12 @@ function Get-AllScores([string]$Skill) {
 function Get-OrCreateBaseline {
   param([string]$Skill, $Policy)
   $path = Join-Path $BaselineDir "$Skill.baseline.json"
+  $carriedHistory = @()
 
   if ($ResetBaseline -and (Test-Path $path)) {
     if (-not $Reason) { Write-Error "-ResetBaseline requires -Reason"; exit 1 }
     $old = Get-Content $path -Raw | ConvertFrom-Json
-    $old.history += @{ resetAt = (Get-Date -Format o); reason = $Reason }
+    $carriedHistory = @($old.history) + @{ resetAt = (Get-Date -Format o); reason = $Reason }
     Remove-Item $path
     Write-Host "  [baseline] Reset for $Skill — reason logged."
   }
@@ -61,7 +62,7 @@ function Get-OrCreateBaseline {
     runCount     = $n
     baselineAvg  = [math]::Round(($source | Measure-Object -Property overallScore -Average).Average, 4)
     sourceRunIds = @($source | ForEach-Object { $_.runId })
-    history      = @()
+    history      = $carriedHistory
   }
   New-Item -ItemType Directory -Force -Path $BaselineDir | Out-Null
   $baseline | ConvertTo-Json -Depth 5 | Set-Content $path

@@ -29,8 +29,9 @@ Running the wizard produces a ZIP containing:
 
 - **`context/`** — `project.md`, `tech-stack.md`, `constitution.md`: the shared
   understanding every spec is written against.
-- **`.github/copilot-instructions.md`** — a project-specific instructions file,
-  generated from your wizard answers (stack, agent, security classification).
+- **`.github/copilot-instructions.md`** — a ≤5-line pointer adapter that hands
+  off to the generated root `AGENTS.md` primer and `.agents/` harness core;
+  ships only when GitHub Copilot is among the tools you selected in the wizard.
 - **`.github/instructions/*.instructions.md`** — scoped coding guardrails (SDD
   workflow, MCP tool usage, security/OWASP, and stack-specific rules such as
   React/Next.js/.NET/Python when relevant).
@@ -56,17 +57,19 @@ npm install                     # once, at the repo root (npm workspaces)
 npm run dev -w sdd-kit-wizard   # serves on :4321
 ```
 
-Open the local Astro URL that's printed in the terminal, walk through the 8 steps
-(Welcome, Project, Tech Stack, Principles, MCP Tools, Agent & LLM, Security,
-Preview / Download), and download the generated ZIP from the last step.
+Open the local Astro URL that's printed in the terminal, walk through the 11 steps
+(Welcome, Scenario, Project, Tech Stack, Domains & Entities, Features, Principles,
+MCP Tools, Agents & Tools, Security, Preview / Download), and download the
+generated ZIP from the last step.
 
 `npm run dev` and `npm run build` both re-bundle the kit's own source files into
 `src/data/kit-files.json` first (via the `predev`/`prebuild` scripts calling
 `scripts/bundle-kit.js`), so the wizard always ships the current contents of
-`context/`, `governance/`, `templates/`, and `.github/` — except the four files the
-wizard overlays with project-specific versions (`context/project.md`,
-`context/tech-stack.md`, `context/constitution.md`, and
-`.github/copilot-instructions.md`).
+`context/`, `governance/`, `templates/`, and `.github/` — except the files the
+wizard overlays with generated versions: `context/project.md`,
+`context/tech-stack.md`, `context/constitution.md` (project-specific, from your
+wizard answers), and `.github/copilot-instructions.md` (a ≤5-line pointer to the
+generated `AGENTS.md` primer, included only when GitHub Copilot is selected).
 
 ## Use the generated scaffold
 
@@ -112,5 +115,5 @@ specdd-kit/
 ```
 
 `.github/copilot-instructions.md` in this kit is the **default** instructions file
-— see that file's own header for details on how the wizard overlays a
-project-specific version generated from your answers.
+— see that file's own header for details on how the wizard replaces it with a
+generated pointer to the project's `AGENTS.md` / SpecDD Harness.
