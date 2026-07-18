@@ -161,3 +161,71 @@ ${rows}
 Append one session_summary line to .agents/telemetry/events/[YYYY-MM].jsonl per .agents/telemetry/EVENTS.md.
 `;
 }
+
+export function renderRouting(input) {
+  const rows = (input.domains || [])
+    .map((d) => `| ${d} work | .agents/skills/${slugify(d)}/SKILL.md | .agents/specs/[entity].spec.yaml if a primary entity is touched |`)
+    .join('\n');
+  return `# ROUTING — Task Classification
+
+Classify every task BEFORE loading anything else. Load ONLY what the matching row
+points to.
+
+| Task pattern | Skill | Also load |
+|--------------|-------|-----------|
+${rows}
+| update .agents/ | .agents/REGISTRY.md | — |
+
+No match? Load the closest domain skill and record the gap in the session summary —
+that gap is a signal a new skill or routing row is needed.
+`;
+}
+
+export function renderRegistry(input, today) {
+  const name = input.project?.name || 'Project';
+  const skillRows = (input.domains || [])
+    .map((d) => `| Skill: ${d} | .agents/skills/${slugify(d)}/SKILL.md | Domain rules (skeleton — fill as the domain takes shape) |`)
+    .join('\n');
+  const rubricRows = (input.domains || [])
+    .map((d) => `| Rubric: ${d} | .agents/evals/rubrics/${slugify(d)}.yaml | Eval criteria + drift policy (log_only) |`)
+    .join('\n');
+  const specRows = (input.entities || [])
+    .map((e) => `| Spec: ${e} | .agents/specs/${slugify(e)}.spec.yaml | Entity contract (designContract: placeholder) |`)
+    .join('\n');
+  const adapters = (input.tools || []).map((t) => renderAdapter(t)).filter(Boolean).map((a) => a.path).join(', ') || 'none';
+  return `---
+version: 1.0.0
+lastUpdated: ${today}
+role: registry
+---
+
+# ${name} — Harness Registry
+
+Load this file only when working ON the harness (adding skills, specs, or systems).
+Every agent session starts from the root \`AGENTS.md\` primer instead.
+
+## Artifacts
+| Artifact | Path | Purpose |
+|----------|------|---------|
+| Session primer | AGENTS.md | Entry point for every session (<=40 lines) |
+| Adapters | ${adapters} | <=5-line pointers to the primer — zero rules |
+| Routing | .agents/orchestration/ROUTING.md | Task classification table |
+${skillRows}
+${specRows}
+${rubricRows}
+| Budget manifest | .agents/cold-start/budget-manifest.yaml | Task class -> injected artifacts map |
+| Workflows | .agents/workflows/spec-first-feature.md, .agents/workflows/skill-review.md | Spec pipeline + drift review |
+| Telemetry contract | .agents/telemetry/EVENTS.md | Vendor-neutral JSONL event schema |
+| Scripts | .agents/scripts/*.ps1, .agents/evals/run-eval.ps1 | Mechanical gates (pwsh 7+, powershell-yaml) |
+
+## Harness Systems Status
+| System | Status | Notes |
+|--------|--------|-------|
+| Portability | active | Root primer + adapters for the team's tools |
+| Cold-Start | scaffolded | Snapshots empty until skills gain real content; then generate-snapshots.ps1 -Scaffold / -Check |
+| Evals Loop | log_only | Baselines freeze after >=10 real runs — never fabricated |
+| Spec-First | active | validate-spec.ps1 gates approval; done-gate runs acceptance checks |
+| Multi-Agent | inactive | Activate only when a real multi-agent workflow with named sub-agents exists |
+| Telemetry | fallback | session_summary appended at session end per EVENTS.md |
+`;
+}

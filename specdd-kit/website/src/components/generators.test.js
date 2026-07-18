@@ -1,7 +1,7 @@
 // src/components/generators.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, renderMcpJson, slugify, renderPrimer, renderAdapter } from './generators.js';
+import { generateFiles, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting } from './generators.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
@@ -75,4 +75,21 @@ test('adapters: <=5 lines, zero rules, correct paths', () => {
   assert.equal(renderAdapter('Gemini').path, 'GEMINI.md');
   assert.equal(renderAdapter('Cursor'), null);
   assert.equal(renderAdapter('Codex'), null);
+});
+
+test('registry lists per-domain and per-entity artifacts + systems status', () => {
+  const reg = renderRegistry(harnessInput, '2026-07-18');
+  assert.match(reg, /role: registry/);
+  assert.match(reg, /\.agents\/skills\/auth\/SKILL\.md/);
+  assert.match(reg, /\.agents\/specs\/user\.spec\.yaml/);
+  assert.match(reg, /\.agents\/evals\/rubrics\/billing-invoicing\.yaml/);
+  assert.match(reg, /Multi-Agent \| inactive/);
+  assert.match(reg, /Evals Loop \| log_only/);
+});
+
+test('routing has one row per domain and a fallback rule', () => {
+  const routing = renderRouting(harnessInput);
+  assert.match(routing, /\| Auth work \| \.agents\/skills\/auth\/SKILL\.md \|/);
+  assert.match(routing, /\| Billing & Invoicing work \| \.agents\/skills\/billing-invoicing\/SKILL\.md \|/);
+  assert.match(routing, /No match\?/);
 });
