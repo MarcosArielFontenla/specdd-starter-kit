@@ -133,6 +133,14 @@ test('features spec lists captured features as unchecked items', () => {
   assert.match(spec, /- \[ \] Monthly invoice generation/);
 });
 
+test('constitution includes selected OWASP controls', () => {
+  const out = generateFiles(base, { ...input, security: { classification: 'internal', owaspControls: ['A01 Broken Access Control', 'A03 Injection'] } });
+  assert.match(out['context/constitution.md'], /A01 Broken Access Control/);
+  assert.match(out['context/constitution.md'], /A03 Injection/);
+  const none = generateFiles(base, { ...input, security: { classification: 'internal', owaspControls: [] } });
+  assert.match(none['context/constitution.md'], /OWASP focus: baseline/);
+});
+
 const baseWithGithub = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt' };
 
 test('greenfield output contains the harness core', () => {

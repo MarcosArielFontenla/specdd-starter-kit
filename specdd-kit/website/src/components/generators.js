@@ -66,6 +66,9 @@ ${(input.principles || []).map((x, i) => `${i + 1}. ${x}`).join('\n')}
 
 ## Data classification
 ${input.security?.classification || 'internal'}
+
+## Security
+OWASP focus: ${(input.security?.owaspControls || []).join(', ') || 'baseline'}
 `;
 }
 
