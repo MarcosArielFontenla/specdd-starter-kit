@@ -111,7 +111,48 @@ export async function analyzeProject({ folderName, paths, readFile }) {
   };
 }
 
-// Filled in by the structure/filename suggestion feature; kept separate so stack
-// detection is testable on its own.
-export function suggestDomains(paths) { return []; }
-export function suggestEntities(paths) { return []; }
+// Technical-layer and infrastructure folder names that are not business domains.
+const NON_DOMAIN_NAMES = new Set([
+  ...IGNORED_DIRS,
+  'test', 'tests', '__tests__', 'e2e', 'docs', 'doc', 'assets', 'public', 'static',
+  'config', 'scripts', 'styles',
+]);
+
+const CODE_ROOTS = ['src', 'apps', 'packages', 'modules'];
+
+export function suggestDomains(paths) {
+  const hasRoot = paths.some((p) => CODE_ROOTS.includes(p.split('/')[0]) && p.includes('/'));
+  const counts = new Map();
+  for (const p of paths) {
+    const segs = p.split('/');
+    let candidate = null;
+    if (hasRoot) {
+      if (CODE_ROOTS.includes(segs[0]) && segs.length > 2) candidate = segs[1];
+    } else if (segs.length > 1) {
+      candidate = segs[0];
+    }
+    if (!candidate || candidate.startsWith('.') || NON_DOMAIN_NAMES.has(candidate.toLowerCase())) continue;
+    counts.set(candidate, (counts.get(candidate) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 8)
+    .map(([name]) => name);
+}
+
+const ENTITY_DIRS = new Set(['models', 'entities', 'domain']);
+const NON_ENTITY_BASENAMES = new Set(['index', '__init__', 'base', 'types']);
+
+export function suggestEntities(paths) {
+  const found = new Set();
+  const add = (name) => found.add(name.charAt(0).toUpperCase() + name.slice(1));
+  for (const p of paths) {
+    const segs = p.split('/');
+    const base = segs[segs.length - 1].replace(/\.[^.]+$/, '');
+    const parent = (segs[segs.length - 2] || '').toLowerCase();
+    const suffixed = base.match(/^(.+)\.(entity|model)$/i);
+    if (suffixed) add(suffixed[1]);
+    else if (ENTITY_DIRS.has(parent) && /^[A-Za-z][A-Za-z0-9_-]*$/.test(base) && !NON_ENTITY_BASENAMES.has(base.toLowerCase())) add(base);
+  }
+  return [...found].slice(0, 12);
+}

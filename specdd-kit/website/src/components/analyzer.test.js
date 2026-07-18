@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeProject, MAX_PATHS } from './analyzer.js';
+import { analyzeProject, MAX_PATHS, suggestDomains, suggestEntities } from './analyzer.js';
 
 function reader(files) {
   return (p) => (p in files ? Promise.resolve(files[p]) : Promise.reject(new Error(`no ${p}`)));
@@ -74,4 +74,40 @@ test('path list over MAX_PATHS is truncated and flagged', async () => {
   const a = await analyzeProject({ folderName: 'big', paths, readFile: reader({}) });
   assert.equal(a.truncated, true);
   assert.equal(a.fileCount, MAX_PATHS);
+});
+
+test('domains from src/* folders, infra names excluded, ordered by file count', () => {
+  const paths = [
+    'src/auth/login.js', 'src/auth/logout.js', 'src/auth/token.js',
+    'src/billing/invoice.js', 'src/billing/charge.js',
+    'src/utils/helpers.js', 'src/tests/auth.test.js', 'src/assets/logo.svg',
+    'README.md',
+  ];
+  const domains = suggestDomains(paths);
+  assert.deepEqual(domains, ['auth', 'billing', 'utils']);
+});
+
+test('domains fall back to root-level folders when no src/apps/packages/modules', () => {
+  const domains = suggestDomains(['auth/a.py', 'auth/b.py', 'catalog/c.py', 'docs/readme.md', 'setup.py']);
+  assert.deepEqual(domains, ['auth', 'catalog']);
+});
+
+test('domains are capped at 8', () => {
+  const paths = Array.from({ length: 12 }, (_, i) => `src/dom${String(i).padStart(2, '0')}/file.js`);
+  assert.equal(suggestDomains(paths).length, 8);
+});
+
+test('entities from models/ dirs and *.entity/*.model filenames', () => {
+  const entities = suggestEntities([
+    'models/user.py', 'models/invoice.py', 'models/__init__.py',
+    'src/catalog/product.entity.ts', 'src/orders/Order.model.ts',
+    'src/auth/login.js',
+  ]);
+  assert.deepEqual([...entities].sort(), ['Invoice', 'Order', 'Product', 'User']);
+});
+
+test('entities are deduplicated and capped at 12', () => {
+  const paths = Array.from({ length: 15 }, (_, i) => `models/entity${String(i).padStart(2, '0')}.py`);
+  assert.equal(suggestEntities(paths).length, 12);
+  assert.equal(suggestEntities(['models/user.py', 'src/x/User.entity.ts']).length, 1);
 });
