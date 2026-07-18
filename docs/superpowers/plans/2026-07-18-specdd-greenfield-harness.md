@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- **Confidentiality (hard rule):** No committed file — including this plan's outputs, code comments, and tests — may reference the private harness source documents by filename, version label (e.g. "V5", "V5.2"), or authorship trail. The architecture is always called the **SpecDD Harness**, versioned independently starting at `1.0.0`.
+- **Confidentiality (hard rule):** No committed file — including this plan's outputs, code comments, and tests — may reference the private harness source documents by filename, version label, or authorship trail. The architecture is always called the **SpecDD Harness**, versioned independently starting at `1.0.0`.
 - Primer `AGENTS.md` hard limit: **≤40 lines** including frontmatter (unit-tested).
 - Adapter files hard limit: **≤5 lines**, zero rules (unit-tested).
 - Nothing fabricated: no synthetic baselines, snapshots, telemetry events, or invented acceptance-check commands. `evals/baselines/` and `cold-start/snapshots/` ship empty. All `acceptanceChecks` use `command: placeholder`. Rubrics start at `reviewTriggerAction: log_only`.
@@ -1222,7 +1222,7 @@ test('adapters carry zero rules and generated content carries no private version
   }
   for (const [path, contents] of Object.entries(out)) {
     if (path === '.github/prompts/specdd-specify.prompt.md') continue; // base fixture, not generated
-    assert.ok(!/\bV5(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
+    assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
   }
 });
 ```
@@ -1740,9 +1740,9 @@ Run from repo root:
 
 - [ ] **Step 5: Confidentiality final sweep**
 
-Run: `git grep -nE '\bV5(\.[0-9]+)?\b' -- ':!node_modules' ':!awesome-copilot-main'`
+Run: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules' ':!awesome-copilot-main'`
 Expected: no hits in any file this plan touched (hits in pre-existing unrelated files, if any, are out of scope — report them).
-Also verify the three private root documents remain untracked: `git status --porcelain | grep -E 'V5\.2'` → only `??` entries or nothing.
+Also verify the private root working documents remain untracked (`git status --porcelain` shows them only as `??`).
 
 - [ ] **Step 6: Commit**
 

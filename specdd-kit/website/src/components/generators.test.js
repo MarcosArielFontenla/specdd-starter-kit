@@ -173,6 +173,6 @@ test('adapters carry zero rules and generated content carries no private version
   }
   for (const [path, contents] of Object.entries(out)) {
     if (path === '.github/prompts/specdd-specify.prompt.md') continue; // base fixture, not generated
-    assert.ok(!/\bV5(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
+    assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
   }
 });
