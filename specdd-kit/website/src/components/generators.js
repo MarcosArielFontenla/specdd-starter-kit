@@ -79,6 +79,7 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
   const out = {};
   for (const [path, contents] of Object.entries(baseFiles)) {
     if (!hasCopilot && path.startsWith('.github/')) continue; // Copilot projection is opt-in
+    if (input.scenario !== 'brownfield' && path === '.agents/workflows/spec-converge.md') continue; // converge is brownfield-only
     out[path] = contents;
   }
 

@@ -176,3 +176,15 @@ test('adapters carry zero rules and generated content carries no private version
     assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
   }
 });
+
+const baseWithConverge = { ...base, '.agents/workflows/spec-converge.md': 'converge workflow' };
+
+test('spec-converge is filtered out of greenfield output even when bundled', () => {
+  const out = generateFiles(baseWithConverge, harnessInput, '2026-07-18');
+  assert.ok(!('.agents/workflows/spec-converge.md' in out));
+});
+
+test('spec-converge survives in brownfield output', () => {
+  const out = generateFiles(baseWithConverge, { ...harnessInput, scenario: 'brownfield' }, '2026-07-18');
+  assert.equal(out['.agents/workflows/spec-converge.md'], 'converge workflow');
+});
