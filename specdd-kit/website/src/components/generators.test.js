@@ -1,7 +1,7 @@
 // src/components/generators.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec } from './generators.js';
+import { generateFiles, generateScaffold, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis } from './generators.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
@@ -143,6 +143,18 @@ test('constitution includes selected OWASP controls', () => {
 
 const baseWithGithub = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt' };
 
+const brownInput = {
+  ...harnessInput,
+  scenario: 'brownfield',
+  existingPaths: ['README.md', 'src/auth/login.js', '.github/prompts/specdd-specify.prompt.md'],
+  analysis: {
+    projectName: 'acme-shop', description: 'A sample shop',
+    stack: { languages: ['TypeScript'], frontend: 'React', backend: 'Express', testing: 'Vitest', database: 'PostgreSQL' },
+    domains: ['auth', 'billing'], entities: ['User'],
+    manifestsFound: ['package.json'], fileCount: 42, truncated: false,
+  },
+};
+
 test('greenfield output contains the harness core', () => {
   const out = generateFiles(baseWithGithub, harnessInput, '2026-07-18');
   assert.ok('AGENTS.md' in out);
@@ -175,6 +187,52 @@ test('adapters carry zero rules and generated content carries no private version
     if (path === '.github/prompts/specdd-specify.prompt.md') continue; // base fixture, not generated
     assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
   }
+  const brown = generateScaffold(baseWithGithub, brownInput, '2026-07-18').files;
+  for (const [path, contents] of Object.entries(brown)) {
+    if (path === '.github/prompts/specdd-specify.prompt.md') continue;
+    assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
+  }
+});
+
+test('generateScaffold greenfield: same files as generateFiles, nothing skipped', () => {
+  const { files, skipped } = generateScaffold(baseWithGithub, harnessInput, '2026-07-18');
+  assert.deepEqual(files, generateFiles(baseWithGithub, harnessInput, '2026-07-18'));
+  assert.deepEqual(skipped, []);
+  assert.ok(!('context/brownfield-analysis.md' in files));
+});
+
+test('generateScaffold brownfield: collisions excluded and reported, analysis report always emitted', () => {
+  const baseWithBoth = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt', '.agents/workflows/spec-converge.md': 'converge workflow' };
+  const { files, skipped } = generateScaffold(baseWithBoth, brownInput, '2026-07-18');
+  assert.ok(!('README.md' in files));                                    // collision dropped
+  assert.ok(!('.github/prompts/specdd-specify.prompt.md' in files));     // collision dropped
+  assert.deepEqual(skipped, ['.github/prompts/specdd-specify.prompt.md', 'README.md']);
+  assert.ok('.agents/workflows/spec-converge.md' in files);              // converge ships
+  const report = files['context/brownfield-analysis.md'];
+  assert.match(report, /acme-shop/);
+  assert.match(report, /React/);
+  assert.match(report, /- auth/);
+  assert.match(report, /README\.md/);                                    // skipped list in report
+  assert.match(report, /spec-converge/);                                 // kickoff instruction
+});
+
+test('analysis report is exempt from collision exclusion', () => {
+  const baseWithBoth = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt', '.agents/workflows/spec-converge.md': 'converge workflow' };
+  const { files } = generateScaffold(baseWithBoth,
+    { ...brownInput, existingPaths: ['context/brownfield-analysis.md'] }, '2026-07-18');
+  assert.ok('context/brownfield-analysis.md' in files);
+});
+
+test('brownfield report notes truncation', () => {
+  const baseWithBoth = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt', '.agents/workflows/spec-converge.md': 'converge workflow' };
+  const { files } = generateScaffold(baseWithBoth,
+    { ...brownInput, analysis: { ...brownInput.analysis, truncated: true } }, '2026-07-18');
+  assert.match(files['context/brownfield-analysis.md'], /truncated/i);
+});
+
+test('brownfield registry lists the converge workflow', () => {
+  assert.match(renderRegistry({ ...harnessInput, scenario: 'brownfield' }, '2026-07-18'), /spec-converge\.md/);
+  assert.ok(!/spec-converge/.test(renderRegistry(harnessInput, '2026-07-18')));
 });
 
 const baseWithConverge = { ...base, '.agents/workflows/spec-converge.md': 'converge workflow' };
