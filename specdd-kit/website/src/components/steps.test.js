@@ -30,3 +30,17 @@ test('constants', () => {
   assert.equal(TOOLS.length, 5);
   assert.equal(OWASP_CONTROLS.length, 10);
 });
+
+test('brownfield step list inserts Ingest & Analyze after Scenario', () => {
+  assert.deepEqual(stepsFor('brownfield'), [
+    'Welcome', 'Scenario', 'Ingest & Analyze', 'Project', 'Tech Stack',
+    'Domains & Entities', 'Features', 'Principles', 'MCP Tools', 'Agents & Tools',
+    'Security', 'Preview / Download',
+  ]);
+  assert.equal(stepsFor('greenfield').length, 11); // unchanged
+});
+
+test('ingest step requires a completed analysis', () => {
+  assert.match(errorFor('Ingest & Analyze', { ...valid, analysis: null }), /folder/i);
+  assert.equal(errorFor('Ingest & Analyze', { ...valid, analysis: { fileCount: 3 } }), '');
+});

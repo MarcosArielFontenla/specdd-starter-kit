@@ -1,5 +1,5 @@
 // Step model for the SpecDD wizard. Pure — no React imports.
-// stepsFor(scenario) is the seam where the Brownfield branch will plug in.
+// stepsFor(scenario) branches the flow per scenario.
 
 export const TOOLS = ['GitHub Copilot', 'Claude Code', 'Cursor', 'Codex', 'Gemini'];
 
@@ -24,9 +24,12 @@ const GREENFIELD_STEPS = [
   'Principles', 'MCP Tools', 'Agents & Tools', 'Security', 'Preview / Download',
 ];
 
+const BROWNFIELD_STEPS = [
+  ...GREENFIELD_STEPS.slice(0, 2), 'Ingest & Analyze', ...GREENFIELD_STEPS.slice(2),
+];
+
 export function stepsFor(scenario) {
-  // Brownfield gets its own branch (folder ingestion + analysis) in a later phase.
-  return GREENFIELD_STEPS;
+  return scenario === 'brownfield' ? BROWNFIELD_STEPS : GREENFIELD_STEPS;
 }
 
 export function errorFor(stepName, data) {
@@ -40,5 +43,8 @@ export function errorFor(stepName, data) {
     if (data.domains.length > MAX_DOMAINS) return `Keep at most ${MAX_DOMAINS} domains — decompose broader areas later.`;
   }
   if (stepName === 'Agents & Tools' && (data.tools || []).length === 0) return 'Select at least one tool your team uses.';
+  if (stepName === 'Ingest & Analyze' && !data.analysis) {
+    return 'Choose your project folder — the analysis pre-fills the next steps.';
+  }
   return '';
 }
