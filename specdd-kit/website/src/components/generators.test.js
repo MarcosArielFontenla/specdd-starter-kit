@@ -11,9 +11,10 @@ const input = {
   stack: { languages: ['TypeScript'], frontend: 'React', backend: 'NestJS', testing: 'Vitest', database: 'PostgreSQL', infra: 'Docker', swagger: true, a11y: true },
   principles: ['Spec first'],
   mcp: ['github', 'postgresql'],
-  agent: { primary: 'GitHub Copilot', model: 'gpt-4o' },
+  tools: ['GitHub Copilot'],
+  model: 'gpt-4o',
   security: { classification: 'internal', owaspControls: ['A01'] },
-  featuresSpec: '',
+  features: [],
 };
 
 const harnessInput = {
@@ -33,9 +34,9 @@ test('generateFiles keeps base and overlays dynamic files', () => {
   assert.match(out['context/project.md'], /Acme/);
   assert.match(out['context/tech-stack.md'], /React/);
   assert.match(out['context/constitution.md'], /Spec first/);
-  assert.match(out['.github/copilot-instructions.md'], /GitHub Copilot/);
+  assert.match(out['.github/copilot-instructions.md'], /AGENTS\.md/);
   assert.ok('.vscode/mcp.json' in out);               // mcp selected
-  assert.ok(!('specs/features-spec.md' in out));       // empty featuresSpec
+  assert.ok(!('specs/features-spec.md' in out));       // empty features
 });
 
 test('no mcp.json when no MCP tools selected', () => {
@@ -130,4 +131,40 @@ test('features spec lists captured features as unchecked items', () => {
   const spec = renderFeaturesSpec(harnessInput);
   assert.match(spec, /- \[ \] User can sign up/);
   assert.match(spec, /- \[ \] Monthly invoice generation/);
+});
+
+const baseWithGithub = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt' };
+
+test('greenfield output contains the harness core', () => {
+  const out = generateFiles(baseWithGithub, harnessInput, '2026-07-18');
+  assert.ok('AGENTS.md' in out);
+  assert.ok('.agents/REGISTRY.md' in out);
+  assert.ok('.agents/orchestration/ROUTING.md' in out);
+  assert.ok('.agents/cold-start/budget-manifest.yaml' in out);
+  assert.ok('.agents/skills/auth/SKILL.md' in out);
+  assert.ok('.agents/evals/rubrics/auth.yaml' in out);
+  assert.ok('.agents/specs/user.spec.yaml' in out);
+  assert.ok('CLAUDE.md' in out);                                  // Claude Code adapter
+  assert.ok('specs/features-spec.md' in out);
+  assert.ok(!Object.keys(out).some((p) => p.includes('spec-converge'))); // greenfield: no converge
+});
+
+test('.github content ships only when Copilot is selected', () => {
+  const withCopilot = generateFiles(baseWithGithub, harnessInput, '2026-07-18');
+  assert.ok('.github/prompts/specdd-specify.prompt.md' in withCopilot);
+  assert.match(withCopilot['.github/copilot-instructions.md'], /AGENTS\.md/); // pointer adapter
+
+  const noCopilot = generateFiles(baseWithGithub, { ...harnessInput, tools: ['Claude Code'] }, '2026-07-18');
+  assert.ok(!Object.keys(noCopilot).some((p) => p.startsWith('.github/')));
+});
+
+test('adapters carry zero rules and generated content carries no private version tags', () => {
+  const out = generateFiles(baseWithGithub, harnessInput, '2026-07-18');
+  for (const adapterPath of ['CLAUDE.md', '.github/copilot-instructions.md']) {
+    assert.ok(out[adapterPath].split('\n').filter(Boolean).length <= 5, `${adapterPath} too long`);
+  }
+  for (const [path, contents] of Object.entries(out)) {
+    if (path === '.github/prompts/specdd-specify.prompt.md') continue; // base fixture, not generated
+    assert.ok(!/\bV5(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
+  }
 });

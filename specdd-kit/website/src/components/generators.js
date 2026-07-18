@@ -69,35 +69,38 @@ ${input.security?.classification || 'internal'}
 `;
 }
 
-export function renderCopilotInstructions(input) {
-  const s = input.stack || {};
-  return `# Copilot Instructions — ${input.project?.name || 'Project'}
+export function generateFiles(baseFiles, input, today = new Date().toISOString().slice(0, 10)) {
+  const tools = input.tools || [];
+  const hasCopilot = tools.includes('GitHub Copilot');
 
-Primary agent: **${input.agent?.primary || 'GitHub Copilot'}** (model: ${input.agent?.model || 'default'}).
+  const out = {};
+  for (const [path, contents] of Object.entries(baseFiles)) {
+    if (!hasCopilot && path.startsWith('.github/')) continue; // Copilot projection is opt-in
+    out[path] = contents;
+  }
 
-Follow Spec-Driven Development: read \`context/\` and \`specs/\` before writing code.
-Specifications are the source of truth.
-
-## Stack
-Frontend: ${s.frontend || 'n/a'} · Backend: ${s.backend || 'n/a'} · Testing: ${s.testing || 'n/a'}.
-
-## Security
-Data classification: ${input.security?.classification || 'internal'}.
-OWASP focus: ${(input.security?.owaspControls || []).join(', ') || 'baseline'}.
-Never commit secrets. Use environment variables and placeholders.
-`;
-}
-
-export function generateFiles(baseFiles, input) {
-  const out = { ...baseFiles };
   out['context/project.md'] = renderProject(input);
   out['context/tech-stack.md'] = renderTechStack(input);
   out['context/constitution.md'] = renderConstitution(input);
-  out['.github/copilot-instructions.md'] = renderCopilotInstructions(input);
-  if ((input.mcp || []).length > 0) out['.vscode/mcp.json'] = renderMcpJson(input.mcp);
-  if (typeof input.featuresSpec === 'string' && input.featuresSpec.trim()) {
-    out['specs/features-spec.md'] = `# Features Spec\n\n${input.featuresSpec}\n`;
+
+  out['AGENTS.md'] = renderPrimer(input, today);
+  out['.agents/REGISTRY.md'] = renderRegistry(input, today);
+  out['.agents/orchestration/ROUTING.md'] = renderRouting(input);
+  out['.agents/cold-start/budget-manifest.yaml'] = renderBudgetManifest(input);
+  for (const domain of input.domains || []) {
+    out[`.agents/skills/${slugify(domain)}/SKILL.md`] = renderSkillSkeleton(domain);
+    out[`.agents/evals/rubrics/${slugify(domain)}.yaml`] = renderRubric(domain);
   }
+  for (const entity of input.entities || []) {
+    out[`.agents/specs/${slugify(entity)}.spec.yaml`] = renderSpecYaml(entity);
+  }
+  for (const tool of tools) {
+    const adapter = renderAdapter(tool);
+    if (adapter) out[adapter.path] = adapter.content;
+  }
+
+  if ((input.mcp || []).length > 0) out['.vscode/mcp.json'] = renderMcpJson(input.mcp);
+  if ((input.features || []).length > 0) out['specs/features-spec.md'] = renderFeaturesSpec(input);
   return out;
 }
 
