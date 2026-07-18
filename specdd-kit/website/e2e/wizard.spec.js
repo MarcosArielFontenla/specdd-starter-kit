@@ -51,3 +51,47 @@ test('greenfield wizard walks all steps and downloads a harness scaffold ZIP', a
   ]);
   expect(download.suggestedFilename()).toContain('scaffold.zip');
 });
+
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'brownfield-sample');
+
+test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.b-shell[data-ready="true"]').waitFor();
+
+  await page.getByTestId('next-btn').click(); // -> Scenario
+  await page.getByTestId('scenario-brownfield').click();
+  await page.getByTestId('next-btn').click(); // -> Ingest & Analyze
+
+  await page.getByTestId('next-btn').click(); // validation blocks (no folder yet)
+  await expect(page.getByTestId('error')).toBeVisible();
+
+  await page.getByTestId('folder-input').setInputFiles(fixtureDir);
+  await expect(page.getByTestId('analysis-summary')).toBeVisible();
+  await expect(page.getByTestId('analysis-summary')).toContainText('acme-shop');
+  await page.getByTestId('next-btn').click(); // -> Project (pre-filled)
+
+  await expect(page.getByTestId('project-name')).toHaveValue('acme-shop');
+  await page.getByTestId('next-btn').click(); // -> Tech Stack (React pre-filled)
+  await expect(page.locator('.b-main__body input').first()).toHaveValue('React');
+  await page.getByTestId('next-btn').click(); // -> Domains & Entities (pre-suggested)
+  await page.getByTestId('next-btn').click(); // -> Features
+  await page.getByTestId('next-btn').click(); // -> Principles
+  await page.getByTestId('next-btn').click(); // -> MCP Tools
+  await page.getByTestId('next-btn').click(); // -> Agents & Tools
+  await page.getByTestId('next-btn').click(); // -> Security
+  await page.getByTestId('next-btn').click(); // -> Preview
+
+  await expect(page.getByTestId('preview')).toContainText('.agents/workflows/spec-converge.md');
+  await expect(page.getByTestId('preview')).toContainText('context/brownfield-analysis.md');
+  await expect(page.getByTestId('preview')).toContainText('.agents/skills/auth/SKILL.md');
+  await expect(page.getByTestId('skipped-group')).toContainText('README.md');
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('download-btn').click(),
+  ]);
+  expect(download.suggestedFilename()).toContain('scaffold.zip');
+});
