@@ -80,6 +80,7 @@ body { margin: 0; background: var(--bg); color: var(--fg1); font-family: var(--f
 .b-card p { margin: 0; color: var(--fg2); font-size: var(--text-sm); }
 .b-card:hover:not(:disabled) { border-color: var(--glacier-500); }
 .b-card--active { border-color: var(--ember-500); box-shadow: var(--shadow-ember); }
+.b-card--warning { border-color: var(--warning, #b45309); }
 .b-card:disabled { opacity: .5; cursor: not-allowed; }
 
 .b-personas { display: flex; gap: var(--space-3); flex-wrap: wrap; }

@@ -12,7 +12,7 @@ const MCP_OPTIONS = ['github', 'sonarqube', 'context7', 'postgresql', 'playwrigh
 
 const initial = {
   scenario: 'greenfield',
-  analysis: null, existingPaths: [],
+  analysis: null, existingPaths: [], legacyAck: false,
   project: { name: '', description: '', problem: '' },
   personas: [], outcomes: { user: '', business: '' },
   constraints: { business: '', technical: '' },
@@ -55,7 +55,7 @@ export default function Wizard() {
   function applyAnalysis(analysis, existingPaths) {
     setData((d) => ({
       ...d,
-      analysis, existingPaths,
+      analysis, existingPaths, legacyAck: false,
       project: {
         ...d.project,
         name: analysis.projectName || d.project.name,
@@ -76,7 +76,7 @@ export default function Wizard() {
 
   const last = step === steps.length - 1;
   const needsScaffold = last || stepName === 'Ingest & Analyze';
-  const { files, skipped } = needsScaffold ? generateScaffold(kitFiles, data) : { files: {}, skipped: [] };
+  const { files, skipped, replaced } = needsScaffold ? generateScaffold(kitFiles, data) : { files: {}, skipped: [], replaced: [] };
 
   async function download() {
     const zip = new JSZip();
@@ -123,7 +123,8 @@ export default function Wizard() {
           )}
 
           {stepName === 'Ingest & Analyze' && (
-            <IngestStep data={data} skippedCount={skipped.length} onAnalyzed={applyAnalysis} />
+            <IngestStep data={data} skippedCount={skipped.length} replacedCount={replaced.length}
+              onAnalyzed={applyAnalysis} onAck={(v) => set({ legacyAck: v })} />
           )}
 
           {stepName === 'Project' && (
@@ -263,6 +264,12 @@ export default function Wizard() {
                     <details data-testid="skipped-group" open>
                       <summary>Skipped — already exist in your project ({skipped.length})</summary>
                       <pre className="b-preview">{skipped.join('\n')}</pre>
+                    </details>
+                  )}
+                  {replaced.length > 0 && (
+                    <details data-testid="replaced-group" open>
+                      <summary>Replaced — legacy harness files ({replaced.length})</summary>
+                      <pre className="b-preview">{replaced.join('\n')}</pre>
                     </details>
                   )}
                 </div>
