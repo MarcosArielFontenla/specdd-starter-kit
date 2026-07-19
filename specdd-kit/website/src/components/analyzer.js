@@ -108,6 +108,7 @@ export async function analyzeProject({ folderName, paths, readFile }) {
     manifestsFound,
     fileCount: visible.length,
     truncated,
+    legacyHarness: detectLegacyHarness(paths),
   };
 }
 
@@ -155,4 +156,31 @@ export function suggestEntities(paths) {
     else if (ENTITY_DIRS.has(parent) && /^[A-Za-z][A-Za-z0-9_-]*$/.test(base) && !NON_ENTITY_BASENAMES.has(base.toLowerCase())) add(base);
   }
   return [...found].slice(0, 12);
+}
+
+// ---- Legacy harness detection (Brownfield deprecation flow) ----
+// Runs on the RAW ingested path list: the ignore filter above drops dot-folders,
+// so detection must never reuse the filtered list.
+
+const HARNESS_ROOT_FILES = new Set([
+  'AGENTS.md', 'CLAUDE.md', 'GEMINI.md', 'SYSTEM_PROMPT.md',
+  '.github/copilot-instructions.md',
+]);
+const HARNESS_DIR_PREFIXES = ['.agents/', '.claude/', '.cursor/rules/'];
+// Files that carry project rules worth rescuing (triaged by the agent);
+// everything else harness-related is mechanism (deprecated directly).
+const KNOWLEDGE_SEGMENTS = new Set(['skills', 'patterns', 'adrs']);
+
+export function detectLegacyHarness(paths) {
+  const mechanism = [];
+  const knowledge = [];
+  for (const p of paths) {
+    const inHarnessDir = HARNESS_DIR_PREFIXES.some((d) => p.startsWith(d));
+    if (!inHarnessDir && !HARNESS_ROOT_FILES.has(p)) continue;
+    const isKnowledge = inHarnessDir && p.split('/').some((seg) => KNOWLEDGE_SEGMENTS.has(seg));
+    (isKnowledge ? knowledge : mechanism).push(p);
+  }
+  mechanism.sort();
+  knowledge.sort();
+  return { detected: mechanism.length + knowledge.length > 0, mechanism, knowledge };
 }

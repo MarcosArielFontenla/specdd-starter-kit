@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeProject, MAX_PATHS, suggestDomains, suggestEntities } from './analyzer.js';
+import { analyzeProject, MAX_PATHS, suggestDomains, suggestEntities, detectLegacyHarness } from './analyzer.js';
 
 function reader(files) {
   return (p) => (p in files ? Promise.resolve(files[p]) : Promise.reject(new Error(`no ${p}`)));
@@ -129,4 +129,49 @@ test('entities are deduplicated and capped at 12', () => {
 test('suggestions never contain markdown-table-breaking characters', () => {
   assert.deepEqual(suggestDomains(['src/bad|name/a.js', 'src/ok/a.js', 'src/ok/b.js']), ['ok']);
   assert.deepEqual(suggestEntities(['src/x/we|rd.entity.ts', 'src/x/Good.entity.ts']), ['Good']);
+});
+
+test('detectLegacyHarness classifies mechanism vs knowledge', () => {
+  const r = detectLegacyHarness([
+    'AGENTS.md', 'SYSTEM_PROMPT.md', 'CLAUDE.md',
+    '.github/copilot-instructions.md',
+    '.agents/AGENTS.md', '.agents/scripts/validate-agent-architecture.ps1',
+    '.agents/subagents/frontend-developer.agent.md',
+    '.agents/skills/angular-core/SKILL.md', '.agents/skills/testing/assets/TEST-TEMPLATE.md',
+    '.agents/patterns/coding.md', '.agents/adrs/001-initial.md',
+    '.claude/skills/foo/SKILL.md', '.cursor/rules/core.mdc',
+    'src/app/main.ts', 'README.md', 'package.json',
+  ]);
+  assert.equal(r.detected, true);
+  assert.deepEqual(r.knowledge, [
+    '.agents/adrs/001-initial.md',
+    '.agents/patterns/coding.md',
+    '.agents/skills/angular-core/SKILL.md',
+    '.agents/skills/testing/assets/TEST-TEMPLATE.md',
+    '.claude/skills/foo/SKILL.md',
+  ]);
+  assert.deepEqual(r.mechanism, [
+    '.agents/AGENTS.md',
+    '.agents/scripts/validate-agent-architecture.ps1',
+    '.agents/subagents/frontend-developer.agent.md',
+    '.cursor/rules/core.mdc',
+    '.github/copilot-instructions.md',
+    'AGENTS.md', 'CLAUDE.md', 'SYSTEM_PROMPT.md',
+  ]);
+});
+
+test('no false positives on a harness-free repo', () => {
+  const r = detectLegacyHarness(['src/index.js', 'README.md', '.github/workflows/ci.yml', 'docs/agents-overview.md']);
+  assert.deepEqual(r, { detected: false, mechanism: [], knowledge: [] });
+});
+
+test('analyzeProject exposes legacyHarness from RAW paths (dot-folders included)', async () => {
+  const a = await analyzeProject({
+    folderName: 'legacy',
+    paths: ['.agents/skills/old/SKILL.md', 'AGENTS.md', 'src/index.js'],
+    readFile: () => Promise.reject(new Error('no')),
+  });
+  assert.equal(a.legacyHarness.detected, true);
+  assert.deepEqual(a.legacyHarness.knowledge, ['.agents/skills/old/SKILL.md']);
+  assert.deepEqual(a.legacyHarness.mechanism, ['AGENTS.md']);
 });
