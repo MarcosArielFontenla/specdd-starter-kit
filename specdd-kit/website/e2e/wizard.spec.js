@@ -107,6 +107,8 @@ test('brownfield with legacy harness: warning gates next, replaced group and mig
 
   await page.getByTestId('folder-input').setInputFiles(legacyFixtureDir);
   await expect(page.getByTestId('legacy-warning')).toBeVisible();
+  await expect(page.getByTestId('legacy-warning')).toContainText('4 files');
+  await expect(page.getByTestId('legacy-warning')).toContainText('1 knowledge file(s)');
 
   await page.getByTestId('next-btn').click(); // blocked: unacknowledged
   await expect(page.getByTestId('error')).toContainText(/deprecat/i);
