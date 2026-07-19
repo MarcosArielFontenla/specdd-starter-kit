@@ -13,10 +13,18 @@ cada una merece su propio ciclo spec → plan → implementación.
    MCP tools, naming y branding en los 3 wizards. Es el mecanismo directo de "adaptar el
    kit al cliente": cargar su perfil → wizards con sus defaults. Complementa el modelo de
    providers de `specdeploy-kit`.
-3. **Campos huérfanos del wizard specdd** — el modelo declara `personas`, `outcomes`,
+3. ✅ (Iteración 6) **Campos huérfanos del wizard specdd** — el modelo declara `personas`, `outcomes`,
    `constraints`, `stack.languages/infra/swagger/a11y`, `security.owaspControls` y
    `featuresSpec`, pero la UI nunca los captura (se generan vacíos; `specs/features-spec.md`
    es inalcanzable desde la UI). Cerrar el gap: agregar UI o podar el modelo.
+13. **Dominios sugeridos desde skills legacy (Brownfield)** — validado en campo (landing
+    Angular real): cuando la ingesta detecta un harness previo con skills con contenido,
+    las sugerencias de dominios salen solo de las carpetas de código (`src/app` →
+    dominios técnicos) y el rescate termina fusionando todos los skills viejos en un
+    único skill. Mejorar `suggestDomains` para incorporar los nombres de los SKILL.md
+    detectados (`legacyHarness.knowledge`) como dominios sugeridos prioritarios, de modo
+    que el `harness-migration.tasks.md` mapee cada skill legacy 1:1 con su skill nuevo
+    en vez de consolidarlos.
 
 ## Ingeniería / mantenibilidad
 
