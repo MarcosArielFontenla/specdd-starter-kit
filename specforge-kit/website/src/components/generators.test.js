@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, renderMcpJson, promptsFor, renderRoleSkill, renderRoleRubric, renderRoleSubagent } from './generators.js';
+import { generateFiles, renderMcpJson, promptsFor, renderRoleSkill, renderRoleRubric, renderRoleSubagent, renderRoleWorkflow, renderRolePrompt, renderInstallTasks, renderPackReport } from './generators.js';
 
 const baseSkills = { 'story-writing': '# story-writing body', 'code-review': '# code-review body' };
 const baBase = {
@@ -82,4 +82,48 @@ test('role subagent carries the inactive note and skill pointer', () => {
   assert.match(sub, /name: role-dev/);
   assert.match(sub, /skill: \.agents\/skills\/role-dev\/SKILL\.md/);
   assert.match(sub, /INACTIVE/);
+});
+
+const packInput = {
+  roles: ['QA', 'Dev'],
+  qa: { approach: 'automated' },
+  ux: { figmaEnabled: false },
+  skillsByRole: { QA: ['test-case-generation'], Dev: ['story-to-code', 'code-review'] },
+  tools: ['GitHub Copilot', 'Claude Code'],
+  targetPaths: [],
+  harness: { specdd: false, legacy: false },
+};
+
+test('role workflow is vendor-neutral and points at the role skill', () => {
+  const wf = renderRoleWorkflow('QA', 'specforge-testcases');
+  assert.match(wf, /\.agents\/skills\/role-qa\/SKILL\.md/);
+  assert.match(wf, /never invent requirements/i);
+  assert.ok(!/copilot|cursor|gemini|claude/i.test(wf), 'workflow must not name vendors');
+});
+
+test('copilot prompt is a pointer to the workflow', () => {
+  const p = renderRolePrompt('Dev', 'specforge-implement');
+  assert.match(p, /\.agents\/workflows\/role-dev\/specforge-implement\.md/);
+  assert.match(p, /AGENTS\.md/);
+});
+
+test('install tasks: draft, one wiring set per role, C-prefixed gate ids', () => {
+  const tasks = renderInstallTasks(packInput, '2026-07-19');
+  assert.match(tasks, /status: draft/);
+  assert.match(tasks, /Quality Analyst work \| \.agents\/skills\/role-qa\/SKILL\.md/);
+  assert.match(tasks, /Developer work \| \.agents\/skills\/role-dev\/SKILL\.md/);
+  assert.match(tasks, /40 lines/);
+  assert.match(tasks, /C001/);
+  assert.ok(!/\bV\d+(\.\d+)?\b/.test(tasks), 'no V-prefixed ids');
+});
+
+test('pack report covers roles, harness guidance and skipped list', () => {
+  const withTarget = { ...packInput, targetPaths: ['src/a.js'], harness: { specdd: true, legacy: false } };
+  const r1 = renderPackReport(withTarget, ['x/y.md'], '2026-07-19');
+  assert.match(r1, /SpecDD Harness detected/);
+  assert.match(r1, /- x\/y\.md/);
+  const legacy = { ...packInput, targetPaths: ['src/a.js'], harness: { specdd: false, legacy: true } };
+  assert.match(renderPackReport(legacy, [], '2026-07-19'), /Migrate it first/);
+  assert.match(renderPackReport(packInput, [], '2026-07-19'), /No target project was ingested/);
+  assert.match(renderPackReport(withTarget, [], '2026-07-19'), /role-pack-install\.tasks\.md/);
 });
