@@ -1,7 +1,7 @@
 // src/components/generators.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, generateScaffold, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis } from './generators.js';
+import { generateFiles, generateScaffold, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks } from './generators.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
@@ -155,6 +155,19 @@ const brownInput = {
   },
 };
 
+const legacyInput = {
+  ...brownInput,
+  legacyAck: true,
+  analysis: {
+    ...brownInput.analysis,
+    legacyHarness: {
+      detected: true,
+      mechanism: ['.agents/AGENTS.md', 'AGENTS.md', 'SYSTEM_PROMPT.md'],
+      knowledge: ['.agents/patterns/coding.md', '.agents/skills/angular-core/SKILL.md'],
+    },
+  },
+};
+
 test('greenfield output contains the harness core', () => {
   const out = generateFiles(baseWithGithub, harnessInput, '2026-07-18');
   assert.ok('AGENTS.md' in out);
@@ -245,4 +258,18 @@ test('spec-converge is filtered out of greenfield output even when bundled', () 
 test('spec-converge survives in brownfield output', () => {
   const out = generateFiles(baseWithConverge, { ...harnessInput, scenario: 'brownfield' }, '2026-07-18');
   assert.equal(out['.agents/workflows/spec-converge.md'], 'converge workflow');
+});
+
+test('migration tasks file: draft status, real paths, phases, defaults, questions', () => {
+  const tasks = renderMigrationTasks(legacyInput, '2026-07-18');
+  assert.match(tasks, /status: draft/);
+  assert.match(tasks, /M001.*`\.agents\/AGENTS\.md`/);
+  assert.match(tasks, /M003.*`SYSTEM_PROMPT\.md`/);
+  assert.match(tasks, /K002.*`\.agents\/skills\/angular-core\/SKILL\.md`/);
+  assert.match(tasks, /\.agents\/_archive\//);
+  assert.match(tasks, /driftPolicyPath/);
+  assert.match(tasks, /Phase 3 — Rewire/);
+  assert.match(tasks, /validate-spec\.ps1/);
+  assert.match(tasks, /Snapshots: deferred/);
+  assert.match(tasks, /## Questions for the human/);
 });
