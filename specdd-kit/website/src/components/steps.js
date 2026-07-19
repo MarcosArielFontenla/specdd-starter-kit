@@ -43,8 +43,11 @@ export function errorFor(stepName, data) {
     if (data.domains.length > MAX_DOMAINS) return `Keep at most ${MAX_DOMAINS} domains — decompose broader areas later.`;
   }
   if (stepName === 'Agents & Tools' && (data.tools || []).length === 0) return 'Select at least one tool your team uses.';
-  if (stepName === 'Ingest & Analyze' && !data.analysis) {
-    return 'Choose your project folder — the analysis pre-fills the next steps.';
+  if (stepName === 'Ingest & Analyze') {
+    if (!data.analysis) return 'Choose your project folder — the analysis pre-fills the next steps.';
+    if (data.analysis.legacyHarness?.detected && !data.legacyAck) {
+      return 'A previous harness was detected — acknowledge its deprecation to continue.';
+    }
   }
   return '';
 }

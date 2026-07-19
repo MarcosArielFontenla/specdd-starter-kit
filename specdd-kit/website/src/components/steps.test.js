@@ -44,3 +44,11 @@ test('ingest step requires a completed analysis', () => {
   assert.match(errorFor('Ingest & Analyze', { ...valid, analysis: null }), /folder/i);
   assert.equal(errorFor('Ingest & Analyze', { ...valid, analysis: { fileCount: 3 } }), '');
 });
+
+test('ingest step blocks on unacknowledged legacy harness', () => {
+  const legacy = { ...valid, analysis: { fileCount: 3, legacyHarness: { detected: true, mechanism: ['AGENTS.md'], knowledge: [] } } };
+  assert.match(errorFor('Ingest & Analyze', { ...legacy, legacyAck: false }), /deprecat/i);
+  assert.equal(errorFor('Ingest & Analyze', { ...legacy, legacyAck: true }), '');
+  const clean = { ...valid, analysis: { fileCount: 3, legacyHarness: { detected: false, mechanism: [], knowledge: [] } } };
+  assert.equal(errorFor('Ingest & Analyze', { ...clean, legacyAck: false }), '');
+});
