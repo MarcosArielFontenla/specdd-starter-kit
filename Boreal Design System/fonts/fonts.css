@@ -1,7 +1,0 @@
-/* Boreal web fonts — loaded from Google Fonts CDN.
-   SUBSTITUTION NOTE: These are the intended families. To ship offline, download
-   the woff2 files and replace the @import with local @font-face rules here.
-   Display : Bricolage Grotesque (expressive grotesque, opsz/wght variable)
-   Body/UI : Hanken Grotesk (clean, warm geometric grotesque)
-   Data/Mono: Space Mono (expedition data, coordinates, eyebrows) */
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
