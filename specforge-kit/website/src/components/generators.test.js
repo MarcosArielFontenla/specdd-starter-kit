@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, renderMcpJson, promptsFor } from './generators.js';
+import { generateFiles, renderMcpJson, promptsFor, renderRoleSkill, renderRoleRubric, renderRoleSubagent } from './generators.js';
 
 const baseSkills = { 'story-writing': '# story-writing body', 'code-review': '# code-review body' };
 const baBase = {
@@ -56,4 +56,30 @@ test('no ADO commands or servers are ever generated', () => {
   }
   const json = renderMcpJson({ figma: true, playwright: true });
   assert.ok(!/azure|ado|devops/i.test(json));
+});
+
+test('role skill: harness frontmatter with pointers, meta content, playbook index', () => {
+  const skill = renderRoleSkill('QA', ['test-case-generation', 'qa-guardrails']);
+  assert.match(skill, /name: role-qa/);
+  assert.match(skill, /snapshotPath: \.agents\/cold-start\/snapshots\/role-qa\.snapshot\.md/);
+  assert.match(skill, /driftPolicyPath: \.agents\/evals\/rubrics\/role-qa\.yaml/);
+  assert.ok(!/driftPolicy:\n/.test(skill));
+  assert.match(skill, /Quality Analyst — Role Skill/);
+  assert.match(skill, /- Derive test cases from acceptance criteria/);
+  assert.match(skill, /- assets\/test-case-generation\.md/);
+});
+
+test('role rubric starts at log_only with median aggregation', () => {
+  const rubric = renderRoleRubric('BA');
+  assert.match(rubric, /skill: role-ba/);
+  assert.match(rubric, /reviewTriggerAction: log_only/);
+  assert.match(rubric, /aggregation: median/);
+  assert.match(rubric, /ciFailConsecutiveWindows: 2/);
+});
+
+test('role subagent carries the inactive note and skill pointer', () => {
+  const sub = renderRoleSubagent('Dev');
+  assert.match(sub, /name: role-dev/);
+  assert.match(sub, /skill: \.agents\/skills\/role-dev\/SKILL\.md/);
+  assert.match(sub, /INACTIVE/);
 });

@@ -1,4 +1,5 @@
 // Pure generators — baseSkills passed in (no import of skills.json).
+import { ROLE_META, roleSlug, commandsFor } from './roles.js';
 
 const MCP_SERVERS = {
   figma: { command: 'npx', args: ['-y', 'figma-developer-mcp', '--stdio'], env: { FIGMA_API_KEY: '${input:figma_key}' } },
@@ -109,4 +110,76 @@ export function generateFiles(baseSkills, input) {
     out['.vscode/mcp.json'] = renderMcpJson(input.mcp);
   }
   return out;
+}
+
+export function renderRoleSkill(role, selectedSkills) {
+  const meta = ROLE_META[role];
+  const slug = roleSlug(role);
+  return `---
+name: ${slug}
+version: 0.1.0
+snapshotPath: .agents/cold-start/snapshots/${slug}.snapshot.md
+snapshotVersion: 0.1.0
+driftPolicyPath: .agents/evals/rubrics/${slug}.yaml
+---
+
+# ${meta.title} — Role Skill
+
+## Scope
+${meta.scope}
+
+## Must rules
+${meta.must.map((m) => `- ${m}`).join('\n')}
+
+## Never do
+${meta.never.map((n) => `- ${n}`).join('\n')}
+
+## Verification
+${meta.verification}
+
+## Playbooks
+${(selectedSkills || []).map((s) => `- assets/${s}.md`).join('\n') || '- (none selected)'}
+`;
+}
+
+export function renderRoleRubric(role) {
+  const slug = roleSlug(role);
+  return `skill: ${slug}
+criteria:
+  - id: rule-adherence
+    description: "Output follows the role skill's Must rules and violates no Never rules"
+    weight: 1.0
+driftPolicy:
+  windowDays: 7
+  minRunsForTrend: 5
+  criterionDriftThreshold: 0.15
+  skillDriftThreshold: 0.10
+  baselineStrategy: first_N_runs
+  baselineRuns: 10
+  aggregation: median
+  ciFailConsecutiveWindows: 2
+  reviewTriggerAction: log_only
+  reviewWorkflow: skill-review
+`;
+}
+
+export function renderRoleSubagent(role) {
+  const meta = ROLE_META[role];
+  const slug = roleSlug(role);
+  return `---
+name: ${slug}
+domain: ${slug}
+skill: .agents/skills/${slug}/SKILL.md
+---
+
+# ${meta.title} — Subagent (canonical definition)
+
+> Seed for the harness Multi-Agent system, which is INACTIVE until this project has a
+> real multi-agent workflow. Do not project this file to any vendor format until that
+> system activates (see the systems status in .agents/REGISTRY.md).
+
+Load \`.agents/skills/${slug}/SKILL.md\` before any ${meta.title} work. Stay within the
+role's scope; escalate cross-role decisions to the orchestrating session. Follow the
+role workflows in \`.agents/workflows/${slug}/\`.
+`;
 }
