@@ -1,35 +1,21 @@
 import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import skills from '../data/skills.json';
-import { generateFiles } from './generators.js';
+import { generatePack } from './generators.js';
+import { stepsFor, errorFor as stepError, ROLES, ROLE_SKILLS, TOOLS } from './roles.js';
+import TargetStep from './TargetStep.jsx';
 import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
-const STEPS = ['Welcome', 'Persona', 'Role', 'Context', 'Governance', 'Review'];
-const PERSONAS = ['BA', 'QA', 'Dev', 'UX'];
-
 const initial = {
-  persona: '',
-  agent: { primary: 'GitHub Copilot', model: '' },
-  project: { name: '', featureTitle: '', featureSlug: '' },
-  context: { text: '' },
-  security: { classification: 'internal', regulatory: 'none' },
-  ba: { strategy: '555', storyHierarchy: 'Epic→Feature→Story', sizing: 'Fibonacci', style: 'Gherkin' },
-  qa: { approach: 'manual', appBaseUrl: '' },
-  dev: { architecture: 'component-based', framework: '', commentLevel: 'normal' },
-  ux: { designSystem: '', figmaEnabled: false, figmaUrl: '' },
-  skills: [],
-  mcp: { figma: false, playwright: false },
+  targetPaths: [], harness: { specdd: false, legacy: false }, targetName: '',
+  roles: [], qa: { approach: 'manual' }, ux: { figmaEnabled: false },
+  skillsByRole: {},
+  tools: ['GitHub Copilot'],
 };
 
-const slugify = (s) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const pad2 = (n) => String(n).padStart(2, '0');
-
-function withDerived(d) {
-  const slug = slugify(d.project.featureTitle) || 'feature';
-  const mcp = { figma: d.persona === 'UX' && d.ux.figmaEnabled, playwright: d.persona === 'QA' && d.qa.approach !== 'manual' };
-  return { ...d, project: { ...d.project, featureSlug: slug }, mcp };
-}
 
 export default function Wizard() {
   const [step, setStep] = useState(0);
@@ -41,41 +27,49 @@ export default function Wizard() {
 
   const set = (patch) => setData((d) => ({ ...d, ...patch }));
 
-  function isStepValid(i) {
-    if (i === 1) return !!data.persona;
-    if (i === 2) return data.project.featureTitle.trim() !== '';
-    return true;
-  }
-  function errorFor(i) {
-    if (i === 1 && !data.persona) return 'Pick a persona.';
-    if (i === 2 && !data.project.featureTitle.trim()) return 'Feature title is required.';
-    return '';
-  }
+  const steps = stepsFor(data);
+  const stepName = steps[step];
+  const isStepValid = (i) => stepError(steps[i], data) === '';
 
   function next() {
-    const e = errorFor(step);
+    const e = stepError(stepName, data);
     if (e) { setError(e); return; }
     setError('');
-    const target = Math.min(step + 1, STEPS.length - 1);
+    const target = Math.min(step + 1, steps.length - 1);
     setStep(target);
     setMaxVisited((m) => Math.max(m, target));
   }
   function back() { setError(''); setStep((s) => Math.max(s - 1, 0)); }
   function jump(i) { if (i <= maxVisited) { setError(''); setStep(i); } }
 
-  const last = step === STEPS.length - 1;
-  const files = last ? generateFiles(skills, withDerived(data)) : {};
-  const skillSlugs = Object.keys(skills);
+  function toggleRole(role) {
+    setData((d) => {
+      const on = d.roles.includes(role);
+      const roles = on ? d.roles.filter((r) => r !== role) : [...d.roles, role];
+      const skillsByRole = { ...d.skillsByRole };
+      if (on) delete skillsByRole[role];
+      else skillsByRole[role] = [...ROLE_SKILLS[role]];
+      return { ...d, roles, skillsByRole };
+    });
+    // Step list length can change (Role Options) — keep navigation on solid ground.
+    setMaxVisited((m) => Math.min(m, 2));
+  }
+
+  function onTarget(targetPaths, harness, targetName) {
+    set({ targetPaths, harness, targetName });
+  }
+
+  const last = step === steps.length - 1;
+  const { files, skipped } = last ? generatePack(skills, data) : { files: {}, skipped: [] };
 
   async function download() {
-    const d = withDerived(data);
     const zip = new JSZip();
-    for (const [path, contents] of Object.entries(generateFiles(skills, d))) zip.file(path, contents);
+    for (const [path, contents] of Object.entries(generatePack(skills, data).files)) zip.file(path, contents);
     const blob = await zip.generateAsync({ type: 'blob' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${d.project.name || 'specforge'}-${d.persona || 'scaffold'}.zip`;
+    a.download = `${data.targetName || 'specforge'}-role-pack.zip`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -84,42 +78,47 @@ export default function Wizard() {
     <div className="b-shell" data-ready={ready ? 'true' : 'false'}>
       <aside className="b-sidebar">
         <div className="b-brand">SpecForge Wizard</div>
-        <div className="b-sidebar__eyebrow">STEP {pad2(step + 1)} / {pad2(STEPS.length)}</div>
-        <Stepper steps={STEPS} current={step} isValid={isStepValid} maxVisited={maxVisited} onJump={jump} />
+        <div className="b-sidebar__eyebrow">STEP {pad2(step + 1)} / {pad2(steps.length)}</div>
+        <Stepper steps={steps} current={step} isValid={isStepValid} maxVisited={maxVisited} onJump={jump} />
       </aside>
 
       <main className="b-main">
-        <div className="b-main__eyebrow">STEP {pad2(step + 1)} · {STEPS[step].toUpperCase()}</div>
-        <h2 className="b-main__title" data-testid="step-title">{STEPS[step]}</h2>
+        <div className="b-main__eyebrow">STEP {pad2(step + 1)} · {stepName.toUpperCase()}</div>
+        <h2 className="b-main__title" data-testid="step-title">{stepName}</h2>
 
         <div className="b-main__body">
-          {step === 0 && <p className="b-lead">Generate a role-specific Copilot scaffold. Click Next to start.</p>}
+          {stepName === 'Welcome' && (
+            <p className="b-lead">
+              Build a Role Pack for your SpecDD Harness project: per-role skills,
+              playbooks, workflows and subagent seeds for BA, QA, Dev and UX. Click
+              Next to start.
+            </p>
+          )}
 
-          {step === 1 && (
+          {stepName === 'Target Project' && <TargetStep data={data} onTarget={onTarget} />}
+
+          {stepName === 'Roles' && (
             <div className="b-personas">
-              {PERSONAS.map((p) => (
-                <button key={p} data-testid={`persona-${p}`} className={`b-persona${data.persona === p ? ' b-persona--active' : ''}`}
-                  onClick={() => set({ persona: p })}>{p}</button>
+              {ROLES.map((r) => (
+                <button key={r} data-testid={`role-${slug(r)}`}
+                  className={`b-persona${data.roles.includes(r) ? ' b-persona--active' : ''}`}
+                  onClick={() => toggleRole(r)}>{r}</button>
               ))}
             </div>
           )}
 
-          {step === 2 && (
+          {stepName === 'Role Options' && (
             <>
-              <label>Project name</label>
-              <input value={data.project.name} onChange={(e) => set({ project: { ...data.project, name: e.target.value } })} />
-              <label>Feature title *</label>
-              <input data-testid="feature-title" value={data.project.featureTitle}
-                onChange={(e) => set({ project: { ...data.project, featureTitle: e.target.value } })} />
-              {data.persona === 'QA' && (
+              {data.roles.includes('QA') && (
                 <>
-                  <label>Test approach</label>
-                  <select value={data.qa.approach} onChange={(e) => set({ qa: { ...data.qa, approach: e.target.value } })}>
+                  <label>QA test approach</label>
+                  <select value={data.qa.approach}
+                    onChange={(e) => set({ qa: { ...data.qa, approach: e.target.value } })}>
                     {['manual', 'automated', 'manual + automated'].map((a) => <option key={a}>{a}</option>)}
                   </select>
                 </>
               )}
-              {data.persona === 'UX' && (
+              {data.roles.includes('UX') && (
                 <label className="b-check">
                   <input type="checkbox" checked={data.ux.figmaEnabled}
                     onChange={(e) => set({ ux: { ...data.ux, figmaEnabled: e.target.checked } })} /> Figma enabled
@@ -128,36 +127,64 @@ export default function Wizard() {
             </>
           )}
 
-          {step === 3 && (
-            <>
-              <label>Context (paste any relevant notes)</label>
-              <textarea value={data.context.text} onChange={(e) => set({ context: { text: e.target.value } })} />
-              <label>Skills to include</label>
-              {skillSlugs.map((s) => (
+          {stepName === 'Skills' && data.roles.map((role) => (
+            <div key={role}>
+              <label>{role} playbooks</label>
+              {ROLE_SKILLS[role].map((s) => (
                 <label className="b-check" key={s}>
-                  <input type="checkbox" checked={data.skills.includes(s)}
-                    onChange={(e) => set({ skills: e.target.checked ? [...data.skills, s] : data.skills.filter((x) => x !== s) })} />
+                  <input type="checkbox"
+                    checked={(data.skillsByRole[role] || []).includes(s)}
+                    onChange={(e) => {
+                      const cur = data.skillsByRole[role] || [];
+                      set({ skillsByRole: { ...data.skillsByRole, [role]: e.target.checked ? [...cur, s] : cur.filter((x) => x !== s) } });
+                    }} />
                   {s}
+                </label>
+              ))}
+            </div>
+          ))}
+
+          {stepName === 'Tools' && (
+            <>
+              <label>Team tools * (drives the Copilot projection)</label>
+              {TOOLS.map((t) => (
+                <label className="b-check" key={t}>
+                  <input type="checkbox" data-testid={`tool-${slug(t)}`}
+                    checked={data.tools.includes(t)}
+                    onChange={(e) => set({ tools: e.target.checked ? [...data.tools, t] : data.tools.filter((x) => x !== t) })} />
+                  {t}
                 </label>
               ))}
             </>
           )}
 
-          {step === 4 && (
-            <>
-              <label>Data classification</label>
-              <select value={data.security.classification} onChange={(e) => set({ security: { ...data.security, classification: e.target.value } })}>
-                {['public', 'internal', 'confidential', 'restricted'].map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </>
-          )}
-
-          {step === 5 && (
-            <>
-              <p className="b-lead">{Object.keys(files).length} files ready for persona {data.persona}.</p>
-              <pre className="b-preview" data-testid="preview">{Object.keys(files).sort().join('\n')}</pre>
-            </>
-          )}
+          {stepName === 'Preview / Download' && (() => {
+            const paths = Object.keys(files).sort();
+            const isProjection = (p) => p.startsWith('.github/');
+            const groups = [
+              ['Role pack', paths.filter((p) => !isProjection(p))],
+              ['Copilot projection', paths.filter(isProjection)],
+            ].filter(([, items]) => items.length > 0);
+            return (
+              <>
+                <p className="b-lead">{paths.length} files ready for roles: {data.roles.join(', ')}.</p>
+                <div data-testid="preview">
+                  {groups.map(([title, items]) => (
+                    <details key={title} open>
+                      <summary>{title} ({items.length})</summary>
+                      <pre className="b-preview">{items.join('\n')}</pre>
+                    </details>
+                  ))}
+                  {skipped.length > 0 && (
+                    <details data-testid="skipped-group" open>
+                      <summary>Skipped — already exist in the target ({skipped.length})</summary>
+                      <pre className="b-preview">{skipped.join('\n')}</pre>
+                    </details>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {error && <p className="b-error" data-testid="error">{error}</p>}
