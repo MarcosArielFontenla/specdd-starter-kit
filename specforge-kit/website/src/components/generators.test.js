@@ -1,60 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, renderMcpJson, promptsFor, renderRoleSkill, renderRoleRubric, renderRoleSubagent, renderRoleWorkflow, renderRolePrompt, renderInstallTasks, renderPackReport } from './generators.js';
+import { generatePack, renderMcpJson, renderRoleSkill, renderRoleRubric, renderRoleSubagent, renderRoleWorkflow, renderRolePrompt, renderInstallTasks, renderPackReport } from './generators.js';
 
-const baseSkills = { 'story-writing': '# story-writing body', 'code-review': '# code-review body' };
-const baBase = {
-  persona: 'BA',
-  agent: { primary: 'GitHub Copilot', model: 'gpt-4o' },
-  project: { name: 'Acme', featureTitle: 'Login', featureSlug: 'login' },
-  context: { text: 'some context' },
-  security: { classification: 'internal', regulatory: 'none' },
-  ba: { strategy: '555', storyHierarchy: 'Epic→Feature→Story', sizing: 'Fibonacci', style: 'Gherkin' },
-  skills: ['story-writing'],
-  mcp: { figma: false, playwright: false },
-};
-
-test('BA persona generates its prompts, instructions, context and selected skills', () => {
-  const out = generateFiles(baseSkills, baBase);
-  assert.match(out['README.md'], /Acme/);
-  assert.ok(out['.github/copilot-instructions.md'].includes('GitHub Copilot'));
-  assert.ok('.github/instructions/specforge-ba.instructions.md' in out);
-  assert.ok('.github/prompts/specforge-requirements.prompt.md' in out);
-  assert.ok('.github/prompts/specforge-stories.prompt.md' in out);
-  assert.ok('context/login.md' in out);
-  assert.equal(out['skills/story-writing.md'], '# story-writing body');
-  assert.ok(!('skills/code-review.md' in out)); // not selected
-  assert.ok(!('.vscode/mcp.json' in out));       // no mcp
-});
-
-test('QA automated adds playwright prompt + playwright mcp; manual does not', () => {
-  const qaAuto = { ...baBase, persona: 'QA', ba: undefined, qa: { approach: 'automated' }, mcp: { figma: false, playwright: true } };
-  const outA = generateFiles(baseSkills, qaAuto);
-  assert.ok('.github/prompts/specforge-playwright.prompt.md' in outA);
-  assert.ok('.vscode/mcp.json' in outA);
-  assert.ok(JSON.parse(outA['.vscode/mcp.json']).servers.playwright);
-
-  const qaManual = { ...qaAuto, qa: { approach: 'manual' }, mcp: { figma: false, playwright: false } };
-  const outM = generateFiles(baseSkills, qaManual);
-  assert.ok(!('.github/prompts/specforge-playwright.prompt.md' in outM));
-  assert.ok(!('.vscode/mcp.json' in outM));
-});
-
-test('UX with figma adds setupfigmamcp prompt + figma mcp placeholders', () => {
-  const ux = { ...baBase, persona: 'UX', ba: undefined, ux: { designSystem: 'Motif', figmaEnabled: true, figmaUrl: 'https://figma.com/x' }, mcp: { figma: true, playwright: false } };
-  const out = generateFiles(baseSkills, ux);
-  assert.ok('.github/prompts/specforge-setupfigmamcp.prompt.md' in out);
-  const mcp = JSON.parse(out['.vscode/mcp.json']);
-  assert.ok(mcp.servers.figma);
-  assert.match(JSON.stringify(mcp), /\$\{input:/);
-});
-
-test('no ADO commands or servers are ever generated', () => {
-  for (const persona of ['BA', 'QA', 'Dev', 'UX']) {
-    const cmds = promptsFor({ ...baBase, persona, ba:{}, qa:{approach:'automated'}, dev:{}, ux:{figmaEnabled:true} });
-    assert.ok(!cmds.some((c) => /ado|publishspecs/i.test(c)), `${persona} must not include ADO commands`);
-  }
+test('renderMcpJson embeds the figma key as an input placeholder, never ADO/Azure servers', () => {
   const json = renderMcpJson({ figma: true, playwright: true });
+  assert.match(json, /\$\{input:figma_key\}/);
   assert.ok(!/azure|ado|devops/i.test(json));
 });
 
@@ -126,4 +76,49 @@ test('pack report covers roles, harness guidance and skipped list', () => {
   assert.match(renderPackReport(legacy, [], '2026-07-19'), /Migrate it first/);
   assert.match(renderPackReport(packInput, [], '2026-07-19'), /No target project was ingested/);
   assert.match(renderPackReport(withTarget, [], '2026-07-19'), /role-pack-install\.tasks\.md/);
+});
+
+const baseSkills = { 'test-case-generation': 'tc playbook', 'story-to-code': 's2c', 'code-review': 'cr' };
+
+test('generatePack assembles per-role artifacts and cross-cutting files', () => {
+  const { files, skipped } = generatePack(baseSkills, packInput, '2026-07-19');
+  assert.deepEqual(skipped, []);
+  assert.ok('.agents/skills/role-qa/SKILL.md' in files);
+  assert.equal(files['.agents/skills/role-qa/assets/test-case-generation.md'], 'tc playbook');
+  assert.ok('.agents/skills/role-dev/assets/code-review.md' in files);
+  assert.ok('.agents/evals/rubrics/role-qa.yaml' in files);
+  assert.ok('.agents/workflows/role-qa/specforge-testcases.md' in files);
+  assert.ok('.agents/workflows/role-qa/specforge-playwright.md' in files);   // approach=automated
+  assert.ok('.agents/subagents/role-dev.agent.md' in files);
+  assert.ok('.agents/specs/tasks/role-pack-install.tasks.md' in files);
+  assert.ok('context/role-pack-report.md' in files);
+  assert.ok('.vscode/mcp.json' in files);                                     // QA automated -> playwright
+  assert.ok(!Object.keys(files).some((p) => p.includes('role-ba')), 'unselected roles absent');
+});
+
+test('copilot projection only when Copilot selected', () => {
+  const withCopilot = generatePack(baseSkills, packInput, '2026-07-19').files;
+  assert.ok('.github/prompts/specforge-testcases.prompt.md' in withCopilot);
+  const without = generatePack(baseSkills, { ...packInput, tools: ['Claude Code'] }, '2026-07-19').files;
+  assert.ok(!Object.keys(without).some((p) => p.startsWith('.github/')));
+});
+
+test('collisions with the target are skipped and reported; report is exempt', () => {
+  const input2 = {
+    ...packInput,
+    targetPaths: ['.agents/evals/rubrics/role-qa.yaml', 'context/role-pack-report.md', 'src/a.js'],
+    harness: { specdd: true, legacy: false },
+  };
+  const { files, skipped } = generatePack(baseSkills, input2, '2026-07-19');
+  assert.deepEqual(skipped, ['.agents/evals/rubrics/role-qa.yaml']);
+  assert.ok(!('.agents/evals/rubrics/role-qa.yaml' in files));
+  assert.ok('context/role-pack-report.md' in files);                          // exemption
+  assert.match(files['context/role-pack-report.md'], /role-qa\.yaml/);        // reported
+});
+
+test('generated pack carries no private version tags', () => {
+  const { files } = generatePack(baseSkills, packInput, '2026-07-19');
+  for (const [path, contents] of Object.entries(files)) {
+    assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
+  }
 });
