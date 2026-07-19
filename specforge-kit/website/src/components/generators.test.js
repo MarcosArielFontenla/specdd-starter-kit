@@ -64,6 +64,8 @@ test('install tasks: draft, one wiring set per role, C-prefixed gate ids', () =>
   assert.match(tasks, /Developer work \| \.agents\/skills\/role-dev\/SKILL\.md/);
   assert.match(tasks, /40 lines/);
   assert.match(tasks, /C001/);
+  assert.match(tasks, /generate-snapshots\.ps1 -Scaffold/);
+  assert.match(tasks, /C003/);
   assert.ok(!/\bV\d+(\.\d+)?\b/.test(tasks), 'no V-prefixed ids');
 });
 
@@ -76,6 +78,8 @@ test('pack report covers roles, harness guidance and skipped list', () => {
   assert.match(renderPackReport(legacy, [], '2026-07-19'), /Migrate it first/);
   assert.match(renderPackReport(packInput, [], '2026-07-19'), /No target project was ingested/);
   assert.match(renderPackReport(withTarget, [], '2026-07-19'), /role-pack-install\.tasks\.md/);
+  const collided = { ...packInput, targetPaths: ['.agents/specs/tasks/role-pack-install.tasks.md'], harness: { specdd: true, legacy: false } };
+  assert.match(renderPackReport(collided, ['.agents/specs/tasks/role-pack-install.tasks.md'], '2026-07-19'), /did not overwrite/);
 });
 
 const baseSkills = { 'test-case-generation': 'tc playbook', 'story-to-code': 's2c', 'code-review': 'cr' };
