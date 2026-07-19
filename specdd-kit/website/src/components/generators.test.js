@@ -205,6 +205,11 @@ test('adapters carry zero rules and generated content carries no private version
     if (path === '.github/prompts/specdd-specify.prompt.md') continue;
     assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
   }
+  const legacy = generateScaffold(baseWithHarnessCollisions, legacyInput, '2026-07-18').files;
+  for (const [path, contents] of Object.entries(legacy)) {
+    if (path === '.github/prompts/specdd-specify.prompt.md' || path === '.agents/workflows/spec-converge.md') continue;
+    assert.ok(!/\bV\d+(\.\d+)?\b/.test(contents), `version tag leaked in ${path}`);
+  }
 });
 
 test('generateScaffold greenfield: same files as generateFiles, nothing skipped', () => {
@@ -274,4 +279,39 @@ test('migration tasks file: draft status, real paths, phases, defaults, question
   assert.match(tasks, /## Questions for the human/);
   assert.match(tasks, /C001/);
   assert.ok(!/\bV\d+(\.\d+)?\b/.test(tasks), 'migration tasks must not contain V-prefixed ids');
+});
+
+const baseWithHarnessCollisions = {
+  ...baseWithGithub,
+  '.agents/workflows/spec-converge.md': 'converge workflow',
+};
+
+test('acknowledged legacy harness: harness collisions replaced, others skipped', () => {
+  const input2 = { ...legacyInput, existingPaths: ['AGENTS.md', 'CLAUDE.md', '.agents/REGISTRY.md', 'README.md'] };
+  const { files, skipped, replaced } = generateScaffold(baseWithHarnessCollisions, input2, '2026-07-18');
+  assert.deepEqual(replaced, ['.agents/REGISTRY.md', 'AGENTS.md', 'CLAUDE.md']);
+  assert.ok('AGENTS.md' in files);                       // replaced → still shipped
+  assert.ok('.agents/REGISTRY.md' in files);
+  assert.deepEqual(skipped, ['README.md']);              // non-harness keeps never-clobber
+  assert.ok(!('README.md' in files));
+  assert.ok('.agents/specs/tasks/harness-migration.tasks.md' in files);
+  const report = files['context/brownfield-analysis.md'];
+  assert.match(report, /## Legacy harness detected/);
+  assert.match(report, /SYSTEM_PROMPT\.md/);             // inventory listed
+  assert.match(report, /harness-migration\.tasks\.md/);  // kickoff points to migration first
+});
+
+test('clean brownfield (no legacy) unchanged: no migration tasks, replaced empty', () => {
+  const { files, skipped, replaced } = generateScaffold(baseWithGithub, brownInput, '2026-07-18');
+  assert.deepEqual(replaced, []);
+  assert.ok(!('.agents/specs/tasks/harness-migration.tasks.md' in files));
+  assert.ok(!/Legacy harness detected/.test(files['context/brownfield-analysis.md']));
+  assert.deepEqual(skipped, ['.github/prompts/specdd-specify.prompt.md', 'README.md']);
+});
+
+test('greenfield returns empty replaced and no migration artifacts', () => {
+  const { files, skipped, replaced } = generateScaffold(baseWithGithub, harnessInput, '2026-07-18');
+  assert.deepEqual(skipped, []);
+  assert.deepEqual(replaced, []);
+  assert.ok(!Object.keys(files).some((p) => p.includes('harness-migration')));
 });
