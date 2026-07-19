@@ -1,5 +1,7 @@
 # Agentify Wizard — Structural Spec
 
+> Superseded (2026-07-19) by the Role Packs design — see docs/superpowers/specs/2026-07-19-specforge-role-packs-design.md at the repo root. Kept as history.
+
 specforge-kit collects role-specific inputs and generates a Copilot-ready scaffold.
 
 ## Personas

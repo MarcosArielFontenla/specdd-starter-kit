@@ -62,7 +62,7 @@ npm workspaces monorepo (Node ≥ 20):
 |-----------|---------|
 | [`platform`](platform/) | SpecDD Platform — unified portal: Boreal landing + the three wizards mounted at `/specdd`, `/specforge`, `/specdeploy`. |
 | [`specdd-kit`](specdd-kit/) | The SDD scaffold content + the scenario-branched wizard (Greenfield/Brownfield) that generates the harness ZIP. |
-| [`specforge-kit`](specforge-kit/) | Role-based scaffold wizard (BA/QA/Dev/UX): persona-specific prompts, instructions and skills. |
+| [`specforge-kit`](specforge-kit/) | Role Pack wizard (BA/QA/Dev/UX): generates per-role .agents/ extensions (skills + playbooks, workflows, rubrics, subagent seeds) that plug into a SpecDD-Harness project, with optional target-folder ingestion and agent-executed install tasks. |
 | [`specdeploy-kit`](specdeploy-kit/) | Deploy wizard: CI/CD pipelines, IaC and runbooks for 6 providers (Azure SWA, Cloudflare, AWS, Vercel, Netlify, on-prem Docker). Providers are data — see [`provider-authoring.md`](specdeploy-kit/docs/provider-authoring.md). |
 | [`packages/ui`](packages/ui/) | `@specdd/ui` — Boreal Design System (shared Stepper + styles for all wizards). |
 
