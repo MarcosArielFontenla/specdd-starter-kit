@@ -10,6 +10,9 @@ in the browser and downloads as a ZIP.
 The centerpiece is the **SpecDD wizard**: it generates a scaffold structured around
 the **SpecDD Harness**, a vendor-neutral agent architecture that any AI coding tool
 (GitHub Copilot, Claude Code, Cursor, Codex, Gemini) consumes through the same core.
+Its companion, the **SpecForge wizard**, generates **Role Packs** (BA / QA / Dev / UX)
+that plug into a harness project — per-role skills, playbooks, workflows and subagent
+seeds, wired in by your agent under your approval.
 
 ## Scenarios
 
@@ -54,6 +57,75 @@ carry zero rules), nothing is fabricated (empty baselines, placeholder acceptanc
 checks, `log_only` drift policies), and every "auto-generated" artifact has a
 validator script. See [`specdd-kit/docs/harness.md`](specdd-kit/docs/harness.md).
 
+## What a SpecForge Role Pack contains
+
+For each selected role (example: QA):
+
+```
+.agents/skills/role-qa/SKILL.md          Role skill: scope, Must/Never rules, verification
+.agents/skills/role-qa/assets/*.md       The playbooks you selected, verbatim
+.agents/evals/rubrics/role-qa.yaml       Drift policy (log_only)
+.agents/workflows/role-qa/<command>.md   Role commands as vendor-neutral workflows
+.agents/subagents/role-qa.agent.md       Canonical subagent seed (Multi-Agent stays inactive)
+--- once per pack ---
+.agents/specs/tasks/role-pack-install.tasks.md   Draft install tasks — your agent wires
+                                                 ROUTING/REGISTRY/budget after YOUR approval
+context/role-pack-report.md              What was generated, harness detection result,
+                                         skipped collisions, agent kickoff
+.github/prompts/specforge-*.prompt.md    ONLY when GitHub Copilot is selected — pointers
+                                         to the pack's workflows
+```
+
+The pack never modifies existing harness files: collisions with the target project are
+skipped and reported, and all wiring happens through the install tasks with a human gate.
+
+## Step-by-step guides
+
+### Greenfield — new project
+
+1. Open the SpecDD wizard → pick **Greenfield**.
+2. Fill the steps: project (name, description, personas, outcomes, constraints), tech
+   stack, **domains** (1–8, they become skills and routing — think business areas, not
+   tech folders) and primary **entities**, initial features, principles, MCP tools,
+   **team tools** (one pointer adapter each), security (classification + OWASP focus).
+3. Review the grouped preview and download the ZIP; extract it into your empty repo.
+4. First agent session: your agent auto-loads `AGENTS.md` and routes work through the
+   harness. Define real specs per entity with `.agents/workflows/spec-first-feature.md`
+   when you are ready.
+
+### Brownfield — existing project
+
+1. Open the SpecDD wizard → pick **Brownfield** → choose your project folder.
+   Analysis runs 100% in your browser; only manifest files are read.
+2. Review the detection cards (stack, suggested domains/entities — **edit them**:
+   replace technical folder names with business domains, drop noise entities).
+   If a previous agent harness is detected, read the warning and check the
+   acknowledgment — its mechanism files will be deprecated, its knowledge triaged.
+3. Walk the remaining steps (pre-filled), check the preview — including the
+   "Skipped — already exist" group — and download; extract into your repo root.
+4. Verify nothing was clobbered: `git status` must show only new files (plus, with an
+   acknowledged legacy harness, the replaced harness paths).
+5. First agent session — one line:
+   `Read AGENTS.md and follow it. Then read context/brownfield-analysis.md and do what its Kickoff section says.`
+   The agent will ask for your approval on the pre-generated migration tasks (if a
+   legacy harness existed) and then run `spec-converge` against your specs.
+
+### Role Pack — add BA/QA/Dev/UX roles to a harness project
+
+1. Open the SpecForge wizard. Optionally pick your **target project folder** — the
+   wizard detects its SpecDD Harness and computes collisions (skip to get a standard
+   pack; generate the harness first with SpecDD if you don't have one).
+2. Select the **roles** your team needs, tune role options (QA test approach, Figma
+   for UX), review the preselected playbooks per role, pick your team tools.
+3. Download and extract into the project root.
+4. First agent session — one line:
+   `Read AGENTS.md and follow it. Then read context/role-pack-report.md and do what its Kickoff section says.`
+   The agent asks for your approval on `role-pack-install.tasks.md`, wires
+   ROUTING/REGISTRY/budget, scaffolds the role-skill snapshots, and re-runs the gates.
+
+After any scaffold: the harness validation scripts (`.agents/scripts/*.ps1`) need
+PowerShell 7+ and the `powershell-yaml` module (`Install-Module powershell-yaml -Scope CurrentUser`).
+
 ## Workspaces
 
 npm workspaces monorepo (Node ≥ 20):
@@ -72,6 +144,8 @@ in `generators.js` overlay the personalized artifacts from your answers; the wiz
 zips everything client-side with JSZip. The Brownfield analyzer (`analyzer.js`) is
 equally pure: manifest files for stack detection, folder structure for domain
 suggestions, filename patterns for entities — source code content is never read.
+SpecForge's target ingestion reads only the path LIST (no content at all) to detect
+the destination harness and compute collisions.
 
 ## Run it locally
 
@@ -94,9 +168,13 @@ npm run dev -w specforge-wizard     # http://localhost:4322  (SpecForge)
 npm run dev -w specdeploy-wizard    # http://localhost:4323  (SpecDeploy)
 ```
 
-To try **Brownfield** end-to-end without a real project, point the folder picker at
-[`specdd-kit/website/e2e/fixtures/brownfield-sample/`](specdd-kit/website/e2e/fixtures/brownfield-sample/)
-— a tiny Node/React fixture that exercises detection, pre-fill and collision skipping.
+To try the wizards end-to-end without a real project, point the folder pickers at the
+test fixtures: [`specdd-kit/website/e2e/fixtures/brownfield-sample/`](specdd-kit/website/e2e/fixtures/brownfield-sample/)
+(Brownfield: detection, pre-fill, collision skipping),
+[`specdd-kit/website/e2e/fixtures/brownfield-legacy/`](specdd-kit/website/e2e/fixtures/brownfield-legacy/)
+(Brownfield with a legacy harness: warning + migration tasks), and
+[`specforge-kit/website/e2e/fixtures/harness-target/`](specforge-kit/website/e2e/fixtures/harness-target/)
+(SpecForge: harness detection + collision skipping).
 
 ### Tests
 
@@ -104,7 +182,8 @@ To try **Brownfield** end-to-end without a real project, point the folder picker
 npm run test:unit -w sdd-kit-wizard      # unit (Node test runner): generators, analyzer, steps
 npm run test:unit -w specforge-wizard
 npm run test:unit -w specdeploy-wizard
-npm test -w sdd-kit-wizard               # Playwright e2e: greenfield + brownfield walkthroughs
+npm test -w sdd-kit-wizard               # Playwright e2e: greenfield + brownfield (+legacy) walkthroughs
+npm test -w specforge-wizard             # Playwright e2e: standalone pack + target-ingestion walkthroughs
 npm test -w specdd-platform              # Playwright e2e: portal + wizard mounts
 npm run build -w specdd-platform         # production build (bundles all kits first)
 ```
@@ -113,8 +192,8 @@ CI (`.github/workflows/ci.yml`) runs unit + build per workspace; e2e runs locall
 
 ## Repo layout & docs
 
-- `docs/superpowers/specs/` — approved design specs per iteration (the two most
-  recent cover the Greenfield harness and the Brownfield ingestion).
+- `docs/superpowers/specs/` — approved design specs per iteration (Greenfield harness,
+  Brownfield ingestion, legacy-harness deprecation, SpecForge Role Packs).
 - `docs/superpowers/plans/` — the implementation plans executed task-by-task.
 - `docs/ROADMAP.md` — improvement backlog.
 - `awesome-copilot-main/` — vendored reference copy of `github/awesome-copilot`.
