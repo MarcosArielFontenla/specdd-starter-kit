@@ -409,8 +409,8 @@ ${knowRows || '- [ ] (none detected)'}
 - [ ] R002 Remove every REGISTRY/ROUTING reference to archived files (no dangling references)
 
 ## Phase 4 — Verify (done gate)
-- [ ] V001 \`pwsh .agents/scripts/validate-spec.ps1\` exits 0
-- [ ] V002 \`pwsh .agents/scripts/validate-budget.ps1\` exits 0
+- [ ] C001 \`pwsh .agents/scripts/validate-spec.ps1\` exits 0
+- [ ] C002 \`pwsh .agents/scripts/validate-budget.ps1\` exits 0
 
 ## Questions for the human (content judgment — answer before Phase 2)
 - Which legacy knowledge files are still authoritative vs dead? Mark each K-task's

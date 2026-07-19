@@ -272,4 +272,6 @@ test('migration tasks file: draft status, real paths, phases, defaults, question
   assert.match(tasks, /validate-spec\.ps1/);
   assert.match(tasks, /Snapshots: deferred/);
   assert.match(tasks, /## Questions for the human/);
+  assert.match(tasks, /C001/);
+  assert.ok(!/\bV\d+(\.\d+)?\b/.test(tasks), 'migration tasks must not contain V-prefixed ids');
 });
