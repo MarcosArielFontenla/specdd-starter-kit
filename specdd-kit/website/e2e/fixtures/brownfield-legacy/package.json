@@ -1,0 +1,5 @@
+{
+  "name": "legacy-app",
+  "description": "App with an old harness",
+  "dependencies": { "react": "^18.0.0" }
+}

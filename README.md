@@ -18,7 +18,7 @@ The SpecDD wizard branches by scenario on its second step:
 | Scenario | Status | What it does |
 |----------|--------|--------------|
 | **Greenfield** | ✅ | New project. You pour in all the context you have (project, stack, domains, entities, features, principles, security, team tools) and get a fully personalized harness scaffold. |
-| **Brownfield** | ✅ | Existing project. You pick your project folder; the wizard analyzes it **100% in the browser** (no file ever leaves your machine), pre-fills the flow, and generates a collision-safe scaffold: files that already exist in your project are skipped and reported, never overwritten. Includes the `spec-converge` workflow so your agent can align existing code to the specs. |
+| **Brownfield** | ✅ | Existing project. You pick your project folder; the wizard analyzes it **100% in the browser** (no file ever leaves your machine), pre-fills the flow, and generates a collision-safe scaffold: files that already exist in your project are skipped and reported, never overwritten. Includes the `spec-converge` workflow so your agent can align existing code to the specs. If a previous agent harness is detected in the folder, the wizard warns you, requires an explicit acknowledgment, and pre-generates `.agents/specs/tasks/harness-migration.tasks.md` so your agent migrates it (mechanism archived, knowledge triaged) without hand-written prompts. |
 | **Deploy** (SpecDeploy wizard) | ⏸ deferred | CI/CD + IaC generation works for 6 providers, but refinement is on hold until a real target environment is defined (Azure vs AWS vs Railway vs other). |
 
 ## What the generated scaffold contains (SpecDD Harness v1)
