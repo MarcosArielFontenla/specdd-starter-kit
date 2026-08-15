@@ -20,6 +20,7 @@ test('node/react project: stack from package.json + tsconfig', async () => {
     readFile: reader(files),
   });
   assert.equal(a.projectName, 'acme-shop');
+  assert.equal(a.analysisDepth, 'structural');
   assert.equal(a.description, 'A sample shop');
   assert.equal(a.stack.frontend, 'React');
   assert.equal(a.stack.backend, 'Express');
@@ -174,4 +175,14 @@ test('analyzeProject exposes legacyHarness from RAW paths (dot-folders included)
   assert.equal(a.legacyHarness.detected, true);
   assert.deepEqual(a.legacyHarness.knowledge, ['.agents/skills/old/SKILL.md']);
   assert.deepEqual(a.legacyHarness.mechanism, ['AGENTS.md']);
+});
+
+test('unavailable semantic depth falls back to structural analysis', async () => {
+  const a = await analyzeProject({
+    folderName: 'future-mode',
+    analysisDepth: 'semantic',
+    paths: ['package.json'],
+    readFile: reader({ 'package.json': '{"name":"future-mode"}' }),
+  });
+  assert.equal(a.analysisDepth, 'structural');
 });

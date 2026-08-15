@@ -1,4 +1,5 @@
 // Pure generators — no imports of kit-files.json (passed in as `baseFiles`).
+import { getAnalysisLevel } from './analysis.js';
 
 const MCP_SERVERS = {
   github: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-github'], env: { GITHUB_PERSONAL_ACCESS_TOKEN: '${input:github_pat}' } },
@@ -340,6 +341,7 @@ const ANALYSIS_REPORT_PATH = 'context/brownfield-analysis.md';
 
 export function renderBrownfieldAnalysis(input, skipped, replaced, today) {
   const a = input.analysis || {};
+  const analysisLevel = getAnalysisLevel(a.analysisDepth || input.analysisDepth);
   const stack = a.stack || {};
   const list = (xs) => (xs && xs.length ? xs.map((x) => `- ${x}`).join('\n') : '- (none)');
   const lh = a.legacyHarness;
@@ -377,6 +379,7 @@ the codebase is the source of truth.
 ${kickoff}
 
 ## Detected
+- Analysis level: Level ${analysisLevel.number} — ${analysisLevel.title}
 - Files scanned: ${a.fileCount ?? 0}${a.truncated ? ' (truncated at the scan cap — deep paths were not analyzed)' : ''}
 - Manifests: ${(a.manifestsFound || []).join(', ') || '(none)'}
 - Languages: ${(stack.languages || []).join(', ') || '(none)'}

@@ -5,6 +5,7 @@ import { generateScaffold } from './generators.js';
 import { stepsFor, errorFor as stepError, TOOLS, OWASP_CONTROLS } from './steps.js';
 import ChipInput from './ChipInput.jsx';
 import IngestStep from './IngestStep.jsx';
+import { DEFAULT_ANALYSIS_DEPTH } from './analysis.js';
 import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
@@ -12,7 +13,7 @@ const MCP_OPTIONS = ['github', 'sonarqube', 'context7', 'postgresql', 'playwrigh
 
 const initial = {
   scenario: 'greenfield',
-  analysis: null, existingPaths: [], legacyAck: false,
+  analysisDepth: DEFAULT_ANALYSIS_DEPTH, analysis: null, existingPaths: [], legacyAck: false,
   project: { name: '', description: '', problem: '' },
   personas: [], outcomes: { user: '', business: '' },
   constraints: { business: '', technical: '' },
@@ -55,6 +56,7 @@ export default function Wizard() {
   function applyAnalysis(analysis, existingPaths) {
     setData((d) => ({
       ...d,
+      analysisDepth: analysis.analysisDepth || d.analysisDepth,
       analysis, existingPaths, legacyAck: false,
       project: {
         ...d.project,
@@ -124,7 +126,8 @@ export default function Wizard() {
 
           {stepName === 'Ingest & Analyze' && (
             <IngestStep data={data} skippedCount={skipped.length} replacedCount={replaced.length}
-              onAnalyzed={applyAnalysis} onAck={(v) => set({ legacyAck: v })} />
+              onAnalyzed={applyAnalysis} onAck={(v) => set({ legacyAck: v })}
+              onAnalysisDepthChange={(analysisDepth) => set({ analysisDepth })} />
           )}
 
           {stepName === 'Project' && (

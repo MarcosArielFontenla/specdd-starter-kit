@@ -1,5 +1,6 @@
 // Pure in-browser project analyzer for the Brownfield scenario. No React, no DOM.
 // Reads CONTENT only from manifest files; every other file contributes its path only.
+import { DEFAULT_ANALYSIS_DEPTH, getAnalysisLevel } from './analysis.js';
 
 export const MAX_PATHS = 20000;
 
@@ -50,7 +51,11 @@ function shallowest(paths, name) {
 
 const setIf = (stack, field, value) => { if (!stack[field]) stack[field] = value; };
 
-export async function analyzeProject({ folderName, paths, readFile }) {
+export async function analyzeProject({ folderName, paths, readFile, analysisDepth = DEFAULT_ANALYSIS_DEPTH }) {
+  // Level 2 is intentionally not executable yet. Keep the runtime honest if a
+  // future caller sends an unavailable mode before its analyzer exists.
+  const level = getAnalysisLevel(analysisDepth);
+  const effectiveDepth = level.available ? level.id : DEFAULT_ANALYSIS_DEPTH;
   const visibleAll = paths.filter((p) => !isIgnored(p));
   const truncated = visibleAll.length > MAX_PATHS;
   const visible = truncated ? visibleAll.slice(0, MAX_PATHS) : visibleAll;
@@ -100,6 +105,7 @@ export async function analyzeProject({ folderName, paths, readFile }) {
   if (shallowest(visible, 'go.mod') && !stack.languages.includes('Go')) stack.languages.push('Go');
 
   return {
+    analysisDepth: effectiveDepth,
     projectName,
     description,
     stack,

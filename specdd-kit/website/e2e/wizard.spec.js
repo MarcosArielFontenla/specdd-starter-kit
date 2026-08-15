@@ -66,6 +66,9 @@ test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', a
   await page.getByTestId('scenario-brownfield').click();
   await page.getByTestId('next-btn').click(); // -> Ingest & Analyze
 
+  await expect(page.getByTestId('analysis-depth-structural')).toBeChecked();
+  await expect(page.getByTestId('analysis-depth-semantic')).toBeDisabled();
+
   await page.getByTestId('next-btn').click(); // validation blocks (no folder yet)
   await expect(page.getByTestId('error')).toBeVisible();
 

@@ -228,6 +228,7 @@ test('generateScaffold brownfield: collisions excluded and reported, analysis re
   assert.ok('.agents/workflows/spec-converge.md' in files);              // converge ships
   const report = files['context/brownfield-analysis.md'];
   assert.match(report, /acme-shop/);
+  assert.match(report, /Analysis level: Level 1 — Structural bootstrap/);
   assert.match(report, /React/);
   assert.match(report, /- auth/);
   assert.match(report, /README\.md/);                                    // skipped list in report

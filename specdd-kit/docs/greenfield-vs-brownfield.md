@@ -29,6 +29,21 @@ Retrofitting SDD onto a codebase that already has months or years of history tak
 more care, because the "shared understanding" in `context/` has to actually match
 reality, and you can't spec everything retroactively.
 
+### Brownfield analysis depth
+
+Brownfield has an explicit analysis-depth choice, independent from the scenario:
+
+- **Level 1 — Structural bootstrap (available):** reads known manifests and file
+  paths only. It detects the stack, suggests domains and entities, detects legacy
+  harnesses, and generates a collision-safe scaffold.
+- **Level 2 — Assisted semantic analysis (planned):** an opt-in local analysis of
+  source code, tests, models, routes, and configuration. It will report evidence and
+  confidence for each inference before any human-approved convergence work.
+
+The current wizard exposes both levels but executes only Level 1. Neither level
+should invent business rules, approve specs automatically, or modify existing source
+code.
+
 1. **Write `context/tech-stack.md` from what's actually there**, not what you wish
    were there. Run through the file's own Definition of Done: every tool a plan
    might reference should be listed with its actual command, versions should be

@@ -21,7 +21,7 @@ The SpecDD wizard branches by scenario on its second step:
 | Scenario | Status | What it does |
 |----------|--------|--------------|
 | **Greenfield** | ✅ | New project. You pour in all the context you have (project, stack, domains, entities, features, principles, security, team tools) and get a fully personalized harness scaffold. |
-| **Brownfield** | ✅ | Existing project. You pick your project folder; the wizard analyzes it **100% in the browser** (no file ever leaves your machine), pre-fills the flow, and generates a collision-safe scaffold: files that already exist in your project are skipped and reported, never overwritten. Includes the `spec-converge` workflow so your agent can align existing code to the specs. If a previous agent harness is detected in the folder, the wizard warns you, requires an explicit acknowledgment, and pre-generates `.agents/specs/tasks/harness-migration.tasks.md` so your agent migrates it (mechanism archived, knowledge triaged) without hand-written prompts. |
+| **Brownfield** | ✅ | Existing project. You pick your project folder; the default **Level 1 — Structural bootstrap** analyzes it **100% in the browser** (no file ever leaves your machine), pre-fills the flow, and generates a collision-safe scaffold: files that already exist in your project are skipped and reported, never overwritten. **Level 2 — Assisted semantic analysis** is explicitly modeled as a future opt-in mode. Includes the `spec-converge` workflow so your agent can align existing code to the specs. If a previous agent harness is detected in the folder, the wizard warns you, requires an explicit acknowledgment, and pre-generates `.agents/specs/tasks/harness-migration.tasks.md` so your agent migrates it (mechanism archived, knowledge triaged) without hand-written prompts. |
 | **Deploy** (SpecDeploy wizard) | ⏸ deferred | CI/CD + IaC generation works for 6 providers, but refinement is on hold until a real target environment is defined (Azure vs AWS vs Railway vs other). |
 
 ## What the generated scaffold contains (SpecDD Harness v1)
@@ -96,7 +96,9 @@ skipped and reported, and all wiring happens through the install tasks with a hu
 ### Brownfield — existing project
 
 1. Open the SpecDD wizard → pick **Brownfield** → choose your project folder.
-   Analysis runs 100% in your browser; only manifest files are read.
+   Select the analysis depth. Level 1 is available by default; Level 2 is shown as
+   a planned opt-in capability and is not executable yet. Level 1 runs 100% in your
+   browser and reads only known manifest files.
 2. Review the detection cards (stack, suggested domains/entities — **edit them**:
    replace technical folder names with business domains, drop noise entities).
    If a previous agent harness is detected, read the warning and check the
@@ -109,6 +111,19 @@ skipped and reported, and all wiring happens through the install tasks with a hu
    `Read AGENTS.md and follow it. Then read context/brownfield-analysis.md and do what its Kickoff section says.`
    The agent will ask for your approval on the pre-generated migration tasks (if a
    legacy harness existed) and then run `spec-converge` against your specs.
+
+#### Brownfield analysis depth
+
+The scenario and the analysis depth are separate decisions:
+
+- **Level 1 — Structural bootstrap:** reads known manifests and file paths only;
+  detects technologies, suggests domains/entities, and detects legacy harnesses.
+- **Level 2 — Assisted semantic analysis:** a future opt-in local analysis of
+  source code, tests, models, routes, and configuration, with evidence and
+  confidence for each inference.
+
+Neither level invents business rules, approves specs automatically, or modifies
+existing source code.
 
 ### Role Pack — add BA/QA/Dev/UX roles to a harness project
 
@@ -141,9 +156,10 @@ npm workspaces monorepo (Node ≥ 20):
 **How generation works** (same pattern in all three wizards): a build-time bundle
 script snapshots the kit's real files into `website/src/data/*.json`; pure functions
 in `generators.js` overlay the personalized artifacts from your answers; the wizard
-zips everything client-side with JSZip. The Brownfield analyzer (`analyzer.js`) is
-equally pure: manifest files for stack detection, folder structure for domain
-suggestions, filename patterns for entities — source code content is never read.
+zips everything client-side with JSZip. The current Brownfield analyzer
+(`analyzer.js`) implements Level 1 — manifest files for stack detection, folder
+structure for domain suggestions, filename patterns for entities — source code
+content is never read.
 SpecForge's target ingestion reads only the path LIST (no content at all) to detect
 the destination harness and compute collisions.
 
@@ -196,6 +212,7 @@ CI (`.github/workflows/ci.yml`) runs unit + build per workspace; e2e runs locall
   Brownfield ingestion, legacy-harness deprecation, SpecForge Role Packs).
 - `docs/superpowers/plans/` — the implementation plans executed task-by-task.
 - `docs/ROADMAP.md` — improvement backlog.
+- `docs/IMPLEMENTATION_STATUS.md` — completed scope and the next Brownfield analysis phase.
 
 ## References
 

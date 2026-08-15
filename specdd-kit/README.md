@@ -57,10 +57,11 @@ npm install                     # once, at the repo root (npm workspaces)
 npm run dev -w sdd-kit-wizard   # serves on :4321
 ```
 
-Open the local Astro URL that's printed in the terminal, walk through the 11 steps
-(Welcome, Scenario, Project, Tech Stack, Domains & Entities, Features, Principles,
-MCP Tools, Agents & Tools, Security, Preview / Download), and download the
-generated ZIP from the last step.
+Open the local Astro URL that's printed in the terminal, walk through the 11
+Greenfield steps (or 12 Brownfield steps, including Ingest & Analyze), and download
+the generated ZIP from the last step. Brownfield currently offers Level 1 —
+Structural bootstrap; Level 2 — Assisted semantic analysis is modeled as a future
+opt-in capability and is not executable yet.
 
 `npm run dev` and `npm run build` both re-bundle the kit's own source files into
 `src/data/kit-files.json` first (via the `predev`/`prebuild` scripts calling

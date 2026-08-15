@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { analyzeProject } from './analyzer.js';
+import { ANALYSIS_LEVELS, DEFAULT_ANALYSIS_DEPTH } from './analysis.js';
 
 // Folder ingestion for the Brownfield scenario. All analysis happens in-browser via
 // the File API; only manifest files are ever read.
-export default function IngestStep({ data, skippedCount, replacedCount, onAnalyzed, onAck }) {
+export default function IngestStep({ data, skippedCount, replacedCount, onAnalyzed, onAck, onAnalysisDepthChange }) {
   const [busy, setBusy] = useState(false);
+  const analysisDepth = data.analysisDepth || DEFAULT_ANALYSIS_DEPTH;
+  const selectedLevel = ANALYSIS_LEVELS.find((level) => level.id === analysisDepth) || ANALYSIS_LEVELS[0];
 
   async function onPick(e) {
     const inputEl = e.target;
@@ -19,6 +22,7 @@ export default function IngestStep({ data, skippedCount, replacedCount, onAnalyz
         folderName,
         paths: [...byPath.keys()],
         readFile: (p) => byPath.get(p).text(),
+        analysisDepth,
       });
       onAnalyzed(analysis, [...byPath.keys()]);
     } finally {
@@ -35,6 +39,26 @@ export default function IngestStep({ data, skippedCount, replacedCount, onAnalyz
         ever leaves your machine. Only manifest files (package.json and friends) are
         read; everything else contributes its path only.
       </p>
+      <fieldset className="b-fieldset">
+        <legend>Analysis depth</legend>
+        {ANALYSIS_LEVELS.map((level) => (
+          <label className="b-check" key={level.id}>
+            <input
+              type="radio"
+              name="analysis-depth"
+              value={level.id}
+              data-testid={`analysis-depth-${level.id}`}
+              checked={analysisDepth === level.id}
+              disabled={!level.available}
+              onChange={() => onAnalysisDepthChange(level.id)}
+            />
+            <span>
+              <strong>Level {level.number} — {level.title}</strong><br />
+              <small>{level.description}</small>
+            </span>
+          </label>
+        ))}
+      </fieldset>
       <label>Project folder *</label>
       <input type="file" data-testid="folder-input" webkitdirectory="" directory="" multiple
         onChange={onPick} disabled={busy} />
@@ -45,6 +69,10 @@ export default function IngestStep({ data, skippedCount, replacedCount, onAnalyz
             <div className="b-card">
               <strong>{a.projectName}</strong>
               <p>{a.fileCount} files scanned{a.truncated ? ' (truncated at the scan cap)' : ''} · manifests: {a.manifestsFound.join(', ') || 'none'}</p>
+            </div>
+            <div className="b-card">
+              <strong>Analysis</strong>
+              <p>Level {selectedLevel.number} — {selectedLevel.title}</p>
             </div>
             <div className="b-card">
               <strong>Stack</strong>
