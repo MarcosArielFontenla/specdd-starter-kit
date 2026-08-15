@@ -667,7 +667,7 @@ In the repo-root `README.md`, in the Scenarios table's Brownfield row, append to
 - `npm run test:unit -w sdd-kit-wizard` — PASS
 - `npm run build -w sdd-kit-wizard` and `npm run build -w specdd-platform` — succeed
 - `npm test -w specdd-platform` — PASS
-- Confidentiality sweep: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules' ':!awesome-copilot-main'` — no hits in files this plan touched.
+- Confidentiality sweep: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules'` — no hits in files this plan touched.
 
 - [ ] **Step 6: Commit**
 

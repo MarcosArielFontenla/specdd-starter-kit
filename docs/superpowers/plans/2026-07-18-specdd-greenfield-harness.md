@@ -1740,7 +1740,7 @@ Run from repo root:
 
 - [ ] **Step 5: Confidentiality final sweep**
 
-Run: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules' ':!awesome-copilot-main'`
+Run: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules'`
 Expected: no hits in any file this plan touched (hits in pre-existing unrelated files, if any, are out of scope — report them).
 Also verify the private root working documents remain untracked (`git status --porcelain` shows them only as `??`).
 

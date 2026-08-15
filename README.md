@@ -196,9 +196,7 @@ CI (`.github/workflows/ci.yml`) runs unit + build per workspace; e2e runs locall
   Brownfield ingestion, legacy-harness deprecation, SpecForge Role Packs).
 - `docs/superpowers/plans/` — the implementation plans executed task-by-task.
 - `docs/ROADMAP.md` — improvement backlog.
-- `awesome-copilot-main/` — vendored reference copy of `github/awesome-copilot`.
 
 ## References
 
 - `github/spec-kit` — SDD methodology and templates.
-- `github/awesome-copilot` — agents/prompts/instructions/skills.

@@ -66,5 +66,4 @@ commands as if they were already implemented.
 
 ## Further reading
 
-See `docs/references.md` for links to `github/spec-kit`, `github/awesome-copilot`,
-and MCP documentation.
+See `docs/references.md` for links to `github/spec-kit` and MCP documentation.

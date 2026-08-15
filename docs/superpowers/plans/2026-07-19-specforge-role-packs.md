@@ -1133,7 +1133,7 @@ Expected: 2 passed. If the directory upload drops the dot-folder `.agents/**` fi
 - `npm run build -w specforge-wizard` — succeeds
 - `npm run build -w specdd-platform` — succeeds
 - `npm test -w specdd-platform` — platform e2e; if a platform test walks the old SpecForge steps by name/index, update it minimally to the new flow and note it.
-- Confidentiality sweep: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules' ':!awesome-copilot-main'` — no hits in files this plan touched.
+- Confidentiality sweep: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules'` — no hits in files this plan touched.
 
 - [ ] **Step 6: Commit**
 

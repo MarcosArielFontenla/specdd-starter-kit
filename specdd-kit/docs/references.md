@@ -8,23 +8,6 @@
   directly inspired by. See `docs/specdd-methodology.md` in this kit for how
   `specdd-kit` relates to and differs from it.
 
-## Prompts, instructions, and agent definitions
-
-- [`github/awesome-copilot`](https://github.com/github/awesome-copilot) — a
-  community-maintained collection of GitHub Copilot prompts, instructions, chat
-  modes, and agent definitions. Several stack-specific instruction files in this
-  kit's `.github/instructions/` directory (for example the framework- and
-  tool-specific guardrails such as React, Next.js, Angular, ASP.NET, NestJS,
-  Spring Boot, Python, Docker, Kubernetes, GitHub Actions, and OWASP/security
-  guidance) are adapted from patterns established by the `awesome-copilot`
-  project. Attribution: these files are referenced/adapted, not vendored
-  verbatim wholesale — see each instruction file's own frontmatter for scope, and
-  consult the upstream repository for the original, most current versions and
-  full license terms before redistributing.
-- A local mirror/snapshot referenced during development of this kit lives at the
-  repository root under `awesome-copilot-main/`, kept for reference only; it is
-  not part of the generated wizard ZIP.
-
 ## Model Context Protocol (MCP)
 
 - [Model Context Protocol specification](https://modelcontextprotocol.io/) — the

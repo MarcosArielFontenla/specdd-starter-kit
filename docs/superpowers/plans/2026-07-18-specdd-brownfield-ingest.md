@@ -1002,7 +1002,7 @@ Expected: 2 passed (greenfield + brownfield). If the brownfield test fails on a 
 - `npm run build -w sdd-kit-wizard` — succeeds
 - `npm run build -w specdd-platform` — succeeds
 - `npm test -w specdd-platform` — platform e2e passes (it does not exercise the brownfield flow; investigate any failure before touching platform code)
-- Confidentiality sweep: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules' ':!awesome-copilot-main'` — no hits in files this plan touched.
+- Confidentiality sweep: `git grep -nE '\bV[0-9]+(\.[0-9]+)?\b' -- ':!node_modules'` — no hits in files this plan touched.
 
 - [ ] **Step 5: Commit**
 

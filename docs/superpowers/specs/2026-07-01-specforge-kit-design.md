@@ -152,5 +152,5 @@ Cada skill: frontmatter (`name`, `description`, `persona`) + cuerpo (Purpose / W
 ## Fuera de alcance
 
 - Azure DevOps (publishspecs/setupadomcp/config ADO), PAT flows.
-- `specdeploy-kit`, snapshot de awesome-copilot, gobernanza L1–L4, Motif.
+- `specdeploy-kit`, gobernanza L1–L4, Motif.
 - Publicación real a Miro/Figma (solo skills/prompts que lo describen; sin credenciales).

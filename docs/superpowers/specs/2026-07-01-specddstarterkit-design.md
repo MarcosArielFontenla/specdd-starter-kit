@@ -23,7 +23,6 @@ ese prompt a las decisiones tomadas con el usuario (abajo).
 | Agente/stack | Multi-agente genérico (Copilot/Claude/Cursor/Gemini), stack configurable en el wizard |
 | Integraciones | Sin Azure DevOps y sin despliegue Azure. Sí opciones de **MCP básicos** generadas por el wizard |
 | Gobernanza | Flujo SDD puro, **sin** niveles L1–L4 |
-| awesome-copilot | **Omitir** el snapshot; solo placeholder de referencia + atribución de licencia |
 | Personas specforge | BA, QA, Dev, UX (las 4) — en Iteración 2 |
 | Tests/CI | Tests básicos + verificación de build; CI simple en GitHub Actions |
 | Branding | Neutro/configurable (no "Surtec" por defecto) |
@@ -46,7 +45,6 @@ SPECDDSTARTERKIT/
 │   ├── prompts/specdd-launch.prompt.md      # launcher Copilot Chat para specdd-kit
 │   └── workflows/ci.yml                      # lint/build de specdd-kit (Node 20)
 ├── .vscode/settings.json                     # genérico, mínimo
-├── awesome-copilot-main/README.md            # placeholder de referencia + licencia/atribución
 ├── docs/superpowers/specs/                    # specs de brainstorming (este archivo)
 ├── specdd-kit/                               # ver sección 2
 ├── .gitignore                                # del prompt, corregido a specdd-kit/...
@@ -153,7 +151,6 @@ stack: `typescript-5-es2022`, `reactjs`, `angular`, `nextjs`, `nestjs`, `aspnet-
 - `specdd-kit/website` levanta el wizard y descarga un ZIP con contexto, prompts, instrucciones, templates y `mcp.json` según inputs.
 - `/specdd-launch` documentado y funcional desde Copilot Chat.
 - Sin secretos en fuentes/ejemplos.
-- `awesome-copilot-main/` preserva atribución de licencia (placeholder de referencia).
 - Build y tests básicos pasan; CI simple corre.
 - Resumen final de archivos creados, comandos ejecutados y supuestos pendientes.
 
@@ -161,6 +158,5 @@ stack: `typescript-5-es2022`, `reactjs`, `angular`, `nextjs`, `nestjs`, `aspnet-
 
 - `specforge-kit` (BA/QA/Dev/UX) — Iteración 2, spec/plan propios.
 - `specdeploy-kit` (Azure SWA + Functions) — no en el roadmap actual.
-- Snapshot completo de `awesome-copilot`.
 - Gobernanza L1–L4, integración Azure DevOps, Motif Design System.
 ```

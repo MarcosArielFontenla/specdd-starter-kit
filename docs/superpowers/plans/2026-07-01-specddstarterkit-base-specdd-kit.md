@@ -11,7 +11,6 @@
 ## Global Constraints
 
 - No secrets, PATs, tokens, client secrets, or real Azure values anywhere in source, examples, or logs. Use placeholders (`${input:...}`) in generated `mcp.json`.
-- Preserve licenses/attribution for any referenced public content (`awesome-copilot-main/`).
 - Do not version `node_modules/`, `.astro/`, `dist/`, logs, `.env*`, or generated bundles (`kit-files.json`).
 - `.vscode/settings.json` must be generic — no personal paths or auto-approved commands.
 - Windows-friendly paths and commands; repo is developed on Windows 11.
@@ -29,7 +28,6 @@ SPECDDSTARTERKIT/
 ├── .github/prompts/specdd-launch.prompt.md
 ├── .github/workflows/ci.yml
 ├── .vscode/settings.json
-├── awesome-copilot-main/README.md
 ├── .gitignore
 ├── README.md
 └── specdd-kit/
@@ -66,7 +64,7 @@ SPECDDSTARTERKIT/
 ## Task 1: Repository base files
 
 **Files:**
-- Create: `.gitignore`, `README.md`, `.vscode/settings.json`, `awesome-copilot-main/README.md`, `.github/prompts/specdd-launch.prompt.md`
+- Create: `.gitignore`, `README.md`, `.vscode/settings.json`, `.github/prompts/specdd-launch.prompt.md`
 
 **Interfaces:**
 - Produces: repo root scaffolding; `.gitignore` ignores `specdd-kit/website/src/data/kit-files.json`.
@@ -144,7 +142,6 @@ Extract it at the root of your project so VS Code / GitHub Copilot auto-loads
 ## References
 
 - `github/spec-kit` — SDD methodology and templates.
-- `github/awesome-copilot` — agents/prompts/instructions/skills (referenced, not vendored; see `awesome-copilot-main/`).
 ```
 
 - [ ] **Step 4: Create `.vscode/settings.json`** (generic)
@@ -157,30 +154,7 @@ Extract it at the root of your project so VS Code / GitHub Copilot auto-loads
 }
 ```
 
-- [ ] **Step 5: Create `awesome-copilot-main/README.md`** (reference placeholder + attribution)
-
-```markdown
-# awesome-copilot (reference)
-
-This directory is a **placeholder**. The full snapshot of
-[`github/awesome-copilot`](https://github.com/github/awesome-copilot) is **not**
-vendored in this repository to keep it lightweight.
-
-## How to add it (optional)
-
-```powershell
-git clone https://github.com/github/awesome-copilot awesome-copilot-main
-```
-
-## Attribution & license
-
-`github/awesome-copilot` is published by GitHub under its own license (MIT at the
-time of writing). If you vendor its contents here, you **must** preserve its
-`LICENSE`, `README.md`, `SECURITY.md`, `SUPPORT.md`, and `CONTRIBUTING.md`, and
-keep all upstream copyright notices intact.
-```
-
-- [ ] **Step 6: Create `.github/prompts/specdd-launch.prompt.md`**
+- [ ] **Step 5: Create `.github/prompts/specdd-launch.prompt.md`**
 
 ```markdown
 ---
@@ -201,10 +175,10 @@ Launch the **specdd-kit** wizard locally.
 7. Report the final URL, or surface any errors verbatim (do not hide failures).
 ```
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add .gitignore README.md .vscode/settings.json awesome-copilot-main/README.md .github/prompts/specdd-launch.prompt.md
+git add .gitignore README.md .vscode/settings.json .github/prompts/specdd-launch.prompt.md
 git commit -m "chore: repository base files and specdd-launch prompt"
 ```
 
@@ -1392,7 +1366,7 @@ git commit -m "feat(specdd-kit): agents (specify/implement/orchestrator/reviewer
 - `docs/workflow.md`: the constitution→specify→plan→tasks→implement loop with the matching `/specdd-*` prompts.
 - `docs/greenfield-vs-brownfield.md`: applying SDD to new vs existing codebases.
 - `docs/faq.md`: common questions (secrets, MCP, which agent, offline).
-- `docs/references.md`: links to `github/spec-kit`, `github/awesome-copilot` (with attribution), MCP docs.
+- `docs/references.md`: links to `github/spec-kit` and MCP docs.
 - `.github/copilot-instructions.md`: the kit's own default instructions (SDD guardrails), noting the wizard overlays a project-specific version.
 
 - [ ] **Step 1:** Create all documentation files per the content requirements.
@@ -1448,7 +1422,7 @@ git commit -m "chore(specdd-kit): iteration 1 validation" || echo "nothing to co
 ## Self-Review
 
 **Spec coverage:**
-- Base repo (README, .gitignore, .vscode, awesome-copilot placeholder, launch prompt) → Task 1. ✅
+- Base repo (README, .gitignore, .vscode, launch prompt) → Task 1. ✅
 - CI → Task 2. ✅
 - Wizard app (Astro/React/JSZip, 8 steps, bundle-kit, generators, ZIP) → Tasks 3–7. ✅
 - MCP básicos as opt-in `mcp.json` with placeholders → Task 5 (`renderMcpJson`) + Task 6 step. ✅
