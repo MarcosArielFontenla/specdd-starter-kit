@@ -67,7 +67,14 @@ test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', a
   await page.getByTestId('next-btn').click(); // -> Ingest & Analyze
 
   await expect(page.getByTestId('analysis-depth-structural')).toBeChecked();
-  await expect(page.getByTestId('analysis-depth-semantic')).toBeDisabled();
+  await expect(page.getByTestId('analysis-depth-semantic')).toBeEnabled();
+  await page.getByTestId('analysis-depth-semantic').check();
+  await expect(page.getByTestId('analysis-depth-semantic')).toBeChecked();
+
+  await page.getByTestId('folder-trigger').click();
+  await expect(page.getByTestId('folder-consent')).toBeVisible();
+  await page.getByTestId('folder-cancel').click();
+  await expect(page.getByTestId('folder-consent')).toBeHidden();
 
   await page.getByTestId('next-btn').click(); // validation blocks (no folder yet)
   await expect(page.getByTestId('error')).toBeVisible();
@@ -75,6 +82,10 @@ test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', a
   await page.getByTestId('folder-input').setInputFiles(fixtureDir);
   await expect(page.getByTestId('analysis-summary')).toBeVisible();
   await expect(page.getByTestId('analysis-summary')).toContainText('acme-shop');
+  await expect(page.getByTestId('analysis-summary')).toContainText('Semantic context');
+  await page.getByTestId('next-btn').click(); // -> Review Context
+  await expect(page.getByTestId('context-review')).toBeVisible();
+  await page.getByTestId('context-approve').click();
   await page.getByTestId('next-btn').click(); // -> Project (pre-filled)
 
   await expect(page.getByTestId('project-name')).toHaveValue('acme-shop');
@@ -117,6 +128,9 @@ test('brownfield with legacy harness: warning gates next, replaced group and mig
   await expect(page.getByTestId('error')).toContainText(/deprecat/i);
 
   await page.getByTestId('legacy-ack').check();
+  await page.getByTestId('next-btn').click(); // -> Review Context
+  await expect(page.getByTestId('context-review')).toBeVisible();
+  await page.getByTestId('context-approve').click();
   await page.getByTestId('next-btn').click(); // -> Project
 
   await page.getByTestId('next-btn').click(); // -> Tech Stack (react pre-filled)

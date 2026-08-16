@@ -48,9 +48,11 @@ export function renderTechStack(input) {
 - **Backend:** ${s.backend || ''}
 - **Testing:** ${s.testing || ''}
 - **Database:** ${s.database || ''}
+- **Architecture:** ${(input.architecture || []).join(', ')}
 - **Infrastructure:** ${s.infra || ''}
 - **Swagger/OpenAPI:** ${s.swagger ? 'yes' : 'no'}
 - **WCAG/a11y:** ${s.a11y ? 'yes' : 'no'}
+${input.scenario === 'brownfield' && input.contextReview?.approved ? '- **Brownfield evidence review:** human-approved; see `context/brownfield-analysis.md` for provenance and classifications.\n' : ''}
 `;
 }
 
@@ -73,44 +75,101 @@ OWASP focus: ${(input.security?.owaspControls || []).join(', ') || 'baseline'}
 `;
 }
 
+export const SCAFFOLD_MANIFEST_PATH = 'context/scaffold-manifest.json';
+
+export function renderScaffoldManifest(input, generatedFiles, skipped = [], replaced = []) {
+  return JSON.stringify({
+    schemaVersion: 1,
+    scenario: input.scenario || 'greenfield',
+    analysisDepth: input.analysis?.analysisDepth || input.analysisDepth || null,
+    contextReview: input.contextReview ? {
+      approved: Boolean(input.contextReview.approved),
+      statuses: Object.fromEntries(['stack', 'architecture', 'domains', 'entities', 'features']
+        .map((group) => [group, (input.contextReview[group] || []).map((item) => ({
+          value: item.value || item.label || '', selected: Boolean(item.selected), status: item.status || 'unknown',
+        }))])),
+    } : null,
+    selected: {
+      domains: input.domains || [],
+      entities: input.entities || [],
+      features: input.features || [],
+      architecture: input.architecture || [],
+      stack: input.stack || {},
+    },
+    generatedFiles: [...new Set(generatedFiles)].sort(),
+    skippedPaths: [...new Set(skipped)].sort(),
+    replacedPaths: [...new Set(replaced)].sort(),
+  }, null, 2);
+}
+
 export function generateFiles(baseFiles, input, today = new Date().toISOString().slice(0, 10)) {
-  const tools = input.tools || [];
+  const effectiveInput = withApprovedContext(input);
+  const tools = effectiveInput.tools || [];
   const hasCopilot = tools.includes('GitHub Copilot');
 
   const out = {};
   for (const [path, contents] of Object.entries(baseFiles)) {
     if (!hasCopilot && path.startsWith('.github/')) continue; // Copilot projection is opt-in
-    if (input.scenario !== 'brownfield' && path === '.agents/workflows/spec-converge.md') continue; // converge is brownfield-only
+    if (effectiveInput.scenario !== 'brownfield' && path === '.agents/workflows/spec-converge.md') continue; // converge is brownfield-only
     out[path] = contents;
   }
 
-  out['context/project.md'] = renderProject(input);
-  out['context/tech-stack.md'] = renderTechStack(input);
-  out['context/constitution.md'] = renderConstitution(input);
+  out['context/project.md'] = renderProject(effectiveInput);
+  out['context/tech-stack.md'] = renderTechStack(effectiveInput);
+  out['context/constitution.md'] = renderConstitution(effectiveInput);
 
-  out['AGENTS.md'] = renderPrimer(input, today);
-  out['.agents/REGISTRY.md'] = renderRegistry(input, today);
-  out['.agents/orchestration/ROUTING.md'] = renderRouting(input);
-  out['.agents/cold-start/budget-manifest.yaml'] = renderBudgetManifest(input);
-  for (const domain of input.domains || []) {
-    out[`.agents/skills/${slugify(domain)}/SKILL.md`] = renderSkillSkeleton(domain);
+  out['AGENTS.md'] = renderPrimer(effectiveInput, today);
+  out['.agents/REGISTRY.md'] = renderRegistry(effectiveInput, today);
+  out['.agents/orchestration/ROUTING.md'] = renderRouting(effectiveInput);
+  out['.agents/cold-start/budget-manifest.yaml'] = renderBudgetManifest(effectiveInput);
+  for (const domain of effectiveInput.domains || []) {
+    out[`.agents/skills/${slugify(domain)}/SKILL.md`] = renderSkillSkeleton(domain, reviewItemFor(effectiveInput, 'domains', domain));
     out[`.agents/evals/rubrics/${slugify(domain)}.yaml`] = renderRubric(domain);
   }
-  for (const entity of input.entities || []) {
-    out[`.agents/specs/${slugify(entity)}.spec.yaml`] = renderSpecYaml(entity);
+  for (const entity of effectiveInput.entities || []) {
+    out[`.agents/specs/${slugify(entity)}.spec.yaml`] = renderSpecYaml(entity, reviewItemFor(effectiveInput, 'entities', entity));
   }
   for (const tool of tools) {
     const adapter = renderAdapter(tool);
     if (adapter) out[adapter.path] = adapter.content;
   }
 
-  if ((input.mcp || []).length > 0) out['.vscode/mcp.json'] = renderMcpJson(input.mcp);
-  if ((input.features || []).length > 0) out['specs/features-spec.md'] = renderFeaturesSpec(input);
+  if ((effectiveInput.mcp || []).length > 0) out['.vscode/mcp.json'] = renderMcpJson(effectiveInput.mcp);
+  if ((effectiveInput.features || []).length > 0) out['specs/features-spec.md'] = renderFeaturesSpec(effectiveInput);
+  out[SCAFFOLD_MANIFEST_PATH] = renderScaffoldManifest(effectiveInput, [...Object.keys(out), SCAFFOLD_MANIFEST_PATH]);
   return out;
 }
 
 export const slugify = (s) =>
   s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+const selectedReviewValues = (items) => (items || [])
+  .filter((item) => item.selected && String(item.value || '').trim())
+  .map((item) => String(item.value).trim());
+
+const reviewItemFor = (input, group, value) => (input.contextReview?.[group] || [])
+  .find((item) => String(item.value || '').trim().toLowerCase() === String(value || '').trim().toLowerCase());
+
+// Defense in depth: the final generator applies the approved review itself so a
+// stale UI field can never reintroduce a finding the human excluded.
+const withApprovedContext = (input) => {
+  const review = input.contextReview;
+  if (!review?.approved) return input;
+  const stack = { ...input.stack };
+  const languages = (review.stack || []).filter((item) => item.field === 'languages');
+  for (const item of review.stack || []) {
+    if (item.field && item.field !== 'languages') stack[item.field] = item.selected ? String(item.value || '').trim() : '';
+  }
+  if (languages.length) stack.languages = selectedReviewValues(languages);
+  return {
+    ...input,
+    stack,
+    domains: selectedReviewValues(review.domains),
+    entities: selectedReviewValues(review.entities),
+    features: selectedReviewValues(review.features),
+    architecture: selectedReviewValues(review.architecture),
+  };
+};
 
 const ADAPTER_CONTENT = `<!-- Adapter file — do not add rules here. All rules live in the vendor-neutral core. -->
 Read the \`AGENTS.md\` file at the repository root and follow it completely before starting any task.
@@ -146,7 +205,7 @@ registry: .agents/REGISTRY.md
 
 ## What this is
 ${desc}. Stack: ${stack}.
-Full artifact registry: \`.agents/REGISTRY.md\` (load only when modifying the harness itself).
+Full artifact registry: \`.agents/REGISTRY.md\` (load only when modifying the harness itself).${input.scenario === 'brownfield' ? ' Brownfield baseline: `context/brownfield-analysis.md`.' : ''}
 
 ## Load order (always)
 1. \`.agents/orchestration/ROUTING.md\` — classify the task
@@ -204,6 +263,9 @@ export function renderRegistry(input, today) {
   const workflows = ['.agents/workflows/spec-first-feature.md', '.agents/workflows/skill-review.md']
     .concat(input.scenario === 'brownfield' ? ['.agents/workflows/spec-converge.md'] : [])
     .join(', ');
+  const brownfieldRow = input.scenario === 'brownfield'
+    ? '| Brownfield context review | context/brownfield-analysis.md | Approved detection snapshot and convergence evidence |\n'
+    : '';
   return `---
 version: 1.0.0
 lastUpdated: ${today}
@@ -226,7 +288,7 @@ ${specRows}
 ${rubricRows}
 | Budget manifest | .agents/cold-start/budget-manifest.yaml | Task class -> injected artifacts map |
 | Workflows | ${workflows} | Spec pipeline + drift review${input.scenario === 'brownfield' ? ' + converge' : ''} |
-| Telemetry contract | .agents/telemetry/EVENTS.md | Vendor-neutral JSONL event schema |
+${brownfieldRow}| Telemetry contract | .agents/telemetry/EVENTS.md | Vendor-neutral JSONL event schema |
 | Scripts | .agents/scripts/*.ps1, .agents/evals/run-eval.ps1 | Mechanical gates (pwsh 7+, powershell-yaml) |
 
 ## Harness Systems Status
@@ -241,7 +303,7 @@ ${rubricRows}
 `;
 }
 
-export function renderSkillSkeleton(domain) {
+export function renderSkillSkeleton(domain, review = null) {
   const slug = slugify(domain);
   return `---
 name: ${slug}
@@ -259,6 +321,13 @@ driftPolicyPath: .agents/evals/rubrics/${slug}.yaml
 
 ## Scope
 What ${domain} covers in this project, and what it explicitly does not.
+
+${review ? `## Brownfield context baseline
+- Review status: ${review.status || 'unknown'}
+- Evidence: ${review.source || 'manual review'} (${review.confidence || 'unknown'})
+
+> This classification confirms the detected context only; it does not invent or approve business rules.
+` : ''}
 
 ## Must rules
 <!-- Rules the agent must always follow in this domain. One imperative sentence each. -->
@@ -292,11 +361,17 @@ driftPolicy:
 `;
 }
 
-export function renderSpecYaml(entity) {
+const yamlQuote = (value) => JSON.stringify(String(value ?? ''));
+
+export function renderSpecYaml(entity, review = null) {
   return `entity: ${entity}
 version: 0.1.0
 description: "Primary entity captured at scaffold time. Specify via the spec-first workflow."
-requirements: []
+${review ? `brownfieldContext:
+  reviewStatus: ${yamlQuote(review.status || 'unknown')}
+  evidenceSource: ${yamlQuote(review.source || 'manual review')}
+  confidence: ${yamlQuote(review.confidence || 'unknown')}
+` : ''}requirements: []
 designContract:
   status: placeholder
   reviewedBy: null
@@ -328,12 +403,28 @@ ${classes}
 
 export function renderFeaturesSpec(input) {
   const items = (input.features || []).map((f) => `- [ ] ${f}`).join('\n');
+  const safeCell = (value) => String(value ?? '').replaceAll('|', '\\|').replace(/[\r\n]+/g, ' ');
+  const featureReview = input.scenario === 'brownfield'
+    ? (input.features || []).map((feature) => reviewItemFor(input, 'features', feature)).filter(Boolean)
+    : [];
+  const reviewBlock = featureReview.length
+    ? `
+## Brownfield context baseline
+
+The classifications below describe the detected starting context. They do not mark
+the feature as specified, approved or complete; all feature checkboxes remain open.
+
+| Feature | Review status | Evidence | Confidence |
+|---------|---------------|----------|------------|
+${featureReview.map((item) => `| ${safeCell(item.value)} | ${safeCell(item.status || 'unknown')} | ${safeCell(item.source || 'manual review')} | ${safeCell(item.confidence || 'unknown')} |`).join('\n')}
+` : '';
   return `# Features Spec — ${input.project?.name || 'Project'}
 
 Initial feature list captured at scaffold time. Refine each into a full spec via
 \`.agents/workflows/spec-first-feature.md\` before implementation.
 
 ${items}
+${reviewBlock}
 `;
 }
 
@@ -343,6 +434,8 @@ export function renderBrownfieldAnalysis(input, skipped, replaced, today) {
   const a = input.analysis || {};
   const analysisLevel = getAnalysisLevel(a.analysisDepth || input.analysisDepth);
   const stack = a.stack || {};
+  const semantic = a.semantic;
+  const review = input.contextReview;
   const list = (xs) => (xs && xs.length ? xs.map((x) => `- ${x}`).join('\n') : '- (none)');
   const lh = a.legacyHarness;
   const deprecating = !!(lh?.detected && input.legacyAck);
@@ -350,12 +443,14 @@ export function renderBrownfieldAnalysis(input, skipped, replaced, today) {
     ? `${skipped.map((p) => `- ${p}`).join('\n')}\n\nThese scaffold files were NOT written because they already exist in this project.\nMerge harness-relevant content into them via the converge workflow, not by overwriting.`
     : '- (none — no scaffold file collided with an existing one)';
   const kickoff = deprecating
-    ? `A legacy harness was detected and its deprecation acknowledged. First session:
-get the human's approval on \`.agents/specs/tasks/harness-migration.tasks.md\`, then
-execute it. Afterwards run \`.agents/workflows/spec-converge.md\` to measure the
-delta between this codebase and the specs in \`.agents/specs/\`.`
-    : `Run \`.agents/workflows/spec-converge.md\` to measure the delta between this codebase
-and the specs in \`.agents/specs/\`. Treat the suggestions below as leads, not facts.`;
+    ? `A legacy harness was detected and its deprecation acknowledged. First validate
+the extraction with \`.agents/scripts/validate-harness.ps1\`, then get the human's approval on
+\`.agents/specs/tasks/harness-migration.tasks.md\`, then execute it. Afterwards run
+\`.agents/workflows/spec-converge.md\` to measure the delta between this codebase and the
+specs in \`.agents/specs/\`.`
+    : `First validate the extraction with \`.agents/scripts/validate-harness.ps1\`. Then run
+\`.agents/workflows/spec-converge.md\` to measure the delta between this codebase and the
+specs in \`.agents/specs/\`. Treat the suggestions below as leads, not facts.`;
   const legacyBlock = deprecating
     ? `
 ## Legacy harness detected
@@ -367,6 +462,45 @@ ${list(lh.knowledge)}
 
 Scaffold files replacing legacy paths on extract:
 ${list(replaced)}
+`
+    : '';
+  const semanticBlock = semantic
+    ? `
+## Semantic context (Level 2)
+- Safe files read: ${semantic.filesRead?.length || 0}
+- Characters read: ${semantic.totalChars || 0}
+- Confidence: ${semantic.confidence || 'unknown'}
+
+### Architecture signals
+${list((semantic.architecture || []).map((item) => `${item.value} — ${item.source} (${item.confidence})`))}
+
+### Evidence
+${list((semantic.evidence || []).map((item) => `[${item.category}] ${item.value} — ${item.source} (${item.confidence}) — ${item.detail}`))}
+
+### Files skipped by semantic safety limits
+${list((semantic.filesSkipped || []).map((item) => `${item.path} (${item.reason})`))}
+`
+    : '';
+  const reviewItemLabel = (item) => `${item.value || item.label || '(unnamed)'} — ${item.selected ? 'included' : 'excluded'} · ${item.status || 'unknown / verify'} · ${item.source || 'manual review'}`;
+  const reviewBlock = review
+    ? `
+## Human context review
+- Approval: ${review.approved ? 'approved' : 'pending'}
+
+### Technology stack classifications
+${list((review.stack || []).map((item) => `${item.label}: ${reviewItemLabel(item)}`))}
+
+### Domain classifications
+${list((review.domains || []).map(reviewItemLabel))}
+
+### Entity classifications
+${list((review.entities || []).map(reviewItemLabel))}
+
+### Feature classifications
+${list((review.features || []).map(reviewItemLabel))}
+
+### Architecture signal classifications
+${list((review.architecture || []).map(reviewItemLabel))}
 `
     : '';
   return `# Brownfield Analysis — ${a.projectName || input.project?.name || 'Project'}
@@ -390,6 +524,11 @@ ${list(a.domains)}
 
 ## Suggested entities (from filename patterns)
 ${list(a.entities)}
+
+## Suggested features (from folder structure)
+${list(a.features)}
+${semanticBlock}
+${reviewBlock}
 
 ## Skipped scaffold files (already exist in this project)
 ${skippedBlock}${legacyBlock}
@@ -460,10 +599,16 @@ export function generateScaffold(baseFiles, input, today = new Date().toISOStrin
   }
   skipped.sort();
   replaced.sort();
+  const manifestSkipped = skipped.includes(SCAFFOLD_MANIFEST_PATH);
   for (const p of skipped) delete files[p];
   if (deprecating) {
     files['.agents/specs/tasks/harness-migration.tasks.md'] = renderMigrationTasks(input, today);
   }
   files[ANALYSIS_REPORT_PATH] = renderBrownfieldAnalysis(input, skipped, replaced, today);
+  if (!manifestSkipped) {
+    files[SCAFFOLD_MANIFEST_PATH] = renderScaffoldManifest(
+      withApprovedContext(input), Object.keys(files), skipped, replaced,
+    );
+  }
   return { files, skipped, replaced };
 }

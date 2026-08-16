@@ -20,8 +20,8 @@ export const ANALYSIS_LEVELS = Object.freeze([
     id: ANALYSIS_DEPTHS.SEMANTIC,
     number: 2,
     title: 'Assisted semantic analysis',
-    description: 'Planned opt-in local analysis of source, tests, models and configuration.',
-    available: false,
+    description: 'Opt-in local analysis of safe docs, manifests, models, routes and tests with evidence.',
+    available: true,
   }),
 ]);
 

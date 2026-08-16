@@ -17,6 +17,7 @@ The harness validation scripts require:
 | Path | Purpose |
 |------|---------|
 | `AGENTS.md` (root) | Session primer, ≤40 lines. What every agent session loads first. |
+| `context/scaffold-manifest.json` | Post-extraction manifest: generated paths, collisions and selected context. |
 | `.agents/REGISTRY.md` | Full artifact registry + systems status. Load only when working on the harness itself. |
 | `.agents/orchestration/ROUTING.md` | Task classification → which skill to load. |
 | `.agents/skills/<domain>/SKILL.md` | Per-domain rules. Skeletons at scaffold time — fill as the domain takes shape. |
@@ -25,7 +26,7 @@ The harness validation scripts require:
 | `.agents/cold-start/` | Budget manifest + compressed skill snapshots (generated once skills have real content). |
 | `.agents/workflows/` | spec-first-feature.md, skill-review.md. |
 | `.agents/telemetry/` | EVENTS.md contract; events/ is gitignored. |
-| `.agents/scripts/` | generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
+| `.agents/scripts/` | validate-harness.ps1, generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
 
 ## Lifecycle after scaffolding
 1. Fill each skill skeleton with the domain's real Must/Never rules as they emerge.
@@ -36,3 +37,29 @@ The harness validation scripts require:
    into CI when the team is ready.
 5. Multi-agent orchestration artifacts are deliberately absent — add them only when a
    real multi-agent workflow with named sub-agents exists.
+
+After extracting a scaffold, run:
+
+```powershell
+pwsh .agents/scripts/validate-harness.ps1
+```
+
+The read-only gate checks the manifest, required Harness files, selected domain/entity
+artifacts, internal references, collision bookkeeping and high-confidence secret-like
+tokens. Add `-RunGates` when PowerShell-YAML is installed to run the existing spec and
+budget validators as part of the same check.
+
+## Brownfield additions
+
+For an existing project, the wizard adds `context/brownfield-analysis.md` and keeps
+`.agents/workflows/spec-converge.md`. The analysis can run at two levels: structural
+manifest/path detection or opt-in semantic analysis over a bounded safe text
+allowlist. Level 2 records evidence, confidence, architecture signals and skipped
+files; it does not read secrets or modify source code.
+
+Before generation, `Review Context` requires a human to keep, edit, exclude and
+classify the detected stack, architecture, domains, entities and features. The
+approved selection is applied defensively to generated skills, context and feature
+artifacts. Entity contracts remain `designContract: placeholder`: context approval
+is not spec approval. Existing destination files are still skipped and reported;
+reconciliation belongs to `spec-converge`.

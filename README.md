@@ -21,7 +21,7 @@ The SpecDD wizard branches by scenario on its second step:
 | Scenario | Status | What it does |
 |----------|--------|--------------|
 | **Greenfield** | ✅ | New project. You pour in all the context you have (project, stack, domains, entities, features, principles, security, team tools) and get a fully personalized harness scaffold. |
-| **Brownfield** | ✅ | Existing project. You pick your project folder; the default **Level 1 — Structural bootstrap** analyzes it **100% in the browser** (no file ever leaves your machine), pre-fills the flow, and generates a collision-safe scaffold: files that already exist in your project are skipped and reported, never overwritten. **Level 2 — Assisted semantic analysis** is explicitly modeled as a future opt-in mode. Includes the `spec-converge` workflow so your agent can align existing code to the specs. If a previous agent harness is detected in the folder, the wizard warns you, requires an explicit acknowledgment, and pre-generates `.agents/specs/tasks/harness-migration.tasks.md` so your agent migrates it (mechanism archived, knowledge triaged) without hand-written prompts. |
+| **Brownfield** | ✅ | Existing project. You pick your project folder; Level 1 analyzes manifests and paths, while opt-in **Level 2 — Assisted semantic analysis** reads a bounded allowlist of safe text files locally. Both pre-fill the flow, require human review of detected context, and generate a collision-safe scaffold: existing files are skipped and reported, never overwritten. Includes `spec-converge`; legacy Harness detection still requires explicit acknowledgment and can generate migration tasks. |
 | **Deploy** (SpecDeploy wizard) | ⏸ deferred | CI/CD + IaC generation works for 6 providers, but refinement is on hold until a real target environment is defined (Azure vs AWS vs Railway vs other). |
 
 ## What the generated scaffold contains (SpecDD Harness v1)
@@ -42,10 +42,11 @@ CLAUDE.md / GEMINI.md / ...   ≤5-line pointer adapters, one per selected tool
   workflows/                  spec-first-feature, skill-review
                               (+ spec-converge, brownfield only)
   telemetry/EVENTS.md         Vendor-neutral JSONL event contract
-  scripts/*.ps1               Mechanical gates: validate-spec, validate-budget,
-                              generate-snapshots (require pwsh 7+ + powershell-yaml)
+  scripts/*.ps1               Mechanical gates: validate-harness, validate-spec,
+                              validate-budget, generate-snapshots
 context/                      project.md, tech-stack.md, constitution.md
-                              (+ brownfield-analysis.md, brownfield only)
+                              (+ scaffold-manifest.json; brownfield also includes
+                               brownfield-analysis.md)
 specs/, templates/, docs/     SDD templates and guides
 .github/                      Copilot prompts/instructions/agents — included ONLY
                               when GitHub Copilot is among the selected tools
@@ -89,25 +90,29 @@ skipped and reported, and all wiring happens through the install tasks with a hu
    tech folders) and primary **entities**, initial features, principles, MCP tools,
    **team tools** (one pointer adapter each), security (classification + OWASP focus).
 3. Review the grouped preview and download the ZIP; extract it into your empty repo.
-4. First agent session: your agent auto-loads `AGENTS.md` and routes work through the
+4. Run `pwsh .agents/scripts/validate-harness.ps1` after extraction.
+5. First agent session: your agent auto-loads `AGENTS.md` and routes work through the
    harness. Define real specs per entity with `.agents/workflows/spec-first-feature.md`
    when you are ready.
 
 ### Brownfield — existing project
 
 1. Open the SpecDD wizard → pick **Brownfield** → choose your project folder.
-   Select the analysis depth. Level 1 is available by default; Level 2 is shown as
-   a planned opt-in capability and is not executable yet. Level 1 runs 100% in your
-   browser and reads only known manifest files.
-2. Review the detection cards (stack, suggested domains/entities — **edit them**:
-   replace technical folder names with business domains, drop noise entities).
-   If a previous agent harness is detected, read the warning and check the
+   Select the analysis depth. Level 1 reads manifests and paths; Level 2 is an
+   explicit opt-in that reads only a bounded allowlist of safe documentation,
+   manifests, models, routes and tests. Both run 100% in your browser.
+2. Open **Review Context** and edit, exclude or classify each detected language,
+   technology, architecture signal, domain, entity and feature. Approval is required
+   before the wizard can continue.
+3. If a previous agent harness is detected, read the warning and check the
    acknowledgment — its mechanism files will be deprecated, its knowledge triaged.
-3. Walk the remaining steps (pre-filled), check the preview — including the
+4. Walk the remaining steps (pre-filled), check the preview — including the
    "Skipped — already exist" group — and download; extract into your repo root.
-4. Verify nothing was clobbered: `git status` must show only new files (plus, with an
+5. Run `pwsh .agents/scripts/validate-harness.ps1` after extraction. It checks the
+   manifest, required files, selected artifacts, internal references and safe content.
+6. Verify nothing was clobbered: `git status` must show only new files (plus, with an
    acknowledged legacy harness, the replaced harness paths).
-5. First agent session — one line:
+7. First agent session — one line:
    `Read AGENTS.md and follow it. Then read context/brownfield-analysis.md and do what its Kickoff section says.`
    The agent will ask for your approval on the pre-generated migration tasks (if a
    legacy harness existed) and then run `spec-converge` against your specs.
@@ -118,12 +123,14 @@ The scenario and the analysis depth are separate decisions:
 
 - **Level 1 — Structural bootstrap:** reads known manifests and file paths only;
   detects technologies, suggests domains/entities, and detects legacy harnesses.
-- **Level 2 — Assisted semantic analysis:** a future opt-in local analysis of
-  source code, tests, models, routes, and configuration, with evidence and
-  confidence for each inference.
+- **Level 2 — Assisted semantic analysis:** an opt-in local analysis over a bounded
+  safe allowlist. It records safe files read, evidence, confidence, architecture
+  signals and skipped files; it never reads secrets, environment files or binaries.
 
 Neither level invents business rules, approves specs automatically, or modifies
-existing source code.
+existing source code. Brownfield context approval is not spec approval: generated
+entity contracts remain placeholders until the project defines real requirements and
+executable checks.
 
 ### Role Pack — add BA/QA/Dev/UX roles to a harness project
 
@@ -157,9 +164,11 @@ npm workspaces monorepo (Node ≥ 20):
 script snapshots the kit's real files into `website/src/data/*.json`; pure functions
 in `generators.js` overlay the personalized artifacts from your answers; the wizard
 zips everything client-side with JSZip. The current Brownfield analyzer
-(`analyzer.js`) implements Level 1 — manifest files for stack detection, folder
-structure for domain suggestions, filename patterns for entities — source code
-content is never read.
+(`analyzer.js`) implements both levels. Level 1 uses manifests for stack detection,
+folder structure for domain suggestions and filename patterns for entities. Level 2
+adds a bounded safe text allowlist with evidence/confidence; secrets, environment
+files and binaries are excluded. The approved context is applied defensively by
+`generators.js`.
 SpecForge's target ingestion reads only the path LIST (no content at all) to detect
 the destination harness and compute collisions.
 

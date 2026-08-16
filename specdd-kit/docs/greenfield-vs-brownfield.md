@@ -36,37 +36,42 @@ Brownfield has an explicit analysis-depth choice, independent from the scenario:
 - **Level 1 — Structural bootstrap (available):** reads known manifests and file
   paths only. It detects the stack, suggests domains and entities, detects legacy
   harnesses, and generates a collision-safe scaffold.
-- **Level 2 — Assisted semantic analysis (planned):** an opt-in local analysis of
-  source code, tests, models, routes, and configuration. It will report evidence and
-  confidence for each inference before any human-approved convergence work.
+- **Level 2 — Assisted semantic analysis (available, opt-in):** a bounded local
+  analysis of safe documentation, manifests, models, routes and tests. It reports
+  evidence, confidence, architecture signals and skipped files before any human
+  context review or convergence work.
 
-The current wizard exposes both levels but executes only Level 1. Neither level
-should invent business rules, approve specs automatically, or modify existing source
-code.
+The wizard exposes and executes both levels. Level 2 never reads secrets,
+environment files or binaries. Neither level should invent business rules, approve
+specs automatically, or modify existing source code.
 
-1. **Write `context/tech-stack.md` from what's actually there**, not what you wish
+1. **Review and approve the detected context before generating the Harness.** Keep,
+   edit, exclude and classify technologies, architecture signals, domains, entities
+   and features. This approval confirms detection context; it does not approve
+   entity contracts or business rules.
+2. **Write `context/tech-stack.md` from what's actually there**, not what you wish
    were there. Run through the file's own Definition of Done: every tool a plan
    might reference should be listed with its actual command, versions should be
    concrete, and conventions should reflect what the codebase does today, warts
    included.
-2. **Run `/specdd-analyze` before your first spec**, not after. It checks for gaps
+3. **Run `/specdd-analyze` before your first spec**, not after. It checks for gaps
    between the current codebase and a spec/plan — useful here to surface
    undocumented behavior, dead code paths, or conventions that don't match what
    `context/tech-stack.md` claims, before you plan against a wrong picture.
-3. **Don't write specs for existing, stable code retroactively.** Specs describe
+4. **Don't write specs for existing, stable code retroactively.** Specs describe
    intent for *changes*; a spec for code nobody is touching produces no value and
    goes stale immediately. Start writing specs the moment a feature is touched,
    not before.
-4. **Expand incrementally, module by module.** Pick the next module or feature
+5. **Expand incrementally, module by module.** Pick the next module or feature
    area that's about to be worked on anyway, and give that its first
    `spec.md`/`plan.md`/`tasks.md` when the work starts. Over a few months, the
    actively-maintained parts of the codebase accumulate specs; the untouched parts
    simply stay as they are until someone needs to change them.
-5. **Use `/specdd-adr` for past decisions that matter going forward.** If there's
+6. **Use `/specdd-adr` for past decisions that matter going forward.** If there's
    a significant existing architectural choice that a new contributor would
    otherwise have to reverse-engineer from code, capture it as an ADR once you
    understand it — don't block on documenting everything historical.
-6. **Constitution first, but scoped to what's enforceable.** A brownfield
+7. **Constitution first, but scoped to what's enforceable.** A brownfield
    constitution should state principles the team can actually hold new code to
    (e.g. "new endpoints get tests," "no new `any` types") rather than principles
    that would require rewriting existing code to satisfy.

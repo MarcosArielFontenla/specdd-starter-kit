@@ -1,7 +1,7 @@
 // src/components/generators.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, generateScaffold, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks } from './generators.js';
+import { generateFiles, generateScaffold, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks } from './generators.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
@@ -150,8 +150,25 @@ const brownInput = {
   analysis: {
     projectName: 'acme-shop', description: 'A sample shop',
     stack: { languages: ['TypeScript'], frontend: 'React', backend: 'Express', testing: 'Vitest', database: 'PostgreSQL' },
-    domains: ['auth', 'billing'], entities: ['User'],
+    domains: ['auth', 'billing'], entities: ['User'], features: ['catalog'],
     manifestsFound: ['package.json'], fileCount: 42, truncated: false,
+    semantic: {
+      filesRead: ['README.md'], totalChars: 120, confidence: 'high',
+      architecture: [{ value: 'Modular monolith', source: 'README.md', confidence: 'high' }],
+      evidence: [{ category: 'stack', value: 'xUnit', source: 'README.md', confidence: 'high', detail: 'test evidence' }],
+      filesSkipped: [],
+    },
+  },
+  contextReview: {
+    approved: true,
+    stack: [{ field: 'frontend', label: 'Frontend', value: 'React', selected: true, status: 'architectural', source: 'README.md', confidence: 'high' }],
+    domains: [
+      { value: 'auth', selected: true, status: 'implemented', source: 'folder structure', confidence: 'high' },
+      { value: 'billing', selected: false, status: 'planned', source: 'folder structure', confidence: 'medium' },
+    ],
+    entities: [{ value: 'User', selected: true, status: 'implemented', source: 'filename pattern', confidence: 'high' }],
+    features: [{ value: 'catalog', selected: true, status: 'planned', source: 'folder structure', confidence: 'medium' }],
+    architecture: [{ value: 'Modular monolith', selected: true, status: 'architectural', source: 'README.md', confidence: 'high' }],
   },
 };
 
@@ -219,6 +236,16 @@ test('generateScaffold greenfield: same files as generateFiles, nothing skipped'
   assert.ok(!('context/brownfield-analysis.md' in files));
 });
 
+test('scaffold manifest lists generated files and selected context', () => {
+  const out = generateFiles(baseWithGithub, harnessInput, '2026-07-18');
+  const manifest = JSON.parse(out[SCAFFOLD_MANIFEST_PATH]);
+  assert.equal(manifest.schemaVersion, 1);
+  assert.equal(manifest.scenario, 'greenfield');
+  assert.ok(manifest.generatedFiles.includes(SCAFFOLD_MANIFEST_PATH));
+  assert.deepEqual(manifest.selected.domains, harnessInput.domains);
+  assert.ok(manifest.generatedFiles.includes('.agents/skills/auth/SKILL.md'));
+});
+
 test('generateScaffold brownfield: collisions excluded and reported, analysis report always emitted', () => {
   const baseWithBoth = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt', '.agents/workflows/spec-converge.md': 'converge workflow' };
   const { files, skipped } = generateScaffold(baseWithBoth, brownInput, '2026-07-18');
@@ -231,8 +258,55 @@ test('generateScaffold brownfield: collisions excluded and reported, analysis re
   assert.match(report, /Analysis level: Level 1 — Structural bootstrap/);
   assert.match(report, /React/);
   assert.match(report, /- auth/);
+  assert.match(report, /Suggested features/);
+  assert.match(report, /- catalog/);
+  assert.match(report, /Semantic context \(Level 2\)/);
+  assert.match(report, /Modular monolith/);
+  assert.match(report, /xUnit.*README\.md/);
+  assert.match(report, /Human context review/);
+  assert.match(report, /Approval: approved/);
+  assert.match(report, /Frontend: React.*architectural/);
+  assert.match(report, /billing — excluded.*planned/);
+  assert.match(report, /Architecture signal classifications/);
+  assert.match(report, /Modular monolith.*architectural/);
   assert.match(report, /README\.md/);                                    // skipped list in report
   assert.match(report, /spec-converge/);                                 // kickoff instruction
+  const manifest = JSON.parse(files[SCAFFOLD_MANIFEST_PATH]);
+  assert.equal(manifest.contextReview.approved, true);
+  assert.deepEqual(manifest.skippedPaths, skipped);
+  assert.ok(manifest.generatedFiles.includes('context/brownfield-analysis.md'));
+});
+
+test('approved Brownfield context is the only source for generated project artifacts', () => {
+  const approved = {
+    ...brownInput,
+    domains: ['auth', 'billing'],
+    entities: ['User', 'Invoice'],
+    features: ['catalog', 'legacy checkout'],
+    contextReview: {
+      ...brownInput.contextReview,
+      approved: true,
+      stack: [
+        { field: 'frontend', label: 'Frontend', value: 'React', selected: false, status: 'unknown', source: 'README.md', confidence: 'medium' },
+        { field: 'backend', label: 'Backend', value: 'Express', selected: true, status: 'implemented', source: 'package.json', confidence: 'high' },
+      ],
+      domains: [{ value: 'auth', selected: true, status: 'implemented', source: 'src/auth', confidence: 'high' }],
+      entities: [{ value: 'User', selected: true, status: 'implemented', source: 'models/User.ts', confidence: 'high' }],
+      features: [{ value: 'catalog', selected: true, status: 'planned', source: 'src/features/catalog', confidence: 'medium' }],
+      architecture: [],
+    },
+  };
+  const out = generateFiles(baseWithGithub, approved, '2026-07-18');
+  assert.ok('.agents/skills/auth/SKILL.md' in out);
+  assert.ok(!('.agents/skills/billing/SKILL.md' in out));
+  assert.ok('.agents/specs/user.spec.yaml' in out);
+  assert.ok(!('.agents/specs/invoice.spec.yaml' in out));
+  assert.match(out['context/tech-stack.md'], /\*\*Frontend:\*\*\s*$/m);
+  assert.match(out['context/tech-stack.md'], /\*\*Backend:\*\* Express/);
+  assert.match(out['.agents/skills/auth/SKILL.md'], /Review status: implemented/);
+  assert.match(out['.agents/specs/user.spec.yaml'], /reviewStatus: "implemented"/);
+  assert.match(out['specs/features-spec.md'], /\| catalog \| planned \|/);
+  assert.ok(!out['specs/features-spec.md'].includes('legacy checkout'));
 });
 
 test('analysis report is exempt from collision exclusion', () => {

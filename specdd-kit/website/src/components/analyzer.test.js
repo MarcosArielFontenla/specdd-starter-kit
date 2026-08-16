@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeProject, MAX_PATHS, suggestDomains, suggestEntities, detectLegacyHarness } from './analyzer.js';
+import { analyzeProject, MAX_PATHS, suggestDomains, suggestEntities, suggestFeatures, detectLegacyHarness, isSemanticSafePath, selectSemanticPaths } from './analyzer.js';
 
 function reader(files) {
   return (p) => (p in files ? Promise.resolve(files[p]) : Promise.reject(new Error(`no ${p}`)));
@@ -51,6 +51,57 @@ test('dotnet and java detection by manifest presence', async () => {
   const java = await analyzeProject({ folderName: 'y', paths: ['pom.xml'], readFile: reader(files) });
   assert.ok(java.stack.languages.includes('Java'));
   assert.equal(java.stack.backend, 'Spring');
+});
+
+test('dotnet manifests detect ASP.NET Core, xUnit and PostgreSQL', async () => {
+  const files = {
+    'backend/src/API/TacticArgStore.API.csproj': '<Project Sdk="Microsoft.NET.Sdk.Web"><PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" /></Project>',
+    'backend/tests/TacticArgStore.Tests.csproj': '<PackageReference Include="Microsoft.NET.Test.Sdk" /><PackageReference Include="xunit" />',
+  };
+  const a = await analyzeProject({ folderName: 'tactic-arg', paths: Object.keys(files), readFile: reader(files) });
+  assert.deepEqual(a.stack.languages, ['.NET']);
+  assert.equal(a.stack.backend, 'ASP.NET Core');
+  assert.equal(a.stack.testing, 'xUnit');
+  assert.equal(a.stack.database, 'PostgreSQL');
+  assert.deepEqual(a.manifestsFound, Object.keys(files).sort());
+});
+
+test('semantic mode reads safe context and returns evidence without reading secrets', async () => {
+  const files = {
+    'README.md': '# Tactic ARG Store\n\nTienda online para Tactic ARG con catálogo e inventario de Airsoft.\n\n## Architecture\nASP.NET Core modular monolith with React SSR and Neon Postgres.',
+    'package.json': JSON.stringify({ name: 'tactic-arg-store', dependencies: { react: '^19.0.0' } }),
+    'backend/src/API/TacticArgStore.API.csproj': '<Project Sdk="Microsoft.NET.Sdk.Web"><PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" /></Project>',
+    'backend/tests/TacticArgStore.Tests.csproj': '<PackageReference Include="xunit" />',
+    '.env': 'DATABASE_URL=should-not-be-read',
+    'backend/src/API/appsettings.json': '{"ConnectionStrings":{"Database":"secret"}}',
+    'frontend/app/features/catalog/index.ts': 'export {};',
+  };
+  const a = await analyzeProject({
+    folderName: 'tactic-arg-store',
+    analysisDepth: 'semantic',
+    paths: Object.keys(files),
+    readFile: reader(files),
+  });
+  assert.equal(a.analysisDepth, 'semantic');
+  assert.equal(a.description, 'Tienda online para Tactic ARG con catálogo e inventario de Airsoft.');
+  assert.equal(a.stack.backend, 'ASP.NET Core');
+  assert.equal(a.stack.database, 'PostgreSQL (Neon)');
+  assert.equal(a.stack.testing, 'xUnit');
+  assert.ok(a.semantic.filesRead.includes('README.md'));
+  assert.ok(a.semantic.filesRead.includes('backend/src/API/TacticArgStore.API.csproj'));
+  assert.ok(!a.semantic.filesRead.includes('.env'));
+  assert.ok(!a.semantic.filesRead.includes('backend/src/API/appsettings.json'));
+  assert.ok(a.semantic.evidence.some((item) => item.value === 'Modular monolith'));
+  assert.ok(a.semantic.evidence.every((item) => item.source && item.confidence));
+});
+
+test('semantic allowlist excludes sensitive and binary paths', () => {
+  assert.equal(isSemanticSafePath('README.md'), true);
+  assert.equal(isSemanticSafePath('src/domain/Product.cs'), true);
+  assert.equal(isSemanticSafePath('.env.example'), false);
+  assert.equal(isSemanticSafePath('src/API/appsettings.json'), false);
+  assert.equal(isSemanticSafePath('public/logo.png'), false);
+  assert.deepEqual(selectSemanticPaths(['README.md', '.env', 'public/logo.png', 'src/domain/Product.cs']), ['README.md', 'src/domain/Product.cs']);
 });
 
 test('unreadable manifest is skipped without crashing', async () => {
@@ -112,6 +163,19 @@ test('domains are capped at 8', () => {
   assert.equal(suggestDomains(paths).length, 8);
 });
 
+test('domains prefer backend modules and features are detected separately', () => {
+  const paths = [
+    'backend/src/Modules/Catalog/Application/CatalogService.cs',
+    'backend/src/Modules/Catalog/Domain/Product.cs',
+    'backend/src/Modules/Inventory/Domain/InventoryItem.cs',
+    'frontend/app/features/catalog/index.ts',
+    'frontend/app/features/catalog/components/CatalogPage.tsx',
+    'frontend/app/features/inventory/index.ts',
+  ];
+  assert.deepEqual(suggestDomains(paths), ['Catalog', 'Inventory']);
+  assert.deepEqual(suggestFeatures(paths), ['catalog', 'inventory']);
+});
+
 test('entities from models/ dirs and *.entity/*.model filenames', () => {
   const entities = suggestEntities([
     'models/user.py', 'models/invoice.py', 'models/__init__.py',
@@ -125,6 +189,16 @@ test('entities are deduplicated and capped at 12', () => {
   const paths = Array.from({ length: 15 }, (_, i) => `models/entity${String(i).padStart(2, '0')}.py`);
   assert.equal(suggestEntities(paths).length, 12);
   assert.equal(suggestEntities(['models/user.py', 'src/x/User.entity.ts']).length, 1);
+});
+
+test('entities include .Domain folders but exclude status and infrastructure concepts', () => {
+  assert.deepEqual(suggestEntities([
+    'backend/src/Modules/Inventory/TacticArgStore.Modules.Inventory.Domain/InventoryItem.cs',
+    'backend/src/Modules/Inventory/TacticArgStore.Modules.Inventory.Domain/InventoryMovement.cs',
+    'backend/src/Modules/Catalog/TacticArgStore.Modules.Catalog.Domain/Entities/Product.cs',
+    'backend/src/Modules/Catalog/TacticArgStore.Modules.Catalog.Domain/Entities/ProductStatus.cs',
+    'backend/src/Modules/Orders/TacticArgStore.Modules.Orders.Domain/OrderStatus.cs',
+  ]), ['InventoryItem', 'InventoryMovement', 'Product']);
 });
 
 test('suggestions never contain markdown-table-breaking characters', () => {
@@ -177,10 +251,10 @@ test('analyzeProject exposes legacyHarness from RAW paths (dot-folders included)
   assert.deepEqual(a.legacyHarness.mechanism, ['AGENTS.md']);
 });
 
-test('unavailable semantic depth falls back to structural analysis', async () => {
+test('unknown analysis depth falls back to structural analysis', async () => {
   const a = await analyzeProject({
     folderName: 'future-mode',
-    analysisDepth: 'semantic',
+    analysisDepth: 'unknown',
     paths: ['package.json'],
     readFile: reader({ 'package.json': '{"name":"future-mode"}' }),
   });

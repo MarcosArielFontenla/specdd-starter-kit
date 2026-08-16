@@ -5,6 +5,8 @@ import { generateScaffold } from './generators.js';
 import { stepsFor, errorFor as stepError, TOOLS, OWASP_CONTROLS } from './steps.js';
 import ChipInput from './ChipInput.jsx';
 import IngestStep from './IngestStep.jsx';
+import ContextReviewStep from './ContextReviewStep.jsx';
+import { applyReviewedContext, createContextReview } from './review.js';
 import { DEFAULT_ANALYSIS_DEPTH } from './analysis.js';
 import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
@@ -14,10 +16,11 @@ const MCP_OPTIONS = ['github', 'sonarqube', 'context7', 'postgresql', 'playwrigh
 const initial = {
   scenario: 'greenfield',
   analysisDepth: DEFAULT_ANALYSIS_DEPTH, analysis: null, existingPaths: [], legacyAck: false,
+  contextReview: null,
   project: { name: '', description: '', problem: '' },
   personas: [], outcomes: { user: '', business: '' },
   constraints: { business: '', technical: '' },
-  domains: [], entities: [], features: [],
+  domains: [], entities: [], features: [], architecture: [],
   stack: { languages: [], frontend: '', backend: '', testing: '', database: '', infra: '', swagger: false, a11y: false },
   principles: ['Specifications are the source of truth'],
   mcp: [], tools: ['GitHub Copilot'], model: '',
@@ -57,7 +60,7 @@ export default function Wizard() {
     setData((d) => ({
       ...d,
       analysisDepth: analysis.analysisDepth || d.analysisDepth,
-      analysis, existingPaths, legacyAck: false,
+      analysis, existingPaths, legacyAck: false, contextReview: createContextReview(analysis),
       project: {
         ...d.project,
         name: analysis.projectName || d.project.name,
@@ -73,8 +76,12 @@ export default function Wizard() {
       },
       domains: analysis.domains.length ? analysis.domains : d.domains,
       entities: analysis.entities.length ? analysis.entities : d.entities,
+      features: analysis.features?.length ? analysis.features : d.features,
+      architecture: analysis.semantic?.architecture?.map((item) => item.value) || d.architecture,
     }));
   }
+  function updateContextReview(contextReview) { set({ contextReview }); }
+  function approveContext(contextReview) { setData((d) => applyReviewedContext(d, contextReview)); }
 
   const last = step === steps.length - 1;
   const needsScaffold = last || stepName === 'Ingest & Analyze';
@@ -128,6 +135,10 @@ export default function Wizard() {
             <IngestStep data={data} skippedCount={skipped.length} replacedCount={replaced.length}
               onAnalyzed={applyAnalysis} onAck={(v) => set({ legacyAck: v })}
               onAnalysisDepthChange={(analysisDepth) => set({ analysisDepth })} />
+          )}
+
+          {stepName === 'Review Context' && (
+            <ContextReviewStep data={data} onReviewChange={updateContextReview} onApprove={approveContext} />
           )}
 
           {stepName === 'Project' && (

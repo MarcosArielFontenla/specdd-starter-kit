@@ -397,6 +397,16 @@ repositorio. El gate impide específicamente que se presenten como aprobadas.
 Con `-Run`, ejecuta cada comando no-placeholder de una spec aprobada y compara
 `$LASTEXITCODE` con `expectedExitCode`.
 
+### `validate-harness.ps1`
+
+Es el gate de instalación post-extracción. Lee `context/scaffold-manifest.json` y
+comprueba que estén presentes los artefactos generados, que los dominios y entidades
+seleccionados tengan sus archivos, que las referencias de Routing/Registry/Budget
+apunten a paths existentes, que las colisiones no aparezcan como archivos generados y
+que no haya tokens de alta confianza con apariencia de secreto. Es de solo lectura.
+
+Con `-RunGates` invoca además `validate-spec.ps1` y `validate-budget.ps1`.
+
 ### `validate-budget.ps1`
 
 Lee el manifest de cold-start y calcula, para cada clase de tarea, el peor caso de
@@ -613,24 +623,27 @@ Snapshots, baselines, scores y eventos no se inventan.
 
 ### Análisis local y acotado
 
-El usuario selecciona una carpeta mediante File System Access API. El analizador:
+El usuario selecciona una carpeta mediante un selector local (`webkitdirectory`). El
+analizador:
 
 El análisis Brownfield se expresa mediante dos niveles separados del escenario:
 
 - **Nivel 1 — Bootstrap estructural (disponible):** lee manifests conocidos y paths
   de archivos. Detecta stack, sugiere dominios/entidades y detecta Harnesses previos.
-- **Nivel 2 — Análisis semántico asistido (planificado):** será opt-in y local;
-  podrá inspeccionar código, tests, modelos, rutas y configuración, siempre con
-  evidencia, confianza y aprobación humana. El wizard lo muestra como capacidad
-  futura, pero todavía no lo ejecuta.
+- **Nivel 2 — Análisis semántico asistido (disponible, opt-in):** lee una allowlist
+  acotada de documentación, manifests, modelos, rutas y tests seguros. Devuelve
+  evidencia, confianza, señales de arquitectura y archivos omitidos por límites.
+  No lee secretos, archivos de entorno ni binarios.
 
 Ningún nivel inventa reglas de negocio, aprueba specs automáticamente ni modifica
 el código existente.
 
-El analizador actual implementa Nivel 1:
+El analizador actual implementa ambos niveles:
 
-- lee contenido únicamente de manifests conocidos;
-- usa solamente paths para el resto de los archivos;
+- en Nivel 1 lee contenido únicamente de manifests conocidos y usa solo paths para
+  el resto de los archivos;
+- en Nivel 2 lee solo archivos de texto de la allowlist segura, con límites de 96
+  archivos, 120.000 caracteres por archivo y 500.000 caracteres totales;
 - ignora dependencias, builds, coverage, virtual environments y otras carpetas de
   ruido;
 - toma el manifest más cercano a la raíz;
@@ -639,8 +652,29 @@ El analizador actual implementa Nivel 1:
 - sugiere hasta doce entidades por nombres y ubicación de archivos;
 - limita el análisis visible a 20.000 paths y reporta truncamiento.
 
+Después del análisis existe un paso `Review Context`. El usuario puede editar,
+excluir y clasificar lenguajes, tecnologías, señales de arquitectura, dominios,
+entidades y features. La aprobación es obligatoria para continuar y el generador
+aplica esa selección como fuente efectiva, incluso si existieran valores obsoletos
+en el estado del wizard.
+
 Las sugerencias son leads editables, no hechos. Especialmente los dominios pueden
 salir como capas técnicas y deben convertirse en áreas de negocio significativas.
+
+### Revisión y generación desde contexto aprobado
+
+`Review Context` convierte esos leads en una selección explícita del usuario. Cada
+hallazgo puede conservarse, editarse, excluirse y clasificarse como `implemented`,
+`architectural`, `planned` o `unknown`. La aprobación se conserva en el reporte y
+también acompaña a las skills, specs y lista inicial de features generadas.
+
+El generador reaplica esa selección como defensa adicional: si el estado del wizard
+contiene un valor obsoleto o excluido, no se utiliza en el Harness final. Esta
+aprobación solo confirma el contexto de partida; no aprueba reglas de negocio ni
+convierte una spec YAML en un contrato aprobado.
+
+`context/scaffold-manifest.json` registra los paths generados, las colisiones, los
+reemplazos y la selección aprobada para que el destino pueda validar la extracción.
 
 ### Política de colisiones
 
@@ -650,6 +684,11 @@ silenciosamente.
 
 El reporte de análisis se genera siempre para dejar kickoff, detecciones y lista de
 skips. Luego el workflow `spec-converge` guía la reconciliación.
+
+Después de extraer el ZIP, el gate local `pwsh .agents/scripts/validate-harness.ps1`
+comprueba el manifiesto, la estructura, las referencias internas, los artefactos
+seleccionados, las colisiones registradas y tokens con apariencia de secreto. Con
+`-RunGates` también invoca `validate-spec.ps1` y `validate-budget.ps1`.
 
 ### Spec Converge
 

@@ -25,7 +25,7 @@ const GREENFIELD_STEPS = [
 ];
 
 const BROWNFIELD_STEPS = [
-  ...GREENFIELD_STEPS.slice(0, 2), 'Ingest & Analyze', ...GREENFIELD_STEPS.slice(2),
+  ...GREENFIELD_STEPS.slice(0, 2), 'Ingest & Analyze', 'Review Context', ...GREENFIELD_STEPS.slice(2),
 ];
 
 export function stepsFor(scenario) {
@@ -48,6 +48,9 @@ export function errorFor(stepName, data) {
     if (data.analysis.legacyHarness?.detected && !data.legacyAck) {
       return 'A previous harness was detected — acknowledge its deprecation to continue.';
     }
+  }
+  if (stepName === 'Review Context' && !data.contextReview?.approved) {
+    return 'Review and approve the detected context before continuing.';
   }
   return '';
 }

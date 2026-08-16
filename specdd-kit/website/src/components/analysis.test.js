@@ -7,11 +7,11 @@ import {
   getAnalysisLevel,
 } from './analysis.js';
 
-test('analysis levels expose structural as the available default and semantic as planned', () => {
+test('analysis levels expose structural as default and semantic as an available opt-in', () => {
   assert.equal(DEFAULT_ANALYSIS_DEPTH, ANALYSIS_DEPTHS.STRUCTURAL);
   assert.deepEqual(ANALYSIS_LEVELS.map((level) => level.id), ['structural', 'semantic']);
   assert.equal(getAnalysisLevel('structural').available, true);
-  assert.equal(getAnalysisLevel('semantic').available, false);
+  assert.equal(getAnalysisLevel('semantic').available, true);
 });
 
 test('unknown analysis depth falls back to structural bootstrap', () => {

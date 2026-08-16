@@ -33,7 +33,7 @@ test('constants', () => {
 
 test('brownfield step list inserts Ingest & Analyze after Scenario', () => {
   assert.deepEqual(stepsFor('brownfield'), [
-    'Welcome', 'Scenario', 'Ingest & Analyze', 'Project', 'Tech Stack',
+    'Welcome', 'Scenario', 'Ingest & Analyze', 'Review Context', 'Project', 'Tech Stack',
     'Domains & Entities', 'Features', 'Principles', 'MCP Tools', 'Agents & Tools',
     'Security', 'Preview / Download',
   ]);
@@ -51,4 +51,9 @@ test('ingest step blocks on unacknowledged legacy harness', () => {
   assert.equal(errorFor('Ingest & Analyze', { ...legacy, legacyAck: true }), '');
   const clean = { ...valid, analysis: { fileCount: 3, legacyHarness: { detected: false, mechanism: [], knowledge: [] } } };
   assert.equal(errorFor('Ingest & Analyze', { ...clean, legacyAck: false }), '');
+});
+
+test('review context requires explicit approval', () => {
+  assert.match(errorFor('Review Context', { ...valid, contextReview: null }), /approve/i);
+  assert.equal(errorFor('Review Context', { ...valid, contextReview: { approved: true } }), '');
 });
