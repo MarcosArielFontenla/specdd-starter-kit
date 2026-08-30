@@ -36,7 +36,7 @@ adapted for this kit's tooling.
 | Aspect | `github/spec-kit` | `specdd-kit` |
 |---|---|---|
 | Commands | `/specify`, `/plan`, `/tasks`, etc. | `/specdd-specify`, `/specdd-plan`, `/specdd-tasks`, etc. — namespaced so they don't collide with other prompt sets in the same repo, plus additional prompts (`/specdd-clarify`, `/specdd-analyze`, `/specdd-adr`, `/specdd-spike`, `/specdd-checklist`, `/specdd-code-review`, `/specdd-issues-from-*`, `/specdd-create-llms`, `/specdd-update-llms`). |
-| Onboarding | Manual template copy / CLI scaffolding. | An 8-step visual wizard (`website/`) that asks project, tech stack, principles, MCP, agent, and security questions, then generates a personalized ZIP — no manual template editing required to get started. |
+| Onboarding | Manual template copy / CLI scaffolding. | A scenario-aware visual wizard (`website/`) with 11 Greenfield steps or 12 Brownfield steps, including bounded local analysis and human context review for existing projects, then generates a personalized ZIP — no manual template editing required to get started. |
 | Agent support | Primarily tuned around a single assistant workflow. | Explicitly multi-agent: prompts and instructions are plain Markdown consumed by GitHub Copilot, Claude Code, Cursor, and Gemini alike. Nothing in `.github/prompts/` or `.github/instructions/` assumes one specific agent's proprietary format. |
 | Governance model | — | Flat and practical: one constitution (`governance/constitution.md`, canonical) plus a working copy (`context/constitution.md`) that projects adapt. **There are no maturity levels (no L1–L4 tiers)** — every project follows the same constitution → specify → plan → tasks → implement loop regardless of team size or project age. |
 | Process integrations | — | None baked in. This kit does not assume or require Azure DevOps, a specific issue tracker, or a specific deploy pipeline. `/specdd-issues-from-*` prompts produce issue text you paste into whatever tracker you use. |
@@ -59,10 +59,10 @@ To be explicit about scope, so expectations are set correctly:
 
 ## A note on `specforge-kit`
 
-A second kit, `specforge-kit` (role-based scaffolds for BA/QA/Dev/UX), is planned
-as a future iteration of this project. It does not exist yet in this repository —
-only `specdd-kit` is available today. Do not reference `specforge-kit` files or
-commands as if they were already implemented.
+The companion `specforge-kit` is available in this repository and generates
+role-based BA/QA/Dev/UX packs that plug into an existing SpecDD Harness. It is a
+separate wizard and does not replace the SpecDD wizard's core scaffold or its
+post-extraction validation flow.
 
 ## Further reading
 

@@ -20,6 +20,9 @@ resumed features, or a fresh harness dropped onto an existing project.
 Constraints: converge never touches `designContract.status` · never retro-approves
 anything · its output is always tasks, never direct edits.
 
-First session on a freshly scaffolded brownfield project: read
-`context/brownfield-analysis.md` for what the wizard detected and which scaffold
-files were skipped because they already existed.
+First session on a freshly scaffolded brownfield project: run
+`pwsh .agents/scripts/validate-project.ps1` and read
+`context/harness-validation-report.md` before reading
+`context/brownfield-analysis.md`. The consolidated report is the extraction gate;
+the analysis file explains what the wizard detected and which scaffold files were
+skipped because they already existed.

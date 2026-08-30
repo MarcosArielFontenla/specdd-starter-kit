@@ -45,6 +45,12 @@ The wizard exposes and executes both levels. Level 2 never reads secrets,
 environment files or binaries. Neither level should invent business rules, approve
 specs automatically, or modify existing source code.
 
+After extraction, run `pwsh .agents/scripts/validate-project.ps1` once. It consolidates
+the structural gate, generated-file fingerprints, Brownfield source-path baseline,
+YAML-backed spec/budget checks and any commands declared in
+`context/project-validation.json`. `VERIFIED` means every configured check passed;
+`PARTIAL` is expected while contracts or project commands are still placeholders.
+
 1. **Review and approve the detected context before generating the Harness.** Keep,
    edit, exclude and classify technologies, architecture signals, domains, entities
    and features. This approval confirms detection context; it does not approve

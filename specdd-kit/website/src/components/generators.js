@@ -1,5 +1,11 @@
 // Pure generators — no imports of kit-files.json (passed in as `baseFiles`).
 import { getAnalysisLevel } from './analysis.js';
+import {
+  FINGERPRINT_ALGORITHM,
+  fingerprintPaths,
+  fingerprintText,
+  normalizeFidelityPath,
+} from './fingerprints.js';
 
 const MCP_SERVERS = {
   github: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-github'], env: { GITHUB_PERSONAL_ACCESS_TOKEN: '${input:github_pat}' } },
@@ -75,11 +81,48 @@ OWASP focus: ${(input.security?.owaspControls || []).join(', ') || 'baseline'}
 `;
 }
 
-export const SCAFFOLD_MANIFEST_PATH = 'context/scaffold-manifest.json';
-
-export function renderScaffoldManifest(input, generatedFiles, skipped = [], replaced = []) {
+export function renderProjectValidation() {
   return JSON.stringify({
     schemaVersion: 1,
+    checks: [],
+    notes: 'Add explicit, human-approved PowerShell commands here when the project is ready for test/build/lint verification. The single validate-project.ps1 run will execute them from the project root.',
+  }, null, 2);
+}
+
+export const SCAFFOLD_MANIFEST_PATH = 'context/scaffold-manifest.json';
+
+const isMutableFidelityPath = (path) => (
+  path === 'context/project.md'
+  || path === 'context/tech-stack.md'
+  || path === 'context/constitution.md'
+  || path === 'context/project-validation.json'
+  || path === 'specs/features-spec.md'
+  || path.startsWith('.agents/skills/')
+  || path.startsWith('.agents/specs/')
+);
+
+export function renderScaffoldManifest(input, generatedFiles, skipped = [], replaced = [], fileContents = {}) {
+  const generated = [...new Set(generatedFiles.map((path) => String(path).replaceAll('\\', '/')))].sort();
+  const mutableFiles = generated.filter(isMutableFidelityPath);
+  const source = input.scenario === 'brownfield'
+    ? fingerprintPaths(input.existingPaths || [])
+    : null;
+  const sourceContentFingerprints = source
+    ? Object.fromEntries([
+      ...Object.entries(input.analysis?.manifestFingerprints || {}),
+      ...Object.entries(input.analysis?.semantic?.fileFingerprints || {}),
+    ].map(([path, fingerprint]) => [String(path).replaceAll('\\', '/'), fingerprint]))
+    : {};
+  const generatedCanonical = new Set(generated.map(normalizeFidelityPath));
+  const sourceExistingGeneratedPaths = source
+    ? source.paths.filter((path) => generatedCanonical.has(path))
+    : [];
+  const generatedFingerprints = Object.fromEntries(generated
+    .filter((path) => path !== SCAFFOLD_MANIFEST_PATH && !isMutableFidelityPath(path) && Object.prototype.hasOwnProperty.call(fileContents, path))
+    .map((path) => [path, fingerprintText(fileContents[path])]));
+
+  return JSON.stringify({
+    schemaVersion: 2,
     scenario: input.scenario || 'greenfield',
     analysisDepth: input.analysis?.analysisDepth || input.analysisDepth || null,
     contextReview: input.contextReview ? {
@@ -96,7 +139,21 @@ export function renderScaffoldManifest(input, generatedFiles, skipped = [], repl
       architecture: input.architecture || [],
       stack: input.stack || {},
     },
-    generatedFiles: [...new Set(generatedFiles)].sort(),
+    fidelity: {
+      fingerprintAlgorithm: FINGERPRINT_ALGORITHM,
+      mutableFiles,
+      generatedFiles: generatedFingerprints,
+      source: source ? {
+        pathCount: source.count,
+        pathFingerprint: source.fingerprint,
+        existingGeneratedPaths: sourceExistingGeneratedPaths,
+        analysisFileCount: input.analysis?.fileCount ?? null,
+        analysisTruncated: Boolean(input.analysis?.truncated),
+        manifests: input.analysis?.manifestsFound || [],
+        contentFingerprints: sourceContentFingerprints,
+      } : null,
+    },
+    generatedFiles: generated,
     skippedPaths: [...new Set(skipped)].sort(),
     replacedPaths: [...new Set(replaced)].sort(),
   }, null, 2);
@@ -117,6 +174,7 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
   out['context/project.md'] = renderProject(effectiveInput);
   out['context/tech-stack.md'] = renderTechStack(effectiveInput);
   out['context/constitution.md'] = renderConstitution(effectiveInput);
+  out['context/project-validation.json'] = renderProjectValidation();
 
   out['AGENTS.md'] = renderPrimer(effectiveInput, today);
   out['.agents/REGISTRY.md'] = renderRegistry(effectiveInput, today);
@@ -136,7 +194,13 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
 
   if ((effectiveInput.mcp || []).length > 0) out['.vscode/mcp.json'] = renderMcpJson(effectiveInput.mcp);
   if ((effectiveInput.features || []).length > 0) out['specs/features-spec.md'] = renderFeaturesSpec(effectiveInput);
-  out[SCAFFOLD_MANIFEST_PATH] = renderScaffoldManifest(effectiveInput, [...Object.keys(out), SCAFFOLD_MANIFEST_PATH]);
+  out[SCAFFOLD_MANIFEST_PATH] = renderScaffoldManifest(
+    effectiveInput,
+    [...Object.keys(out), SCAFFOLD_MANIFEST_PATH],
+    [],
+    [],
+    out,
+  );
   return out;
 }
 
@@ -443,14 +507,16 @@ export function renderBrownfieldAnalysis(input, skipped, replaced, today) {
     ? `${skipped.map((p) => `- ${p}`).join('\n')}\n\nThese scaffold files were NOT written because they already exist in this project.\nMerge harness-relevant content into them via the converge workflow, not by overwriting.`
     : '- (none — no scaffold file collided with an existing one)';
   const kickoff = deprecating
-    ? `A legacy harness was detected and its deprecation acknowledged. First validate
-the extraction with \`.agents/scripts/validate-harness.ps1\`, then get the human's approval on
-\`.agents/specs/tasks/harness-migration.tasks.md\`, then execute it. Afterwards run
+    ? `A legacy harness was detected and its deprecation acknowledged. First run
+\`pwsh .agents/scripts/validate-project.ps1\` after extraction; it produces one consolidated
+report with structure, integrity, baseline fidelity, specs and budget. Then get the human's
+approval on \`.agents/specs/tasks/harness-migration.tasks.md\`, execute it, and run
 \`.agents/workflows/spec-converge.md\` to measure the delta between this codebase and the
 specs in \`.agents/specs/\`.`
-    : `First validate the extraction with \`.agents/scripts/validate-harness.ps1\`. Then run
-\`.agents/workflows/spec-converge.md\` to measure the delta between this codebase and the
-specs in \`.agents/specs/\`. Treat the suggestions below as leads, not facts.`;
+    : `First run \`pwsh .agents/scripts/validate-project.ps1\` after extraction. It produces
+one consolidated report and makes clear whether the scaffold is VERIFIED or still PARTIAL.
+Then run \`.agents/workflows/spec-converge.md\` to measure the delta between this codebase
+and the specs in \`.agents/specs/\`. Treat the suggestions below as leads, not facts.`;
   const legacyBlock = deprecating
     ? `
 ## Legacy harness detected
@@ -572,8 +638,10 @@ ${knowRows || '- [ ] (none detected)'}
 - [ ] R002 Remove every REGISTRY/ROUTING reference to archived files (no dangling references)
 
 ## Phase 4 — Verify (done gate)
-- [ ] C001 \`pwsh .agents/scripts/validate-spec.ps1\` exits 0
-- [ ] C002 \`pwsh .agents/scripts/validate-budget.ps1\` exits 0
+- [ ] C001 \`pwsh .agents/scripts/validate-project.ps1\` exits 0 (VERIFIED)
+
+The consolidated gate runs \`validate-spec.ps1 -Run\` and \`validate-budget.ps1\` as part of
+the same report; do not mark this phase complete from a partial result.
 
 ## Questions for the human (content judgment — answer before Phase 2)
 - Which legacy knowledge files are still authoritative vs dead? Mark each K-task's
@@ -589,26 +657,27 @@ export function generateScaffold(baseFiles, input, today = new Date().toISOStrin
   if (input.scenario !== 'brownfield') return { files, skipped: [], replaced: [] };
 
   const deprecating = !!(input.analysis?.legacyHarness?.detected && input.legacyAck);
-  const existing = new Set(input.existingPaths || []);
+  const existing = new Set((input.existingPaths || [])
+    .map((path) => String(path).replaceAll('\\', '/').replace(/^\.\//, '').toLowerCase()));
   const skipped = [];
   const replaced = [];
+  if (deprecating) {
+    files['.agents/specs/tasks/harness-migration.tasks.md'] = renderMigrationTasks(input, today);
+  }
   for (const p of Object.keys(files)) {
-    if (!existing.has(p) || p === ANALYSIS_REPORT_PATH) continue;
+    const canonical = p.toLowerCase();
+    // These two metadata files are regenerated on every extraction so that the
+    // destination receives a truthful manifest/report for this run.
+    if (!existing.has(canonical) || p === ANALYSIS_REPORT_PATH || p === SCAFFOLD_MANIFEST_PATH) continue;
     if (deprecating && isHarnessPath(p)) replaced.push(p);
     else skipped.push(p);
   }
   skipped.sort();
   replaced.sort();
-  const manifestSkipped = skipped.includes(SCAFFOLD_MANIFEST_PATH);
   for (const p of skipped) delete files[p];
-  if (deprecating) {
-    files['.agents/specs/tasks/harness-migration.tasks.md'] = renderMigrationTasks(input, today);
-  }
   files[ANALYSIS_REPORT_PATH] = renderBrownfieldAnalysis(input, skipped, replaced, today);
-  if (!manifestSkipped) {
-    files[SCAFFOLD_MANIFEST_PATH] = renderScaffoldManifest(
-      withApprovedContext(input), Object.keys(files), skipped, replaced,
-    );
-  }
+  files[SCAFFOLD_MANIFEST_PATH] = renderScaffoldManifest(
+    withApprovedContext(input), Object.keys(files), skipped, replaced, files,
+  );
   return { files, skipped, replaced };
 }

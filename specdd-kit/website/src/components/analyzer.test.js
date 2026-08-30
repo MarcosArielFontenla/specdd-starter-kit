@@ -28,6 +28,7 @@ test('node/react project: stack from package.json + tsconfig', async () => {
   assert.equal(a.stack.database, 'PostgreSQL');
   assert.deepEqual(a.stack.languages, ['TypeScript']);
   assert.deepEqual(a.manifestsFound, ['package.json']);
+  assert.ok(a.manifestFingerprints['package.json']);
   assert.equal(a.fileCount, 3);
   assert.equal(a.truncated, false);
 });
@@ -89,6 +90,8 @@ test('semantic mode reads safe context and returns evidence without reading secr
   assert.equal(a.stack.testing, 'xUnit');
   assert.ok(a.semantic.filesRead.includes('README.md'));
   assert.ok(a.semantic.filesRead.includes('backend/src/API/TacticArgStore.API.csproj'));
+  assert.ok(a.semantic.fileFingerprints['README.md']);
+  assert.ok(a.manifestFingerprints['package.json']);
   assert.ok(!a.semantic.filesRead.includes('.env'));
   assert.ok(!a.semantic.filesRead.includes('backend/src/API/appsettings.json'));
   assert.ok(a.semantic.evidence.some((item) => item.value === 'Modular monolith'));

@@ -28,7 +28,8 @@ PowerShell 7+ and the `powershell-yaml` module
 Running the wizard produces a ZIP containing:
 
 - **`context/`** — `project.md`, `tech-stack.md`, `constitution.md`: the shared
-  understanding every spec is written against.
+  understanding every spec is written against, plus the scaffold manifest and the
+  explicit project-validation profile.
 - **`.github/copilot-instructions.md`** — a ≤5-line pointer adapter that hands
   off to the generated root `AGENTS.md` primer and `.agents/` harness core;
   ships only when GitHub Copilot is among the tools you selected in the wizard.
@@ -47,8 +48,9 @@ Running the wizard produces a ZIP containing:
 - **`specs/features-spec.md`** (optional) — a first-draft feature spec if you typed
   one into the wizard's preview step.
 
-Everything is real, editable Markdown/JSON — nothing in the output is a placeholder
-you have to hunt down and delete.
+Everything is editable Markdown/JSON. Entity contracts and the project-validation
+profile intentionally start with explicit placeholders so the first validation run
+reports `PARTIAL` until the project supplies real contracts and commands.
 
 ## Run the wizard
 
@@ -59,9 +61,8 @@ npm run dev -w sdd-kit-wizard   # serves on :4321
 
 Open the local Astro URL that's printed in the terminal, walk through the 11
 Greenfield steps (or 12 Brownfield steps, including Ingest & Analyze), and download
-the generated ZIP from the last step. Brownfield currently offers Level 1 —
-Structural bootstrap; Level 2 — Assisted semantic analysis is modeled as a future
-opt-in capability and is not executable yet.
+the generated ZIP from the last step. Brownfield offers Level 1 — Structural
+bootstrap and Level 2 — Assisted semantic analysis as an explicit opt-in.
 
 `npm run dev` and `npm run build` both re-bundle the kit's own source files into
 `src/data/kit-files.json` first (via the `predev`/`prebuild` scripts calling
@@ -77,10 +78,14 @@ generated `AGENTS.md` primer, included only when GitHub Copilot is selected).
 1. Extract the downloaded ZIP **at the root of your project repository** (the same
    level as your existing `package.json`, `.git/`, etc.), so `.github/`,
    `context/`, `specs/`, and `templates/` land next to your source code.
-2. Open the project in VS Code. GitHub Copilot automatically picks up
+2. Run the one post-extraction check:
+   `pwsh .agents/scripts/validate-project.ps1`. Read the generated
+   `context/harness-validation-report.md`; exit `0` is `VERIFIED`, `2` is `PARTIAL`
+   and `1` is `FAILED`.
+3. Open the project in VS Code. GitHub Copilot automatically picks up
    `.github/copilot-instructions.md` and everything under `.github/instructions/`
    and `.github/prompts/`.
-3. Start with `/specdd-constitution` to confirm or adjust the generated
+4. Start with `/specdd-constitution` to confirm or adjust the generated
    constitution, then run `/specdd-specify` on your first feature idea.
 
 See `SETUP.md` for the full ordered walkthrough (prerequisites → context → first

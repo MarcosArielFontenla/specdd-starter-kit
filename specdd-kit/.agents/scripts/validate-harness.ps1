@@ -63,7 +63,8 @@ if ($failures.Count -eq 0) {
 }
 
 if ($manifest) {
-  if ([int]$manifest.schemaVersion -ne 1) { Fail "unsupported manifest schemaVersion: $($manifest.schemaVersion)" }
+  $schemaVersion = [int]$manifest.schemaVersion
+  if (@(1, 2) -notcontains $schemaVersion) { Fail "unsupported manifest schemaVersion: $($manifest.schemaVersion)" }
 
   $generatedPaths = @($manifest.generatedFiles | ForEach-Object { Normalize-Relative ([string]$_) })
   if ($generatedPaths.Count -eq 0) { Fail "manifest does not list generatedFiles" }
@@ -86,7 +87,11 @@ if ($manifest) {
     if ($generatedPaths -contains $path) { Fail "collision path is also listed as generated: $path" }
   }
 
-  foreach ($required in @('AGENTS.md', '.agents/REGISTRY.md', '.agents/orchestration/ROUTING.md', '.agents/cold-start/budget-manifest.yaml')) {
+  $requiredFiles = @('AGENTS.md', '.agents/REGISTRY.md', '.agents/orchestration/ROUTING.md', '.agents/cold-start/budget-manifest.yaml')
+  if ($schemaVersion -ge 2) {
+    $requiredFiles += @('.agents/scripts/validate-project.ps1', 'context/project-validation.json')
+  }
+  foreach ($required in $requiredFiles) {
     Require-File $required
     if ($generatedPaths -notcontains $required) { Fail "required Harness file is not listed in generatedFiles: $required" }
   }

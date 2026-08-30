@@ -405,7 +405,35 @@ seleccionados tengan sus archivos, que las referencias de Routing/Registry/Budge
 apunten a paths existentes, que las colisiones no aparezcan como archivos generados y
 que no haya tokens de alta confianza con apariencia de secreto. Es de solo lectura.
 
-Con `-RunGates` invoca además `validate-spec.ps1` y `validate-budget.ps1`.
+Acepta los manifiestos de esquema 1 y 2. En el esquema 2 también exige que estén
+presentes `validate-project.ps1` y `context/project-validation.json`.
+
+### `validate-project.ps1`
+
+Es el punto de entrada único después de copiar y extraer el scaffold en el proyecto
+destino. Orquesta, en una sola ejecución:
+
+- `validate-harness.ps1` para estructura, referencias, colisiones y contenido seguro;
+- fingerprints de cada archivo generado inmutable, excluyendo el self-hash del
+  manifiesto y los paths marcados como editables por el proyecto;
+- comparación del inventario de paths fuente Brownfield contra el baseline capturado
+  por el wizard;
+- `validate-spec.ps1 -Run` y `validate-budget.ps1` cuando `powershell-yaml` está
+  instalado;
+- los comandos explícitos de `context/project-validation.json`.
+
+Genera `context/harness-validation-report.md` y
+`context/harness-validation-report.json`. Los estados y códigos son:
+
+- `VERIFIED` / `0`: toda la evidencia configurada pasó;
+- `PARTIAL` / `2`: el scaffold es utilizable, pero faltan pruebas, clasificación,
+  contratos o dependencias para afirmar fidelidad completa;
+- `FAILED` / `1`: falló una validación estructural, de integridad o declarada.
+
+El fingerprint es determinista y sirve para detectar errores de copia o extracción; no
+es una firma criptográfica ni prueba equivalencia semántica. Un scaffold nuevo puede
+quedar correctamente en `PARTIAL` hasta que se reemplacen los contratos placeholder y
+se declaren los checks reales del proyecto.
 
 ### `validate-budget.ps1`
 
@@ -685,10 +713,10 @@ silenciosamente.
 El reporte de análisis se genera siempre para dejar kickoff, detecciones y lista de
 skips. Luego el workflow `spec-converge` guía la reconciliación.
 
-Después de extraer el ZIP, el gate local `pwsh .agents/scripts/validate-harness.ps1`
-comprueba el manifiesto, la estructura, las referencias internas, los artefactos
-seleccionados, las colisiones registradas y tokens con apariencia de secreto. Con
-`-RunGates` también invoca `validate-spec.ps1` y `validate-budget.ps1`.
+Después de extraer el ZIP, el comando recomendado es
+`pwsh .agents/scripts/validate-project.ps1`. El reporte resultante concentra el
+manifiesto, la estructura, la integridad, las referencias internas, los artefactos
+seleccionados, las colisiones, el baseline Brownfield y los checks configurados.
 
 ### Spec Converge
 

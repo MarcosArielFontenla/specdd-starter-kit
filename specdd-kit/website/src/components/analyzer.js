@@ -1,13 +1,11 @@
 // Pure in-browser project analyzer for the Brownfield scenario. No React, no DOM.
 // Structural mode reads manifests only; semantic mode reads a bounded safe text allowlist.
 import { ANALYSIS_DEPTHS, DEFAULT_ANALYSIS_DEPTH, getAnalysisLevel } from './analysis.js';
+import { FIDELITY_IGNORED_DIRS, fingerprintText } from './fingerprints.js';
 
 export const MAX_PATHS = 20000;
 
-export const IGNORED_DIRS = new Set([
-  'node_modules', '.git', 'dist', 'build', 'out', 'coverage', 'vendor',
-  'venv', '.venv', '__pycache__', 'bin', 'obj', 'target',
-]);
+export const IGNORED_DIRS = FIDELITY_IGNORED_DIRS;
 
 // Declarative dependency → stack rules for package.json. First match per field wins,
 // so more specific frameworks (Next.js) come before the libraries they wrap (React).
@@ -81,8 +79,8 @@ export function selectSemanticPaths(paths) {
     .slice(0, SEMANTIC_MAX_FILES);
 }
 
-const isIgnored = (path) =>
-  path.split('/').some((seg) => IGNORED_DIRS.has(seg) || (seg.startsWith('.') && seg !== '.github'));
+export const isIgnored = (path) =>
+  path.split('/').some((seg) => IGNORED_DIRS.has(seg.toLowerCase()) || (seg.startsWith('.') && seg.toLowerCase() !== '.github'));
 
 // The manifest closest to the root wins (fewest path segments).
 function shallowest(paths, name) {
@@ -138,6 +136,8 @@ async function readSemanticSnapshot(paths, readSafe) {
   return {
     files,
     filesRead: [...files.keys()],
+    fileFingerprints: Object.fromEntries([...files.entries()]
+      .map(([path, text]) => [path, fingerprintText(text)])),
     filesSkipped: skipped,
     totalChars,
   };
@@ -231,6 +231,7 @@ function analyzeSemanticSnapshot(snapshot, baseStack, baseDescription) {
   const confidence = evidence.length >= 7 ? 'high' : evidence.length >= 3 ? 'medium' : evidence.length ? 'low' : 'unknown';
   return {
     filesRead: snapshot.filesRead,
+    fileFingerprints: snapshot.fileFingerprints,
     filesSkipped: snapshot.filesSkipped,
     totalChars: snapshot.totalChars,
     confidence,
@@ -251,6 +252,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
 
   const stack = { languages: [], frontend: '', backend: '', testing: '', database: '' };
   const manifestsFound = [];
+  const manifestFingerprints = {};
   let projectName = folderName || 'project';
   let description = '';
 
@@ -261,6 +263,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
     const text = await readSafe(pkgPath);
     if (text !== null) {
       manifestsFound.push(pkgPath);
+      manifestFingerprints[pkgPath] = fingerprintText(text);
       try {
         const pkg = JSON.parse(text);
         if (pkg.name) projectName = pkg.name;
@@ -286,6 +289,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
     const text = await readSafe(p);
     if (text === null) continue;
     manifestsFound.push(p);
+    manifestFingerprints[p] = fingerprintText(text);
     if (!stack.languages.includes(m.language)) stack.languages.push(m.language);
     const lower = text.toLowerCase();
     for (const rule of TEXT_RULES) if (lower.includes(rule.needle)) setIf(stack, rule.field, rule.value);
@@ -297,6 +301,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
     const text = await readSafe(csprojPath);
     if (text === null) continue;
     manifestsFound.push(csprojPath);
+    manifestFingerprints[csprojPath] = fingerprintText(text);
     const lower = text.toLowerCase();
     if (lower.includes('microsoft.aspnetcore') || lower.includes('microsoft.net.sdk.web') || /\/api\/[^/]+\.csproj$/i.test(csprojPath)) {
       setIf(stack, 'backend', 'ASP.NET Core');
@@ -329,6 +334,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
     entities: suggestEntities(visible),
     features: suggestFeatures(visible),
     manifestsFound,
+    manifestFingerprints,
     fileCount: visible.length,
     truncated,
     legacyHarness: detectLegacyHarness(normalizedPaths),

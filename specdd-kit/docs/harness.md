@@ -17,7 +17,8 @@ The harness validation scripts require:
 | Path | Purpose |
 |------|---------|
 | `AGENTS.md` (root) | Session primer, ≤40 lines. What every agent session loads first. |
-| `context/scaffold-manifest.json` | Post-extraction manifest: generated paths, collisions and selected context. |
+| `context/scaffold-manifest.json` | Post-extraction manifest: generated paths, collisions, selected context and fidelity fingerprints. |
+| `context/project-validation.json` | Explicit project-level test/build/lint commands executed by the consolidated validator. |
 | `.agents/REGISTRY.md` | Full artifact registry + systems status. Load only when working on the harness itself. |
 | `.agents/orchestration/ROUTING.md` | Task classification → which skill to load. |
 | `.agents/skills/<domain>/SKILL.md` | Per-domain rules. Skeletons at scaffold time — fill as the domain takes shape. |
@@ -26,7 +27,7 @@ The harness validation scripts require:
 | `.agents/cold-start/` | Budget manifest + compressed skill snapshots (generated once skills have real content). |
 | `.agents/workflows/` | spec-first-feature.md, skill-review.md. |
 | `.agents/telemetry/` | EVENTS.md contract; events/ is gitignored. |
-| `.agents/scripts/` | validate-harness.ps1, generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
+| `.agents/scripts/` | validate-project.ps1 (orchestrator), validate-harness.ps1, generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
 
 ## Lifecycle after scaffolding
 1. Fill each skill skeleton with the domain's real Must/Never rules as they emerge.
@@ -38,16 +39,45 @@ The harness validation scripts require:
 5. Multi-agent orchestration artifacts are deliberately absent — add them only when a
    real multi-agent workflow with named sub-agents exists.
 
-After extracting a scaffold, run:
+After extracting a scaffold, run the one consolidated check:
 
 ```powershell
-pwsh .agents/scripts/validate-harness.ps1
+pwsh .agents/scripts/validate-project.ps1
 ```
 
-The read-only gate checks the manifest, required Harness files, selected domain/entity
-artifacts, internal references, collision bookkeeping and high-confidence secret-like
-tokens. Add `-RunGates` when PowerShell-YAML is installed to run the existing spec and
-budget validators as part of the same check.
+The command runs the structural Harness gate, verifies immutable generated-file fingerprints,
+compares the extracted source path inventory with the Brownfield ingestion baseline,
+runs approved specs and acceptance checks when `powershell-yaml` is available, checks
+the context budget, and executes commands declared in `context/project-validation.json`.
+It writes `context/harness-validation-report.md` and `.json`.
+
+Exit codes are intentionally explicit: `0` means `VERIFIED`, `2` means `PARTIAL`
+(the scaffold is usable but evidence or checks are incomplete), and `1` means a
+structural, integrity or declared check failed. A newly generated scaffold normally
+starts as `PARTIAL` until placeholder specs are replaced and project checks are
+declared.
+
+The manifest uses schema 2 and a deterministic non-cryptographic fingerprint only to
+detect accidental copy/extraction drift. Project context, selected skills/specs,
+feature drafts and `context/project-validation.json` are marked mutable so normal
+project authoring does not look like a broken extraction. It does not prove semantic
+equivalence or approve business rules.
+
+When the project has real commands, edit `context/project-validation.json` and keep
+them explicit and reproducible, for example:
+
+```json
+{
+  "schemaVersion": 1,
+  "checks": [
+    { "id": "unit", "command": "npm run test:unit", "expectedExitCode": 0 },
+    { "id": "build", "command": "npm run build", "expectedExitCode": 0 }
+  ]
+}
+```
+
+Those commands are executed from the project root by the same one-shot validator.
+Do not put credentials or interactive commands in this file.
 
 ## Brownfield additions
 
@@ -62,4 +92,6 @@ classify the detected stack, architecture, domains, entities and features. The
 approved selection is applied defensively to generated skills, context and feature
 artifacts. Entity contracts remain `designContract: placeholder`: context approval
 is not spec approval. Existing destination files are still skipped and reported;
-reconciliation belongs to `spec-converge`.
+reconciliation belongs to `spec-converge`. Run the consolidated validator before the
+first agent session; it will call out source drift, skipped collisions, unknown context
+classifications and placeholder contracts in one report.

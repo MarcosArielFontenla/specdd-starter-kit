@@ -1,6 +1,6 @@
 # Estado de implementación — SpecDD Harness
 
-**Actualizado:** 2026-08-16
+**Actualizado:** 2026-08-29
 **Estado:** Fases 1–6 completadas; mejoras semánticas avanzadas y convergencia siguen siendo trabajo del agente
 
 Este documento deja asentado qué está implementado y cuál es el siguiente incremento
@@ -95,14 +95,20 @@ Brownfield inserta `Review Context` antes de los pasos de personalización.
 
 ### Fase 6 — Validación post-extracción
 
-- El scaffold genera `context/scaffold-manifest.json` con paths generados, colisiones,
-  reemplazos y selección aprobada.
+- El scaffold genera `context/scaffold-manifest.json` de esquema 2 con paths generados,
+  colisiones, reemplazos, selección aprobada y fingerprints de integridad/fidelidad.
+- También genera `context/project-validation.json` como contrato explícito para los
+  comandos de test/build/lint que el proyecto quiera ejecutar.
 - `pwsh .agents/scripts/validate-harness.ps1` valida la instalación sin escribir en
   el proyecto destino.
 - El gate comprueba estructura, artefactos seleccionados, referencias internas,
   bookkeeping de colisiones, YAML cuando `powershell-yaml` está disponible y tokens
   con apariencia de secreto.
-- `-RunGates` ejecuta además `validate-spec.ps1` y `validate-budget.ps1`.
+- `pwsh .agents/scripts/validate-project.ps1` es el run único recomendado: agrega el
+  gate estructural, integridad de archivos, baseline Brownfield, specs ejecutables,
+  budget y checks declarados; escribe reporte Markdown/JSON.
+- Sus códigos distinguen `VERIFIED` (0), `PARTIAL` (2) y `FAILED` (1), por lo que no
+  confunde un scaffold instalable con un proyecto semánticamente ya especificado.
 - Se probó una extracción física temporal de un scaffold Greenfield y el validador
   terminó correctamente.
 
@@ -129,11 +135,14 @@ Brownfield.
 
 La implementación actual fue validada con:
 
-- 67 tests unitarios del wizard SpecDD.
+- 70 tests unitarios del wizard SpecDD.
 - 3 pruebas E2E del wizard: Greenfield, Brownfield y Brownfield con Harness legacy.
 - Build de `sdd-kit-wizard`.
 - `git diff --check` sin errores de whitespace.
 - Scaffold temporal Greenfield materializado y aceptado por `validate-harness.ps1`.
+- Round-trip temporal Brownfield validado con el run único `validate-project.ps1`:
+  estructura, fingerprints, baseline de paths fuente y reporte Markdown/JSON; también
+  se verificó que una modificación posterior de un archivo generado produce `FAILED`.
 - Round-trip real Brownfield generación → ZIP → extracción: 116 archivos, 194.320
   bytes y `validate-harness.ps1` aceptó el resultado.
 - Validación local de solo lectura contra `D:/product-projects/tactical-arg-store-app`:
@@ -153,12 +162,13 @@ universal ni una comprensión 100% automática del proyecto.
 - Conectar el reporte con un análisis de convergencia más detallado por path y
   acceptance check. `spec-converge` ya existe, pero su ejecución corresponde al
   agente en el proyecto destino.
-- Añadir validación del ZIP Brownfield real en un repositorio temporal; el gate base ya
-  existe y fue probado con un scaffold Greenfield temporal.
+- Ampliar la validación round-trip Brownfield con fixtures de más stacks, monorepos y
+  proyectos con múltiples aplicaciones, conservando el baseline de paths y el reporte
+  de fidelidad.
 - Mantener revisión humana de reglas de negocio, contratos, skills y specs; el wizard
   no puede deducir ni aprobar esos artefactos de forma segura.
-- Documentar y ejecutar los gates PowerShell del Harness después de extraerlo en el
-  proyecto destino (`validate-spec`, `validate-budget` y snapshots).
+- Completar la configuración de `context/project-validation.json` por proyecto para
+  pasar de la señal honesta `PARTIAL` a checks funcionales `VERIFIED`.
 - Añadir más fixtures reales para Python, Java, Go y monorepos con múltiples apps.
 
 ## Archivos de referencia para retomar
@@ -172,12 +182,14 @@ universal ni una comprensión 100% automática del proyecto.
   y aprobación del contexto detectado.
 - `specdd-kit/website/src/components/generators.js` — generación del scaffold y reporte.
 - `specdd-kit/.agents/scripts/validate-harness.ps1` — gate post-extracción de solo lectura.
+- `specdd-kit/.agents/scripts/validate-project.ps1` — orquestador único post-extracción
+  con reporte Markdown/JSON y códigos `VERIFIED`/`PARTIAL`/`FAILED`.
 - `specdd-kit/docs/greenfield-vs-brownfield.md` — guía de escenarios y niveles.
 
 ## Regla de continuidad
 
 La siguiente sesión debe comenzar revisando este documento y elegir una de las
-evoluciones pendientes: ampliar parsers semánticos por stack, ejecutar la convergencia
-en el proyecto destino o automatizar una validación post-extracción del ZIP. Cualquier
-ampliación debe conservar los límites locales, la evidencia, la confianza y la
-aprobación humana.
+evoluciones pendientes: ampliar parsers semánticos por stack, enriquecer la convergencia
+por path y acceptance check, o ampliar fixtures y cobertura de CI. La validación
+post-extracción ya está consolidada en `validate-project.ps1`. Cualquier ampliación
+debe conservar los límites locales, la evidencia, la confianza y la aprobación humana.

@@ -1,7 +1,8 @@
 // src/components/generators.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, generateScaffold, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks } from './generators.js';
+import { generateFiles, generateScaffold, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks, renderProjectValidation } from './generators.js';
+import { fingerprintPaths, fingerprintText } from './fingerprints.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
@@ -37,11 +38,29 @@ test('generateFiles keeps base and overlays dynamic files', () => {
   assert.match(out['.github/copilot-instructions.md'], /AGENTS\.md/);
   assert.ok('.vscode/mcp.json' in out);               // mcp selected
   assert.ok(!('specs/features-spec.md' in out));       // empty features
+  assert.ok('context/project-validation.json' in out);
 });
 
 test('no mcp.json when no MCP tools selected', () => {
   const out = generateFiles(base, { ...input, mcp: [] });
   assert.ok(!('.vscode/mcp.json' in out));
+});
+
+test('project validation profile starts explicit and empty', () => {
+  const profile = JSON.parse(renderProjectValidation());
+  assert.equal(profile.schemaVersion, 1);
+  assert.deepEqual(profile.checks, []);
+  assert.match(profile.notes, /validate-project\.ps1/);
+});
+
+test('fingerprints are deterministic for content and source paths', () => {
+  assert.equal(fingerprintText('hello'), fingerprintText('hello'));
+  assert.notEqual(fingerprintText('hello'), fingerprintText('Hello'));
+  assert.deepEqual(fingerprintPaths(['src/B.ts', 'src/a.ts', 'node_modules/x.js']), {
+    count: 2,
+    fingerprint: fingerprintPaths(['src/a.ts', 'src/b.ts']).fingerprint,
+    paths: ['src/a.ts', 'src/b.ts'],
+  });
 });
 
 test('mcp.json contains only placeholders, no secrets', () => {
@@ -239,11 +258,16 @@ test('generateScaffold greenfield: same files as generateFiles, nothing skipped'
 test('scaffold manifest lists generated files and selected context', () => {
   const out = generateFiles(baseWithGithub, harnessInput, '2026-07-18');
   const manifest = JSON.parse(out[SCAFFOLD_MANIFEST_PATH]);
-  assert.equal(manifest.schemaVersion, 1);
+  assert.equal(manifest.schemaVersion, 2);
   assert.equal(manifest.scenario, 'greenfield');
   assert.ok(manifest.generatedFiles.includes(SCAFFOLD_MANIFEST_PATH));
   assert.deepEqual(manifest.selected.domains, harnessInput.domains);
   assert.ok(manifest.generatedFiles.includes('.agents/skills/auth/SKILL.md'));
+  assert.equal(manifest.fidelity.fingerprintAlgorithm, 'fnv1a32-utf8');
+  assert.ok(manifest.fidelity.generatedFiles['AGENTS.md']);
+  assert.ok(manifest.fidelity.mutableFiles.includes('context/project-validation.json'));
+  assert.ok(!manifest.fidelity.generatedFiles['context/project-validation.json']);
+  assert.equal(manifest.fidelity.source, null);
 });
 
 test('generateScaffold brownfield: collisions excluded and reported, analysis report always emitted', () => {
@@ -275,6 +299,8 @@ test('generateScaffold brownfield: collisions excluded and reported, analysis re
   assert.equal(manifest.contextReview.approved, true);
   assert.deepEqual(manifest.skippedPaths, skipped);
   assert.ok(manifest.generatedFiles.includes('context/brownfield-analysis.md'));
+  assert.equal(manifest.fidelity.source.pathCount, 3);
+  assert.equal(manifest.fidelity.source.pathFingerprint, fingerprintPaths(brownInput.existingPaths).fingerprint);
 });
 
 test('approved Brownfield context is the only source for generated project artifacts', () => {
@@ -314,6 +340,19 @@ test('analysis report is exempt from collision exclusion', () => {
   const { files } = generateScaffold(baseWithBoth,
     { ...brownInput, existingPaths: ['context/brownfield-analysis.md'] }, '2026-07-18');
   assert.ok('context/brownfield-analysis.md' in files);
+});
+
+test('manifest is regenerated and migration tasks participate in collision bookkeeping', () => {
+  const { files, skipped, replaced } = generateScaffold(baseWithHarnessCollisions, {
+    ...legacyInput,
+    existingPaths: [SCAFFOLD_MANIFEST_PATH, '.agents/specs/tasks/harness-migration.tasks.md'],
+  }, '2026-07-18');
+  const manifest = JSON.parse(files[SCAFFOLD_MANIFEST_PATH]);
+  assert.ok(files[SCAFFOLD_MANIFEST_PATH]);
+  assert.ok(!skipped.includes(SCAFFOLD_MANIFEST_PATH));
+  assert.ok(replaced.includes('.agents/specs/tasks/harness-migration.tasks.md'));
+  assert.ok(manifest.generatedFiles.includes('.agents/specs/tasks/harness-migration.tasks.md'));
+  assert.ok(manifest.fidelity.mutableFiles.includes('.agents/specs/tasks/harness-migration.tasks.md'));
 });
 
 test('brownfield report notes truncation', () => {

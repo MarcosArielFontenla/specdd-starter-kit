@@ -68,6 +68,14 @@ the wizard itself (`npm run dev`) and using the generated prompts/instructions
 inside your coding agent works offline, modulo whatever network access your agent
 itself needs to reach its model.
 
+**How do I validate a scaffold after copying it into my project?**
+Run the consolidated validator from the repository root:
+`pwsh .agents/scripts/validate-project.ps1`. It writes
+`context/harness-validation-report.md` and `.json`; exit `0` is `VERIFIED`, exit `2`
+is `PARTIAL` evidence, and exit `1` is a failed structural, integrity or declared
+project check. A new scaffold commonly starts as `PARTIAL` until real specs and
+project commands replace the explicit placeholders.
+
 **Can I use the generated scaffold without ever running an AI agent?**
 Yes. `context/`, `specs/`, and `templates/` are plain Markdown meant to be read and
 written by humans too — the `/specdd-*` prompts are a convenience for agent-driven
@@ -88,5 +96,6 @@ No. It scaffolds specs, prompts, and instructions only. Issue-generation prompts
 team already uses.
 
 **What's `specforge-kit`?**
-A planned future kit (role-based scaffolds for BA/QA/Dev/UX) — not implemented in
-this repository yet. Don't expect its files or commands to exist today.
+The companion role-pack wizard in this repository. It generates BA/QA/Dev/UX
+skills, playbooks, workflows and install tasks for an existing SpecDD Harness; see
+the root `specforge-kit/README.md` for its setup and scope.

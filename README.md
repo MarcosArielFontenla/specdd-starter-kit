@@ -24,7 +24,7 @@ The SpecDD wizard branches by scenario on its second step:
 | **Brownfield** | ✅ | Existing project. You pick your project folder; Level 1 analyzes manifests and paths, while opt-in **Level 2 — Assisted semantic analysis** reads a bounded allowlist of safe text files locally. Both pre-fill the flow, require human review of detected context, and generate a collision-safe scaffold: existing files are skipped and reported, never overwritten. Includes `spec-converge`; legacy Harness detection still requires explicit acknowledgment and can generate migration tasks. |
 | **Deploy** (SpecDeploy wizard) | ⏸ deferred | CI/CD + IaC generation works for 6 providers, but refinement is on hold until a real target environment is defined (Azure vs AWS vs Railway vs other). |
 
-## What the generated scaffold contains (SpecDD Harness v1)
+## What the generated scaffold contains (SpecDD Harness v1, manifest schema 2)
 
 ```
 AGENTS.md                     Session primer (≤40 lines): stack one-liners, task
@@ -42,11 +42,12 @@ CLAUDE.md / GEMINI.md / ...   ≤5-line pointer adapters, one per selected tool
   workflows/                  spec-first-feature, skill-review
                               (+ spec-converge, brownfield only)
   telemetry/EVENTS.md         Vendor-neutral JSONL event contract
-  scripts/*.ps1               Mechanical gates: validate-harness, validate-spec,
-                              validate-budget, generate-snapshots
+  scripts/*.ps1               Mechanical gates: validate-project (one run),
+                              validate-harness, validate-spec, validate-budget,
+                              generate-snapshots
 context/                      project.md, tech-stack.md, constitution.md
-                              (+ scaffold-manifest.json; brownfield also includes
-                               brownfield-analysis.md)
+                              (+ scaffold-manifest.json, project-validation.json;
+                               brownfield also includes brownfield-analysis.md)
 specs/, templates/, docs/     SDD templates and guides
 .github/                      Copilot prompts/instructions/agents — included ONLY
                               when GitHub Copilot is among the selected tools
@@ -90,7 +91,9 @@ skipped and reported, and all wiring happens through the install tasks with a hu
    tech folders) and primary **entities**, initial features, principles, MCP tools,
    **team tools** (one pointer adapter each), security (classification + OWASP focus).
 3. Review the grouped preview and download the ZIP; extract it into your empty repo.
-4. Run `pwsh .agents/scripts/validate-harness.ps1` after extraction.
+4. Run `pwsh .agents/scripts/validate-project.ps1` after extraction. This is the
+   single truthful run: it validates structure, generated-file integrity, specs,
+   budget and any declared project checks, then writes a Markdown + JSON report.
 5. First agent session: your agent auto-loads `AGENTS.md` and routes work through the
    harness. Define real specs per entity with `.agents/workflows/spec-first-feature.md`
    when you are ready.
@@ -108,8 +111,10 @@ skipped and reported, and all wiring happens through the install tasks with a hu
    acknowledgment — its mechanism files will be deprecated, its knowledge triaged.
 4. Walk the remaining steps (pre-filled), check the preview — including the
    "Skipped — already exist" group — and download; extract into your repo root.
-5. Run `pwsh .agents/scripts/validate-harness.ps1` after extraction. It checks the
-   manifest, required files, selected artifacts, internal references and safe content.
+5. Run `pwsh .agents/scripts/validate-project.ps1` after extraction. It is the single
+   consolidated validation run and writes `context/harness-validation-report.md` plus
+   a machine-readable JSON report. Exit `0` means `VERIFIED`; exit `2` means `PARTIAL`
+   evidence remains; exit `1` means a validation failed.
 6. Verify nothing was clobbered: `git status` must show only new files (plus, with an
    acknowledged legacy harness, the replaced harness paths).
 7. First agent session — one line:
@@ -132,6 +137,28 @@ existing source code. Brownfield context approval is not spec approval: generate
 entity contracts remain placeholders until the project defines real requirements and
 executable checks.
 
+### Post-extraction validation (all scenarios)
+
+After copying or extracting the generated ZIP at the root of the target repository,
+run the single consolidated check:
+
+```powershell
+pwsh .agents/scripts/validate-project.ps1
+```
+
+The command validates the Harness structure, immutable generated-file fingerprints,
+internal references, selected artifacts, Brownfield source-path baseline, specs,
+budget and the project checks declared in `context/project-validation.json`. It writes
+`context/harness-validation-report.md` and
+`context/harness-validation-report.json`.
+
+Exit codes are explicit: `0` means `VERIFIED`, `2` means `PARTIAL` evidence remains,
+and `1` means a structural, integrity or declared project check failed. The manifest
+keeps context, draft skills/specs/features and the project-validation profile mutable
+so normal project authoring does not look like an extraction error. These fingerprints
+prove path/content fidelity for the generated files; they do not prove semantic
+equivalence or business-rule correctness.
+
 ### Role Pack — add BA/QA/Dev/UX roles to a harness project
 
 1. Open the SpecForge wizard. Optionally pick your **target project folder** — the
@@ -145,8 +172,10 @@ executable checks.
    The agent asks for your approval on `role-pack-install.tasks.md`, wires
    ROUTING/REGISTRY/budget, scaffolds the role-skill snapshots, and re-runs the gates.
 
-After any scaffold: the harness validation scripts (`.agents/scripts/*.ps1`) need
-PowerShell 7+ and the `powershell-yaml` module (`Install-Module powershell-yaml -Scope CurrentUser`).
+After any SpecDD scaffold, use the consolidated validation command above; the
+individual gates remain available for CI and focused debugging. The validation
+scripts (`.agents/scripts/*.ps1`) need PowerShell 7+ and the `powershell-yaml` module
+(`Install-Module powershell-yaml -Scope CurrentUser`).
 
 ## Workspaces
 
@@ -171,6 +200,11 @@ files and binaries are excluded. The approved context is applied defensively by
 `generators.js`.
 SpecForge's target ingestion reads only the path LIST (no content at all) to detect
 the destination harness and compute collisions.
+
+For Brownfield SpecDD generation, the schema-2 manifest also records the approved
+context, collision decisions, a source baseline and deterministic fingerprints. This
+gives the extracted project one reproducible post-copy validation run without
+silently overwriting existing files.
 
 ## Run it locally
 
@@ -221,7 +255,7 @@ CI (`.github/workflows/ci.yml`) runs unit + build per workspace; e2e runs locall
   Brownfield ingestion, legacy-harness deprecation, SpecForge Role Packs).
 - `docs/superpowers/plans/` — the implementation plans executed task-by-task.
 - `docs/ROADMAP.md` — improvement backlog.
-- `docs/IMPLEMENTATION_STATUS.md` — completed scope and the next Brownfield analysis phase.
+- `docs/IMPLEMENTATION_STATUS.md` — completed scope, validation flow and the remaining evolution backlog.
 
 ## References
 
