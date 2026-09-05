@@ -26,7 +26,11 @@ Phases 0–10 have scoped acceptance. The post-roadmap SpecControl track O0–O5
 has bounded local acceptance after the
 [O5-D closure audit and regression](audits/2026-09-05-evolution-closure.md).
 The [unified practical guide](../GUIA_DE_USO.md) describes the operated path;
-commit/push of this monorepo, merge and deployment remain separately authorized.
+O5-E published the accepted implementation to `main` at
+`49bc05cae91c98d0a730a5220740202ab14e1e6c`, and hosted
+[CI run 33996093563](https://github.com/MarcosArielFontenla/specdd-starter-kit/actions/runs/33996093563)
+passed every job. Merge of the separate Bloom pilot and deployment remain outside
+this acceptance.
 Project/company-specific SpecDeploy execution remains future work, not a condition
 for this local architectural closure. Existing contracts/fixtures remain preserved.
 

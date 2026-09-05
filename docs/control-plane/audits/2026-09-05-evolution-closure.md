@@ -144,3 +144,12 @@ CI were observed read-only, failure/recovery/cancellation/security evidence was
 contrasted, and README, guide, tracker, implementation status, design/plan and pilot
 evidence were synchronized. The final local-link scan and `git diff --check` passed.
 No dependency install/update, Bloom/PR mutation, commit, push, merge or deploy occurred.
+
+O5-E release closure (2026-09-05): commit
+`49bc05cae91c98d0a730a5220740202ab14e1e6c` published the reviewed 65-file
+SpecControl evolution to `main`. Hosted
+[CI run 33996093563](https://github.com/MarcosArielFontenla/specdd-starter-kit/actions/runs/33996093563)
+passed all jobs, including online dependency audit, package tests/builds, Phase 5,
+proposal verification and the 12 browser regressions. GitHub emitted only maintenance
+warnings that `actions/checkout@v4` and `actions/setup-node@v4` still target deprecated
+Node 20 internals while the runner forces Node 24. Bloom PR #1 was not changed.
