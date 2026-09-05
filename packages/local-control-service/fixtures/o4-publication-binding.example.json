@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecControlPublicationBinding",
+  "provider": "github",
+  "host": "github.com",
+  "owner": "example-owner",
+  "repository": "example-repository",
+  "remoteName": "origin",
+  "baseBranch": "main",
+  "headPrefix": "codex/speccontrol/",
+  "localRemotePath": null
+}

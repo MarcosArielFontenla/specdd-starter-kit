@@ -22,12 +22,79 @@ This tracker is subordinate to `SpecDD Platform Evolution — Agentic Control Pl
 
 ## Current gate
 
-Phases 0–10 have scoped acceptance. The current task is the
-[cross-phase closure audit and regression](audits/2026-09-05-evolution-closure.md),
-with the [unified practical guide](../GUIA_DE_USO.md) now available; publication and
-integration remain separately authorized steps.
+Phases 0–10 have scoped acceptance. The post-roadmap SpecControl track O0–O5 also
+has bounded local acceptance after the
+[O5-D closure audit and regression](audits/2026-09-05-evolution-closure.md).
+The [unified practical guide](../GUIA_DE_USO.md) describes the operated path;
+commit/push of this monorepo, merge and deployment remain separately authorized.
 Project/company-specific SpecDeploy execution remains future work, not a condition
 for this local architectural closure. Existing contracts/fixtures remain preserved.
+
+The post-roadmap local-operation track has O0–O5 complete with an external pilot.
+[O4-C1](phases/local-operation-o4-github-adapter.md) validates the GitHub draft-PR
+adapter and reconciliation entirely offline through injected boundaries.
+[O4-C2-A](phases/local-operation-o4-github-runtime.md) adds the bounded process and
+Git preparation runtime, first validated offline and then exercised under explicit
+authorization in O5. The live CLI, credential, push and draft-PR effect were never
+enabled by default.
+
+The [O4-C2-B1 read-only preflight](phases/local-operation-o4-github-preflight.md)
+confirmed access, base SHA and an empty SpecControl branch/PR namespace on the
+authorized Bloom repository. The later O5 run and exact publication approval were
+new artifacts; the preflight itself granted no write authority.
+
+[O5-A](phases/local-operation-o5-bloom-baseline.md) cloned the authorized repository
+at that exact SHA and completed a read-only baseline. It proposes one two-file,
+domain-only phone-normalization validation change. Dependency restore, baseline
+tests, the O2/O3 run and every publication effect remain unapproved. O5-B1 then
+received exact approval: the scoped restore succeeded and all 63 domain tests passed;
+the O2 Planner then produced artifact
+`a8c209af29e574886addcfe80c0cd7eb48b6dfa7258b4069735a3668897da9f8`
+and stopped persistently at `awaiting-approval`. O3 and every publication effect
+remain gated. O5-B3-A then removed generated `bin` directories from isolated source
+snapshots while preserving .NET `obj` restore metadata. The full 40-test SpecControl
+suite passed, and a real temporary Bloom snapshot stayed within its configured limit
+and passed all 63 domain tests with `--no-restore`. O5-B3-B approved the exact plan,
+produced the expected two-file diff and passed independent review, then stopped its
+first attempt at `needs-attention`: the structured check's minimal environment lacks
+the Windows profile-location variables required by .NET/NuGet. The failure reproduces
+as `NETSDK1060`; the same isolated change passes 66/66 with that location family
+present. O5-B3-C1 then added that bounded, platform-specific profile-location family
+to structured checks. Its child-process boundary regression and all 41 SpecControl
+tests pass; the compiled runner also passes the real isolated Bloom check. No retry
+or promotion had occurred at that point. O5-B3-C2 then explicitly archived the
+failed first attempt and completed attempt 2 from a fresh workspace: exact two-file
+diff, independent review pass, structured domain check pass (66/66) and final
+evidence `a0d807d996c4eae01e9b3a7cc9d7a4c8c97ae24abacf452aafe6a921634b973d`.
+O5-C1 then prepared the exact O4-A publication subject
+`5e6552e53d179f13d0d8cd3c6fc050935d54ec608bdd5a1aff6cf19a01e81593`
+against clean Bloom `master` at the original revision. It is persistently paused at
+`awaiting-approval` with the publisher disabled. O5-C2 then revalidated the exact
+source and evidence and persisted approval of that subject while the publisher was
+still disabled. All remote-effect fields remain empty; source promotion and GitHub
+publication remained separately gated. O5-C3 enabled the publisher for one approved
+operation, which stopped before preparing a head because the deep private checkout
+did not enable Git for Windows long paths. Exact read-only GitHub observations prove
+that neither the branch nor a PR exists. The journal remains `needs-attention`; a
+local long-path fix and fail-closed pre-head reconciliation are required before an
+explicit retry. O5-C3-R1 implemented both gaps offline: clone-local long-path support
+and pre-head reconciliation that restores approval only for an exactly empty remote
+state. All 46 SpecControl tests pass; the real journal and failed workspace remain
+untouched pending separate reconciliation authority. O5-C3-R2 then performed that
+exact read-only reconciliation against GitHub, observed neither branch nor PR, and
+returned the publication to `approved` at version 5. No new publication operation
+was started in that gate; the failed workspace remains preserved. O5-C3-R3 then
+completed the explicitly authorized retry, producing exact commit
+`37ac7312eb9c32b046b0c248ed67a9e81989e50a` and verified open draft
+[Bloom PR #1](https://github.com/MarcosArielFontenla/bloom-appointments-app/pull/1).
+The PR contains only the two approved files; no merge or deployment occurred.
+O5-D reconfirmed the PR base/head/commit and file set. Its domain suite is 66/66,
+while GitHub's broader backend check is red because 18 integration tests return the
+same `401 Unauthorized` pattern already present on Bloom's base commit. The frontend
+check passes. This is accepted evidence of faithful control-plane publication, not
+a claim that the external application is merge-ready. The 397-test monorepo suite,
+all builds and 12 browser E2E passed; recovery, cancellation and security boundaries
+remain covered by the 46 SpecControl regressions and the preserved real journals.
 
 Phase 9 reached its real human-reviewed draft-PR boundary with
 [PR #3](https://github.com/MarcosArielFontenla/specdd-starter-kit/pull/3).

@@ -16,9 +16,12 @@ No copies todo SPECDDSTARTERKIT dentro de tu aplicación. Instalás el contenido
 ZIP revisado, no este monorepo. El proyecto destino no necesita convertirse en un
 proyecto Node: los requisitos de la plataforma son independientes de su stack.
 
-El portal genera archivos en el navegador; **no ejecuta tu proyecto ni dirige agentes
-automáticamente**. SpecControl aporta contratos y validación de grafos, no un botón
-universal «ejecutar fábrica». Vos y tu herramienta de coding coordinan el trabajo.
+El portal de los tres kits genera archivos en el navegador; **no ejecuta tu proyecto**.
+SpecControl es un servicio local separado y aceptado para un recorrido acotado: un
+Planner real pausa spec/plan para aprobación; Developer trabaja en una copia aislada;
+Reviewer usa otra sesión; luego corren checks registrados y una segunda aprobación
+puede habilitar una draft PR. Publicación está desactivada por defecto y deploy no
+forma parte del flujo. No es un botón universal «ejecutar fábrica».
 
 ## 2. Levantá el portal
 
@@ -174,7 +177,76 @@ pwsh .agents/scripts/validate-spec.ps1 -Run -SpecPath .agents/specs/pedidos.spec
 
 No necesitás un grafo para cada corrección. Para un flujo repetible, SpecControl
 permite describir roles, pasos, artefactos, evals y gates en un contrato portable.
-Actualmente no hay un editor/orquestador universal de grafos en el portal.
+Actualmente no hay un editor/orquestador universal de grafos en el portal. El host
+implementa un único recorrido operativo acotado, separado del portal principal. En
+Windows, el estado privado debe estar fuera del repositorio objetivo y O3 exige un
+modo de sandbox explícito:
+
+```powershell
+$codexPath = (Get-Command codex).Source
+$statePath = Join-Path $env:LOCALAPPDATA 'SpecDD\mi-proyecto'
+npm run speccontrol:start -- `
+  --project-id mi-proyecto `
+  --project-root D:\ruta\a\mi-proyecto `
+  --state-dir $statePath `
+  --codex $codexPath `
+  --execution-binding D:\ruta\confiable\execution-binding.json `
+  --windows-sandbox unelevated `
+  --port 4310
+```
+
+Abrí la URL de bootstrap de un solo uso que imprime el proceso. Podés crear una
+tarea, esperar el draft, aprobar o rechazar su hash exacto y, con otra autorización,
+ejecutar Developer, Reviewer y checks. El root, el binding y el modo de sandbox sólo se registran al
+arrancar: el navegador no acepta paths ni comandos. `unelevated` es el fallback
+validado en este host; usá `elevated` únicamente cuando su prueba de frontera pase.
+El servicio nunca usa ejecución irrestricta como fallback. Consultá los requisitos,
+límites y recuperación en
+[`packages/local-control-service/README.md`](../packages/local-control-service/README.md).
+
+Para habilitar el gate de publicación —todavía sin efectos remotos— agregá un binding
+confiable y el ejecutable Git al arranque. La consola prepara y aprueba el hash exacto
+de una futura draft PR. Requiere un proyecto que sea el top-level
+Git exacto, limpio, en la rama base y con el remote GitHub esperado; vuelve a revisar
+todo eso al aprobar. Usá el
+[ejemplo y límites O4-A](../packages/local-control-service/README.md#optional-o4-a-publication-gate)
+y no coloques tokens en el binding.
+
+O4-B agrega exclusivamente un modo de ensayo `local-git`: con un bare remote local
+confiable y `--local-publication-root`, el botón publica una rama/commit reales sólo
+en ese remote y guarda un recibo privado. Sirve para probar el recorrido; **no es una
+draft PR ni evidencia de GitHub**.
+
+El publicador GitHub implementa draft PR exacta e idempotente, transporte `gh`
+acotado, commit en clone privado y reconciliación `published`/`absent`/`conflict`.
+Sigue desconectado por defecto. Para una operación real, después de revisar el
+binding y aprobar el subject exacto, reiniciá agregando:
+
+```powershell
+$gitPath = (Get-Command git).Source
+$ghPath = (Get-Command gh).Source
+$publicationRoot = Join-Path $statePath 'publication-workspaces'
+npm run speccontrol:start -- `
+  --project-id mi-proyecto `
+  --project-root D:\ruta\a\mi-proyecto `
+  --state-dir $statePath `
+  --codex $codexPath `
+  --execution-binding D:\ruta\confiable\execution-binding.json `
+  --publication-binding D:\ruta\confiable\publication-binding.json `
+  --git $gitPath `
+  --github-cli $ghPath `
+  --github-publication-root $publicationRoot `
+  --windows-sandbox unelevated `
+  --port 4310
+```
+
+Esto habilita un efecto real: revalida repo/base/diff, configura `core.longpaths`
+sólo en el clone privado, crea un commit exacto, hace push create-only y crea la
+draft PR. No concede merge ni deploy. Ante timeout o resultado remoto incierto, no
+presiones publicar otra vez: conservá la evidencia y reconciliá la operación exacta.
+Sólo la ausencia exacta de rama y PR puede devolver el run a `approved`; cualquier
+presencia incompatible queda en conflicto. El piloto Bloom comprobó este recorrido,
+incluido un fallo pre-head, reconciliación y retry explícito.
 
 En **SPECDDSTARTERKIT**, este ejemplo valida un contrato público sin ejecutarlo:
 
@@ -282,6 +354,8 @@ No hace falta repetir la generación del ZIP ni el benchmark en cada sesión.
 | Fallo de integridad/colisión | Compará cambios con lo generado; no fuerces reemplazos ni reescribas hashes |
 | Run privado inexistente | Usá el ejemplo público o prepará una ejecución nueva autorizada |
 | Export ya existente o evidencia desactualizada | No sobrescribas; conservá el run y revisá una ejecución nueva |
+| Publicación en `needs-attention` | No repitas el push; observá y reconciliá la operación exacta antes de decidir |
+| PR con CI rojo pero check de tarea verde | Compará con CI de la base; documentá el fallo preexistente y no la declares mergeable |
 | Propuesta con exit 2 | Puede ser rechazo por evidencia insuficiente o falta de mejora; leé el assessment |
 
 ## 12. Comprobar la plataforma como mantenedor
@@ -294,8 +368,9 @@ npm run build --workspaces --if-present
 ```
 
 Comprobá el exit de cada comando antes de continuar. Los E2E requieren Chromium
-de Playwright instalado; descargalo con `npx playwright install chromium` si falta.
-Detené previamente los servidores de desarrollo que ocupen los puertos de prueba:
+de Playwright instalado; no lo instales durante un cierre que prohíba actualizar
+dependencias. Detené previamente los servidores de desarrollo que ocupen los puertos
+4320–4323 si querés el mismo aislamiento que CI:
 
 ```powershell
 $env:CI='true'
@@ -305,6 +380,6 @@ Remove-Item Env:CI
 
 Usá una terminal dedicada para no alterar una variable CI que ya necesitaras en otra
 sesión. La [auditoría de cierre](control-plane/audits/2026-09-05-evolution-closure.md)
-registra 351 tests unitarios, 28 adicionales y 12 E2E aprobados en ese estado del repo;
+registra 397 tests unitarios, 28 adicionales y 12 E2E aprobados en O5-D;
 no garantiza resultados futuros sin reejecutarlos. CI alojada, publicación y merge
 son pasos separados con revisión/autorización, no efectos de generar el Harness.

@@ -234,16 +234,16 @@ Brownfield.
 La implementación actual fue validada con:
 
 - Auditoría conjunta de cierre (2026-09-05): [resultados y límites](control-plane/audits/2026-09-05-evolution-closure.md).
-  Consulta online nueva de npm audit: 0 vulnerabilidades reportadas; sin cambios de dependencias.
-- 351 tests unitarios aprobados en B2 y reejecutados en el cierre: 12 Project Definition, 8 Capability Pack, 11 SpecControl, 14
+  La consulta O5-D fue offline: 0 advisories cacheados; sin cambios de dependencias.
+- 397 tests unitarios aprobados en O5-D: 12 Project Definition, 8 Capability Pack, 11 SpecControl contracts, 14
   Warp Adapter, 14 Eval Adapters, 26 Run History, 21 Benchmarking, 27 Improvement Proposals, 71 SpecDD,
-  27 SpecForge, 58 SpecDeploy y 62 Delivery Model. El comando de regresión completo
+  27 SpecForge, 58 SpecDeploy, 62 Delivery Model y 46 SpecControl Local. El comando de regresión completo
   del workspace terminó con exit 0; incluye 21 pruebas nuevas de promoción local.
 - 28 pruebas adicionales de cierre aprobadas: 1 de preparación Phase 5 y 27 del
   candidato aislado Phase 9; build del candidato y reconstrucción de su historial aprobados.
-- 12 pruebas E2E reejecutadas conjuntamente y aprobadas: 4 del portal, 3 de SpecDD,
-  2 de SpecForge y 3 de SpecDeploy. Ejecución local con permisos para cierre de procesos
-  en Windows; las cuatro suites terminaron normalmente con exit 0.
+- 12 pruebas E2E aprobadas: 4 del portal, 3 de SpecDD, 2 de SpecForge y 3 de SpecDeploy.
+  El intento CI-mode combinado detectó el puerto 4320 ocupado; las cuatro suites se
+  verificaron luego por separado y terminaron normalmente con exit 0.
 - Builds reejecutados y aprobados de los nueve paquetes de arquitectura, el portal y los tres wizards.
   Persisten avisos no bloqueantes de React/Vite y tamaño de chunk ya documentados.
 - 71 tests unitarios del wizard SpecDD.

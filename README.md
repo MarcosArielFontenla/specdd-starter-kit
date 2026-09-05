@@ -2,8 +2,9 @@
 
 Enterprise starter kit for **Spec-Driven Development (SDD)**, inspired by
 [`github/spec-kit`](https://github.com/github/spec-kit): a web portal with visual
-wizards that generate ready-to-use project scaffolds — no backend, everything runs
-in the browser and downloads as a ZIP.
+wizards that generate ready-to-use project scaffolds entirely in the browser, plus
+an optional, separately started local SpecControl service for a human-gated flow
+through an isolated implementation, review, checks and draft PR.
 
 > Specifications are the source of truth. Code is the output.
 
@@ -207,6 +208,7 @@ npm workspaces monorepo (Node ≥ 22.12):
 | [`packages/benchmarks`](packages/benchmarks/) | `@specdd/benchmarks` — pinned evaluation-node comparison plans, reproducible datasets, explicit metric coverage and descriptive baseline deltas; no automatic winner or Harness mutation. |
 | [`packages/improvement-proposals`](packages/improvement-proposals/) | `@specdd/improvement-proposals` — evidence-bound proposals, failure observations, human-attested review journals and guarded draft PR handoffs; no automatic Harness mutation. |
 | [`packages/delivery-model`](packages/delivery-model/) | `@specdd/delivery-model` — Phase 10 contracts, draft graph and fixed local delivery rehearsal with exact human approval, promotion and HTTP verification; no cloud deployment or pipeline activation. |
+| [`packages/local-control-service`](packages/local-control-service/) | `@specdd/local-control-service` — accepted bounded local control plane: loopback console, transactional SQLite journal, real Planner, exact approvals, isolated Developer, independent Reviewer, structured checks, drift-checked publication and an opt-in GitHub draft-PR publisher with fail-closed reconciliation. The Bloom pilot reached one exact draft PR; this is not a multi-tenant scheduler, auto-merge system or deploy platform. |
 
 **How generation works:** a build-time bundle script snapshots each kit's real files
 into `website/src/data/*.json`. SpecDD first normalizes approved answers into
@@ -248,6 +250,14 @@ npm run dev -w sdd-kit-wizard       # http://localhost:4321  (SpecDD)
 npm run dev -w specforge-wizard     # http://localhost:4322  (SpecForge)
 npm run dev -w specdeploy-wizard    # http://localhost:4323  (SpecDeploy)
 ```
+
+SpecControl is a separate local service, not another browser-only wizard. It operates
+one explicitly registered repository through a fixed human-gated flow and keeps its
+state outside that repository. Start with the non-publishing command and reviewed
+bindings in the [unified usage guide](docs/GUIA_DE_USO.md#7-incorporá-speccontrol-sólo-si-necesitás-formalizar-el-flujo).
+Git/GitHub publication is disabled unless the operator supplies all explicit startup
+bindings; enabling it can create a branch and draft PR, but never authorizes merge or
+deployment.
 
 To try the wizards end-to-end without a real project, point the folder pickers at the
 test fixtures: [`specdd-kit/website/e2e/fixtures/brownfield-sample/`](specdd-kit/website/e2e/fixtures/brownfield-sample/)

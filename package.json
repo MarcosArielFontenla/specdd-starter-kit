@@ -2,7 +2,10 @@
   "name": "specddstarterkit",
   "private": true,
   "scripts": {
-    "test:phase5": "node --test scripts/phase5/*.test.mjs"
+    "test:phase5": "node --test scripts/phase5/*.test.mjs",
+    "speccontrol:build": "npm run build --workspace @specdd/local-control-service",
+    "speccontrol:test": "npm run test:unit --workspace @specdd/local-control-service",
+    "speccontrol:start": "npm run start --workspace @specdd/local-control-service --"
   },
   "engines": { "node": ">=22.12.0" },
   "workspaces": [
@@ -16,6 +19,7 @@
     "packages/benchmarks",
     "packages/improvement-proposals",
     "packages/delivery-model",
+    "packages/local-control-service",
     "platform",
     "specdd-kit/website",
     "specforge-kit/website",

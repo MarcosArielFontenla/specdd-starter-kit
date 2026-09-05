@@ -49,5 +49,8 @@ PROMPT_SPECDDSTARTERKIT.md
 # Private create-only local delivery rehearsals.
 /.specdd-delivery/
 
+# Local SpecControl transactional state and session locks.
+/.specdd-control/
+
 # Per-machine assistant permissions; not project configuration.
 /.claude/settings.local.json

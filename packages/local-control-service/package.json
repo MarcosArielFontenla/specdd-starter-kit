@@ -1,0 +1,23 @@
+{
+  "name": "@specdd/local-control-service",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "scripts", "fixtures"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test:unit": "npm run build && node --experimental-sqlite --test test/*.test.mjs",
+    "start": "npm run build && node --experimental-sqlite scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": { "node": ">=22.12.0" }
+}

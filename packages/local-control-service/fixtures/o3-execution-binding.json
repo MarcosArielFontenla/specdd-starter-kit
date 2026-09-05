@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecControlExecutionBinding",
+  "maxSourceFiles": 100,
+  "maxSourceBytes": 1048576,
+  "developerModel": "gpt-5.6-luna",
+  "reviewerModel": "gpt-5.6-luna",
+  "roleTimeoutMs": 120000,
+  "checks": [
+    {
+      "id": "appointment-unit",
+      "executable": "$NODE",
+      "args": ["--test", "test/appointment.test.mjs"],
+      "timeoutMs": 30000
+    }
+  ]
+}
