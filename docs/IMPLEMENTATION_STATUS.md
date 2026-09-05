@@ -1,10 +1,17 @@
 # Estado de implementación — SpecDD Harness
 
 **Actualizado:** 2026-09-05
-**Estado:** Harness Fases 1–6 implementadas; Control Plane Phases 1–4 remediadas, Phase 5 validada mediante piloto documental humano-asistido y Phases 6–8 implementadas con aceptación local. Warp sigue opcional y sin ejecución alojada. Phase 9 implementada con aceptación local; piloto aprobado y publicado en PR #3 draft; cierre hasta PR, sin merge ni deployment. Evidencia y límites: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md). Los 8 hallazgos de dependencias fueron corregidos: npm audit continúa en 0, con regresiones aprobadas. Evidencia: [remediación de seguridad](control-plane/audits/2026-09-04-dependency-security.md). Workspace: Node 22.12+.
+**Estado:** Harness Fases 1–6 implementadas; Control Plane Phases 1–4 remediadas, Phase 5 validada mediante piloto documental humano-asistido y Phases 6–8 implementadas con aceptación local. Warp sigue opcional y sin ejecución alojada. Phase 9 implementada con aceptación local; piloto aprobado y publicado en PR #3 draft; cierre hasta PR, sin merge ni deployment. Evidencia y límites: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md). Los 8 hallazgos de dependencias fueron corregidos; la auditoría offline B1 conserva 0 hallazgos, sin consultar avisos nuevos. Evidencia previa: [remediación de seguridad](control-plane/audits/2026-09-04-dependency-security.md). Workspace: Node 22.12+. Phase 10 cerrada con aceptación local explícita: A1/A2 contratos, grafo y exportación opcional; B1/B2 entrega local con aprobación humana, promoción del mismo artefacto y post-deploy aprobado. Gate C satisfecho; adaptadores cloud diferidos, no implementados ni validados. [Cierre de Phase 10](control-plane/phases/phase-10-acceptance.md).
 
 Este documento deja asentado qué está implementado y cuál es el siguiente incremento
 del proyecto para poder retomarlo en una sesión futura sin perder contexto.
+
+Actualización Phase 10 B2: piloto local completo desde fixture/build/staging/smoke,
+aprobación explícita del usuario, promoción sin rebuild y verificación HTTP posterior.
+No consume grafos cloud del wizard. El usuario aceptó explícitamente este alcance
+para cerrar Phase 10; cloud queda como trabajo futuro. Publicación y CI alojada
+siguen separadas y no fueron autorizadas por este cierre.
+Decisión y límites: [aceptación local](control-plane/phases/phase-10-acceptance.md).
 
 ## Objetivo del producto
 
@@ -226,11 +233,18 @@ Brownfield.
 
 La implementación actual fue validada con:
 
-- 273 tests unitarios: 12 Project Definition, 8 Capability Pack, 11 SpecControl, 14
+- Auditoría conjunta de cierre (2026-09-05): [resultados y límites](control-plane/audits/2026-09-05-evolution-closure.md).
+  Consulta online nueva de npm audit: 0 vulnerabilidades reportadas; sin cambios de dependencias.
+- 351 tests unitarios aprobados en B2 y reejecutados en el cierre: 12 Project Definition, 8 Capability Pack, 11 SpecControl, 14
   Warp Adapter, 14 Eval Adapters, 26 Run History, 21 Benchmarking, 27 Improvement Proposals, 71 SpecDD,
-  27 SpecForge y 42 SpecDeploy.
-- 11 pruebas E2E: 4 del portal, 3 de SpecDD, 2 de SpecForge y 2 de SpecDeploy.
-- Builds aprobados de los ocho paquetes de arquitectura, el portal y los tres wizards.
+  27 SpecForge, 58 SpecDeploy y 62 Delivery Model. El comando de regresión completo
+  del workspace terminó con exit 0; incluye 21 pruebas nuevas de promoción local.
+- 28 pruebas adicionales de cierre aprobadas: 1 de preparación Phase 5 y 27 del
+  candidato aislado Phase 9; build del candidato y reconstrucción de su historial aprobados.
+- 12 pruebas E2E reejecutadas conjuntamente y aprobadas: 4 del portal, 3 de SpecDD,
+  2 de SpecForge y 3 de SpecDeploy. Ejecución local con permisos para cierre de procesos
+  en Windows; las cuatro suites terminaron normalmente con exit 0.
+- Builds reejecutados y aprobados de los nueve paquetes de arquitectura, el portal y los tres wizards.
   Persisten avisos no bloqueantes de React/Vite y tamaño de chunk ya documentados.
 - 71 tests unitarios del wizard SpecDD.
 - 3 pruebas E2E del wizard: Greenfield, Brownfield y Brownfield con Harness legacy.
@@ -290,9 +304,15 @@ universal ni una comprensión 100% automática del proyecto.
 ## Regla de continuidad
 
 Phase 9 alcanzó el cierre práctico hasta PR: propuesta aprobada, evidencia medida,
-publicación autorizada y PR #3 abierto en borrador. Verificar sus checks finales
-antes de comenzar la especificación de Phase 10. No se hizo merge ni deployment.
+publicación autorizada y PR #3 abierto en borrador. Sus checks finales pasaron;
+Phase 10 ya cerró con aceptación local explícita. No se hizo merge ni deployment
+remoto. La entrega local B1/B2 no equivale a desplegar un proyecto en producción.
 Evidencia: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md).
+La auditoría/regresión conjunta y la [guía única de uso](GUIA_DE_USO.md) están completas.
+El siguiente trabajo es, con autorización específica, publicación e integración en main. SpecDeploy
+específico de infraestructura/proyecto/empresa queda como trabajo futuro; conservar
+contratos y evidencia local no implica continuar desarrollando esos adaptadores.
+Seguimiento: [auditoría de cierre](control-plane/audits/2026-09-05-evolution-closure.md).
 Phase 8 aporta `@specdd/benchmarks`: planes/datasets fijados, cobertura de métricas y
 comparaciones descriptivas de slices de eval. Sus seis observaciones locales validan
 la infraestructura; no demuestran superioridad de modelos ni mejoras generales del

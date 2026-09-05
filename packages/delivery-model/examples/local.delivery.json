@@ -1,0 +1,66 @@
+{
+  "kind": "SpecDDDeliveryDefinition",
+  "schemaVersion": "1.0.0",
+  "lifecycle": "draft",
+  "id": "local-delivery-example",
+  "name": "Local rehearsal delivery plan",
+  "version": "1.0.0",
+  "project": {
+    "id": "example-project",
+    "source": "context/project-definition.json",
+    "version": "1.0.0"
+  },
+  "harness": {
+    "id": "project-harness",
+    "source": ".agents/REGISTRY.md",
+    "version": "1.0.0"
+  },
+  "provider": {
+    "id": "local-static-fixture",
+    "source": "delivery/provider.json",
+    "version": "1.0.0",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "release": {
+    "repositoryRef": "fixture-repository",
+    "sourceRevision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "artifactSha256": null,
+    "sourceGate": "fixture-source"
+  },
+  "graphRef": "controlled-delivery-graph",
+  "artifactRoot": "delivery/evidence",
+  "buildAdapterRef": "local-fixture",
+  "adapters": [
+    {
+      "id": "local-fixture",
+      "version": "1.0.0",
+      "operations": [
+        "verify-source",
+        "build",
+        "deploy",
+        "verify"
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "id": "staging-slot",
+      "class": "local-rehearsal",
+      "adapterRef": "local-fixture",
+      "destinationRef": "slot-a"
+    },
+    {
+      "id": "promotion-slot",
+      "class": "local-rehearsal",
+      "adapterRef": "local-fixture",
+      "destinationRef": "slot-b"
+    }
+  ],
+  "checks": {
+    "source": "fixture-source-check",
+    "smoke": "fixture-smoke-check",
+    "postDeploy": "fixture-health-check"
+  },
+  "evalMaxAttempts": 2,
+  "rollbackInstructions": "Stop on failure. A future authorized local adapter may restore the prior fixture artifact; no rollback is executed by this plan."
+}

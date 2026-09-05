@@ -1,0 +1,505 @@
+{
+  "kind": "SpecDDDeliveryProjection",
+  "schemaVersion": "1.0.0",
+  "delivery": {
+    "kind": "SpecDDDeliveryDefinition",
+    "schemaVersion": "1.0.0",
+    "lifecycle": "draft",
+    "id": "local-delivery-example",
+    "name": "Local rehearsal delivery plan",
+    "version": "1.0.0",
+    "project": {
+      "id": "example-project",
+      "source": "context/project-definition.json",
+      "version": "1.0.0"
+    },
+    "harness": {
+      "id": "project-harness",
+      "source": ".agents/REGISTRY.md",
+      "version": "1.0.0"
+    },
+    "provider": {
+      "id": "local-static-fixture",
+      "source": "delivery/provider.json",
+      "version": "1.0.0",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "release": {
+      "repositoryRef": "fixture-repository",
+      "sourceRevision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "artifactSha256": null,
+      "sourceGate": "fixture-source"
+    },
+    "graphRef": "controlled-delivery-graph",
+    "artifactRoot": "delivery/evidence",
+    "buildAdapterRef": "local-fixture",
+    "adapters": [
+      {
+        "id": "local-fixture",
+        "version": "1.0.0",
+        "operations": [
+          "verify-source",
+          "build",
+          "deploy",
+          "verify"
+        ]
+      }
+    ],
+    "environments": [
+      {
+        "id": "staging-slot",
+        "class": "local-rehearsal",
+        "adapterRef": "local-fixture",
+        "destinationRef": "slot-a"
+      },
+      {
+        "id": "promotion-slot",
+        "class": "local-rehearsal",
+        "adapterRef": "local-fixture",
+        "destinationRef": "slot-b"
+      }
+    ],
+    "checks": {
+      "source": "fixture-source-check",
+      "smoke": "fixture-smoke-check",
+      "postDeploy": "fixture-health-check"
+    },
+    "evalMaxAttempts": 2,
+    "rollbackInstructions": "Stop on failure. A future authorized local adapter may restore the prior fixture artifact; no rollback is executed by this plan."
+  },
+  "definition": {
+    "kind": "SpecDDControlPlane",
+    "schemaVersion": "1.0.0",
+    "lifecycle": "draft",
+    "metadata": {
+      "id": "local-delivery-example",
+      "name": "Local rehearsal delivery plan",
+      "description": "Declarative delivery evidence and gate graph; requires a separate authorized adapter to perform operations.",
+      "version": "1.0.0"
+    },
+    "project": {
+      "id": "example-project",
+      "source": "context/project-definition.json",
+      "version": "1.0.0"
+    },
+    "harnesses": [
+      {
+        "id": "project-harness",
+        "source": ".agents/REGISTRY.md",
+        "contractVersion": "1.0.0",
+        "enabled": true
+      }
+    ],
+    "capabilityBindings": [],
+    "agentRoles": [
+      {
+        "id": "delivery-steward",
+        "title": "Delivery steward",
+        "purpose": "Review delivery evidence under the project Harness; no automatic agent execution.",
+        "harnessRef": "project-harness",
+        "capabilityBindingRefs": [],
+        "policyRefs": [
+          "delivery-governance"
+        ]
+      }
+    ],
+    "workflows": [
+      {
+        "id": "controlled-delivery",
+        "name": "Local rehearsal delivery plan",
+        "purpose": "Order delivery receipts, required evals and human promotion approval.",
+        "graphRef": "controlled-delivery-graph",
+        "triggers": [
+          {
+            "kind": "manual"
+          }
+        ],
+        "inputArtifactRefs": [
+          "release-source",
+          "promotion-subject"
+        ],
+        "outputArtifactRefs": [
+          "post-deploy-receipt"
+        ],
+        "policyRefs": [
+          "delivery-governance"
+        ]
+      }
+    ],
+    "graphs": [
+      {
+        "id": "controlled-delivery-graph",
+        "name": "Local rehearsal delivery plan",
+        "description": "Seven fixed stages; artifact nodes record receipts, not deploy commands.",
+        "entryNodeId": "source-gate",
+        "terminalNodeIds": [
+          "post-deploy"
+        ],
+        "nodes": [
+          {
+            "id": "source-gate",
+            "name": "source-gate",
+            "inputArtifactRefs": [
+              "release-source"
+            ],
+            "outputArtifactRefs": [
+              "source-gate-receipt"
+            ],
+            "policyRefs": [
+              "delivery-governance"
+            ],
+            "failureRouteRef": "stop-delivery",
+            "kind": "eval",
+            "evalGateRef": "source-gate-eval",
+            "retryRef": "eval-retry"
+          },
+          {
+            "id": "build",
+            "name": "Record evidence: build",
+            "inputArtifactRefs": [
+              "release-source",
+              "source-gate-receipt"
+            ],
+            "outputArtifactRefs": [
+              "build-receipt"
+            ],
+            "policyRefs": [
+              "delivery-governance"
+            ],
+            "failureRouteRef": "stop-delivery",
+            "kind": "artifact",
+            "artifactContractRef": "build-receipt"
+          },
+          {
+            "id": "deploy-staging",
+            "name": "Record evidence: deploy-staging",
+            "inputArtifactRefs": [
+              "release-source",
+              "build-receipt"
+            ],
+            "outputArtifactRefs": [
+              "deploy-staging-receipt"
+            ],
+            "policyRefs": [
+              "delivery-governance"
+            ],
+            "failureRouteRef": "stop-delivery",
+            "kind": "artifact",
+            "artifactContractRef": "deploy-staging-receipt"
+          },
+          {
+            "id": "smoke",
+            "name": "smoke",
+            "inputArtifactRefs": [
+              "release-source",
+              "build-receipt",
+              "deploy-staging-receipt"
+            ],
+            "outputArtifactRefs": [
+              "smoke-receipt"
+            ],
+            "policyRefs": [
+              "delivery-governance"
+            ],
+            "failureRouteRef": "stop-delivery",
+            "kind": "eval",
+            "evalGateRef": "smoke-eval",
+            "retryRef": "eval-retry"
+          },
+          {
+            "id": "approve-promotion",
+            "name": "approve-promotion",
+            "inputArtifactRefs": [
+              "release-source",
+              "build-receipt",
+              "smoke-receipt",
+              "promotion-subject"
+            ],
+            "outputArtifactRefs": [
+              "approve-promotion-receipt"
+            ],
+            "policyRefs": [
+              "delivery-governance"
+            ],
+            "failureRouteRef": "stop-delivery",
+            "kind": "approval",
+            "approvalRef": "promotion-approval"
+          },
+          {
+            "id": "deploy-production",
+            "name": "Record evidence: deploy-production",
+            "inputArtifactRefs": [
+              "release-source",
+              "build-receipt",
+              "approve-promotion-receipt"
+            ],
+            "outputArtifactRefs": [
+              "deploy-production-receipt"
+            ],
+            "policyRefs": [
+              "delivery-governance"
+            ],
+            "failureRouteRef": "stop-delivery",
+            "kind": "artifact",
+            "artifactContractRef": "deploy-production-receipt"
+          },
+          {
+            "id": "post-deploy",
+            "name": "post-deploy",
+            "inputArtifactRefs": [
+              "release-source",
+              "build-receipt",
+              "deploy-production-receipt"
+            ],
+            "outputArtifactRefs": [
+              "post-deploy-receipt"
+            ],
+            "policyRefs": [
+              "delivery-governance"
+            ],
+            "failureRouteRef": "stop-delivery",
+            "kind": "eval",
+            "evalGateRef": "post-deploy-eval",
+            "retryRef": "eval-retry"
+          }
+        ],
+        "edges": [
+          {
+            "id": "step-0",
+            "from": "source-gate",
+            "to": "build",
+            "on": "pass"
+          },
+          {
+            "id": "step-1",
+            "from": "build",
+            "to": "deploy-staging",
+            "on": "success"
+          },
+          {
+            "id": "step-2",
+            "from": "deploy-staging",
+            "to": "smoke",
+            "on": "success"
+          },
+          {
+            "id": "step-3",
+            "from": "smoke",
+            "to": "approve-promotion",
+            "on": "pass"
+          },
+          {
+            "id": "step-4",
+            "from": "approve-promotion",
+            "to": "deploy-production",
+            "on": "approved"
+          },
+          {
+            "id": "step-5",
+            "from": "deploy-production",
+            "to": "post-deploy",
+            "on": "success"
+          }
+        ]
+      }
+    ],
+    "approvals": [
+      {
+        "id": "promotion-approval",
+        "name": "Approve exact release promotion",
+        "mode": "human",
+        "required": true,
+        "instructions": "Require approval of delivery fingerprint, source revision, built artifact digest, promotion destination and smoke evidence. Revalidate immediately before dispatch; never infer from a boolean.",
+        "artifactRefs": [
+          "promotion-subject",
+          "build-receipt",
+          "smoke-receipt"
+        ]
+      }
+    ],
+    "policies": [
+      {
+        "id": "delivery-governance",
+        "category": "permission",
+        "effect": "require",
+        "subjectRefs": [
+          "controlled-delivery",
+          "delivery-steward"
+        ],
+        "action": "promote-release",
+        "resource": "slot-b",
+        "enforcement": "human",
+        "condition": "Successful pinned-source, build, staging and smoke evidence plus exact promotion approval; this graph alone cannot enforce runtime permissions."
+      }
+    ],
+    "failureRoutes": [
+      {
+        "id": "stop-delivery",
+        "graphRef": "controlled-delivery-graph",
+        "strategy": "stop",
+        "reason": "Stop on rejection, failed eval or missing/conflicting receipt; no implicit rollback or production retry."
+      }
+    ],
+    "retries": [
+      {
+        "id": "eval-retry",
+        "maxAttempts": 2,
+        "backoff": {
+          "strategy": "none",
+          "initialDelaySeconds": 0,
+          "maxDelaySeconds": 0
+        }
+      }
+    ],
+    "evalGates": [
+      {
+        "id": "source-gate-eval",
+        "evalRef": "fixture-source-check",
+        "mode": "required",
+        "requiredOutcome": "pass"
+      },
+      {
+        "id": "smoke-eval",
+        "evalRef": "fixture-smoke-check",
+        "mode": "required",
+        "requiredOutcome": "pass"
+      },
+      {
+        "id": "post-deploy-eval",
+        "evalRef": "fixture-health-check",
+        "mode": "required",
+        "requiredOutcome": "pass"
+      }
+    ],
+    "artifactContracts": [
+      {
+        "id": "release-source",
+        "name": "Pinned release and source gate evidence",
+        "kind": "input",
+        "path": "delivery/evidence/release-source.json",
+        "required": true
+      },
+      {
+        "id": "promotion-subject",
+        "name": "Exact runtime-computed promotion subject",
+        "kind": "input",
+        "path": "delivery/evidence/promotion-subject.json",
+        "required": true
+      },
+      {
+        "id": "source-gate-receipt",
+        "name": "source-gate evidence",
+        "kind": "evidence",
+        "path": "delivery/evidence/source-gate.json",
+        "required": true
+      },
+      {
+        "id": "build-receipt",
+        "name": "build evidence",
+        "kind": "evidence",
+        "path": "delivery/evidence/build.json",
+        "required": true
+      },
+      {
+        "id": "deploy-staging-receipt",
+        "name": "deploy-staging evidence",
+        "kind": "evidence",
+        "path": "delivery/evidence/deploy-staging.json",
+        "required": true
+      },
+      {
+        "id": "smoke-receipt",
+        "name": "smoke evidence",
+        "kind": "evidence",
+        "path": "delivery/evidence/smoke.json",
+        "required": true
+      },
+      {
+        "id": "approve-promotion-receipt",
+        "name": "approve-promotion evidence",
+        "kind": "evidence",
+        "path": "delivery/evidence/approve-promotion.json",
+        "required": true
+      },
+      {
+        "id": "deploy-production-receipt",
+        "name": "deploy-production evidence",
+        "kind": "evidence",
+        "path": "delivery/evidence/deploy-production.json",
+        "required": true
+      },
+      {
+        "id": "post-deploy-receipt",
+        "name": "post-deploy evidence",
+        "kind": "evidence",
+        "path": "delivery/evidence/post-deploy.json",
+        "required": true
+      }
+    ],
+    "runtimeHints": []
+  },
+  "bindings": [
+    {
+      "nodeRef": "source-gate",
+      "operation": "verify-source",
+      "adapterRef": "local-fixture",
+      "environmentRef": null,
+      "receiptArtifactRef": "source-gate-receipt"
+    },
+    {
+      "nodeRef": "build",
+      "operation": "build",
+      "adapterRef": "local-fixture",
+      "environmentRef": null,
+      "receiptArtifactRef": "build-receipt"
+    },
+    {
+      "nodeRef": "deploy-staging",
+      "operation": "deploy",
+      "adapterRef": "local-fixture",
+      "environmentRef": "staging-slot",
+      "receiptArtifactRef": "deploy-staging-receipt"
+    },
+    {
+      "nodeRef": "smoke",
+      "operation": "verify",
+      "adapterRef": "local-fixture",
+      "environmentRef": "staging-slot",
+      "receiptArtifactRef": "smoke-receipt"
+    },
+    {
+      "nodeRef": "approve-promotion",
+      "operation": "human-approval",
+      "adapterRef": null,
+      "environmentRef": "promotion-slot",
+      "receiptArtifactRef": "approve-promotion-receipt"
+    },
+    {
+      "nodeRef": "deploy-production",
+      "operation": "deploy",
+      "adapterRef": "local-fixture",
+      "environmentRef": "promotion-slot",
+      "receiptArtifactRef": "deploy-production-receipt"
+    },
+    {
+      "nodeRef": "post-deploy",
+      "operation": "verify",
+      "adapterRef": "local-fixture",
+      "environmentRef": "promotion-slot",
+      "receiptArtifactRef": "post-deploy-receipt"
+    }
+  ],
+  "executable": false,
+  "diagnostics": [
+    {
+      "code": "DELIVERY_EXECUTION_UNAVAILABLE",
+      "severity": "warning",
+      "message": "All adapter capabilities are caller declarations. This package implements no deployment runtime, credentials or remote approval verification."
+    }
+  ],
+  "limits": [
+    "Artifact nodes record delivery evidence; they do not execute side effects",
+    "Eval definitions and source/merge evidence require separate validation at execution",
+    "No credential values, merge, deployment, auto-rollback or authorization are produced"
+  ]
+}

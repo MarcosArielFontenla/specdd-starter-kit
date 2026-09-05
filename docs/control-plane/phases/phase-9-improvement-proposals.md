@@ -2,7 +2,10 @@
 
 Status: complete to the human-reviewed draft-PR boundary. Live pilot is published
 as [PR #3](https://github.com/MarcosArielFontenla/specdd-starter-kit/pull/3), not merged
-or deployed. Final PR CI must be verified independently of the successful base CI.
+or deployed. Final PR CI was verified independently of the successful base CI:
+run `33965393351`, head `debc4447a944796bd2c7a5990912a0a5dd3f20fb`, all checks successful.
+The closure audit on 2026-09-05 reconfirmed that remote state read-only; this CI does
+not cover the subsequent uncommitted Phase 10 changes.
 
 Follow-up 2026-09-05: [pilot-001 review package](../../../packages/improvement-proposals/pilot/README.md)
 now contains a real isolated candidate and ten passing benchmark runs. Observed

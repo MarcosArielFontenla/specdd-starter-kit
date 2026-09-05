@@ -46,5 +46,8 @@ PROMPT_SPECDDSTARTERKIT.md
 # Local repeated experiments; publish only reviewed datasets/reports.
 /.specdd-benchmarks/
 
+# Private create-only local delivery rehearsals.
+/.specdd-delivery/
+
 # Per-machine assistant permissions; not project configuration.
 /.claude/settings.local.json
