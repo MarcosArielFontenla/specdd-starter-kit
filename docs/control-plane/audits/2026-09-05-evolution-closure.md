@@ -107,7 +107,8 @@ Phase 9 verification replays existing measured evidence, not new timings or huma
 decisions. Phase 10 verification did not redeploy or request/replay an approval;
 its drift failure is the intended integrity behavior.
 React/Vite option-deprecation warnings remain non-blocking maintenance items.
-This audit ran on Node 24; hosted Node 22 CI for the current uncommitted tree was not run.
+The O5-D local audit ran on Node 24; hosted Node 22 CI was intentionally deferred
+until the separately authorized O5-E publication recorded below.
 All four browser suites ultimately exited normally. No test failure was waived or
 suite omitted; the initial orchestration/port conflict is retained above.
 
@@ -118,13 +119,14 @@ merge while its pre-existing integration baseline is red, and the historical Pha
 10 rehearsal is not declared current after source drift. This is not a production,
 cloud, multi-tenant or universal-autonomy certification.
 
-## Remaining closure sequence
+## Closure sequence recorded at O5-D
 
 The [unified practical usage guide](../../GUIA_DE_USO.md) now includes the complete
 opt-in SpecControl path through draft PR. It maps generation, manual approval,
 explicit host execution, evals, history and proposal review to actual commands and
-limitations. Separately authorize the reviewed SPECDDSTARTERKIT commit/push and any
-main integration. Resolve Bloom's integration-test baseline before merging its PR.
+limitations. At this checkpoint, the reviewed SPECDDSTARTERKIT commit/push and main
+integration still required separate authorization; O5-E completed them as recorded
+below. Bloom's integration-test baseline still must be resolved before merging its PR.
 Infrastructure-specific deployment,
 general scheduler/runtime enforcement, authenticated multi-user approvals and broader
 Brownfield stack coverage remain explicit future scope, not hidden completion claims.

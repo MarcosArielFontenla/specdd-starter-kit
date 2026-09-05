@@ -309,8 +309,13 @@ Phase 10 ya cerró con aceptación local explícita. No se hizo merge ni deploym
 remoto. La entrega local B1/B2 no equivale a desplegar un proyecto en producción.
 Evidencia: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md).
 La auditoría/regresión conjunta y la [guía única de uso](GUIA_DE_USO.md) están completas.
-El siguiente trabajo es, con autorización específica, publicación e integración en main. SpecDeploy
-específico de infraestructura/proyecto/empresa queda como trabajo futuro; conservar
+O5-E publicó SpecControl en `main` mediante
+`49bc05cae91c98d0a730a5220740202ab14e1e6c`; todos los jobs del
+[CI alojado](https://github.com/MarcosArielFontenla/specdd-starter-kit/actions/runs/33996093563)
+pasaron. El cierre documental posterior también está integrado en `main`.
+El trabajo siguiente ya es operación sobre nuevas tareas/proyectos, mantenimiento
+no bloqueante de GitHub Actions o resolución del baseline de integración de Bloom.
+SpecDeploy específico de infraestructura/proyecto/empresa queda como trabajo futuro; conservar
 contratos y evidencia local no implica continuar desarrollando esos adaptadores.
 Seguimiento: [auditoría de cierre](control-plane/audits/2026-09-05-evolution-closure.md).
 Phase 8 aporta `@specdd/benchmarks`: planes/datasets fijados, cobertura de métricas y
@@ -319,4 +324,4 @@ la infraestructura; no demuestran superioridad de modelos ni mejoras generales d
 Harness. Toda propuesta futura necesita evidencia pertinente y revisión humana.
 No modificar Harness, specs, grafos, umbrales o baselines automáticamente. Los hallazgos
 de dependencias siguen resueltos y CI incluye benchmarking e improvement proposals. El backlog Brownfield
-continúa separado; no hacer merge ni deployment del piloto.
+continúa separado; no hacer merge ni deployment del piloto Bloom sin una decisión nueva.
