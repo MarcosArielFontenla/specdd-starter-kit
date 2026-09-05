@@ -1,7 +1,7 @@
 # Estado de implementación — SpecDD Harness
 
-**Actualizado:** 2026-08-29
-**Estado:** Fases 1–6 completadas; mejoras semánticas avanzadas y convergencia siguen siendo trabajo del agente
+**Actualizado:** 2026-09-04
+**Estado:** Harness Fases 1–6 implementadas; Control Plane Phases 1–4 remediadas, Phase 5 validada mediante piloto documental humano-asistido y Phases 6–8 implementadas con aceptación local. Warp sigue opcional y sin ejecución alojada. Phase 9 implementada con aceptación local; piloto excluido de esta consolidación para un PR separado antes de Phase 10. Evidencia y límites: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md). Los 8 hallazgos de dependencias fueron corregidos: npm audit continúa en 0, con regresiones aprobadas. Evidencia: [remediación de seguridad](control-plane/audits/2026-09-04-dependency-security.md). Workspace: Node 22.12+.
 
 Este documento deja asentado qué está implementado y cuál es el siguiente incremento
 del proyecto para poder retomarlo en una sesión futura sin perder contexto.
@@ -23,6 +23,97 @@ Los escenarios y la profundidad del análisis son decisiones separadas. La profu
 solo aplica al escenario Brownfield.
 
 ## Implementado
+
+### Project Definition canónico — Control Plane Phase 1
+
+- `@specdd/project-model` define el IR neutral de runtime con schema `1.0.0`, JSON
+  Schema 2020-12, tipos TypeScript estrictos y diagnósticos estables.
+- El wizard materializa `context/project-definition.json` antes de compilar Harness v1.
+- `context/scaffold-manifest.json` continúa siendo un receipt separado de cada generación.
+- La migración explícita acepta receipts schema 1/2, exige identidad aportada por el
+  usuario y declara la pérdida de cualquier intención que el receipt histórico nunca capturó.
+- El contexto de compilación Brownfield conserva análisis, paths y acknowledgement fuera
+  del IR portable.
+- Warp, grafos ejecutables y loops permanecen fuera de alcance.
+
+### Capability Packs — Control Plane Phase 2
+
+- `@specdd/capability-model` define el contrato portable `1.0.0` con JSON Schema
+  2020-12, tipos TypeScript estrictos y validación semántica.
+- Cada rol seleccionado en SpecForge genera un manifiesto independiente bajo
+  `.agents/capabilities/role-<role>/capability.json`.
+- El manifiesto representa rol, skills, playbooks, workflows, policies, evals,
+  contexto, subagente inactivo, routing y dependencias sin duplicar el contenido.
+- Todas las rutas históricas de Role Pack, prompts condicionales, MCP y nombre del ZIP
+  conservan compatibilidad.
+- La instalación sigue en tareas draft con aprobación humana. El binding al Project
+  Definition se agrega solo si existe; Harnesses anteriores conservan ROUTING,
+  REGISTRY y budget.
+- La migración legacy genera un draft con warning `INFERRED_LEGACY_ROLE_PACK`; nunca
+  infiere activación desde la presencia de archivos.
+- Grafos, runtime, activación multi-agent y Warp permanecen fuera de alcance.
+
+### SpecControl Domain Model — Control Plane Phase 3
+
+- `@specdd/control-plane-model` define `SpecDDControlPlane` schema `1.0.0` y sub-schemas
+  reutilizables para grafos y políticas.
+- Representa workflows, DAGs, nodos tipados, roles, capability bindings, approvals
+  humanos, policies, failure routes, retries finitos, eval gates, artifact contracts y
+  runtime hints portables.
+- El validador comprueba referencias, outcomes por tipo de nodo, alcanzabilidad,
+  terminales, ciclos, ownership de fallos, límites de retry y extensiones namespaced.
+- El modelo es declarativo: no ejecuta grafos, no concede permisos, no aprueba trabajo
+  y no afirma que existan artifacts o resultados de eval.
+- No se creó un nuevo wizard/servicio/CLI porque todavía no existe un flujo de autoría o
+  compilación que lo justifique.
+- Warp continúa completamente fuera del contrato canónico.
+
+### Warp Adapter — Control Plane Phase 4
+
+- `@specdd/warp-adapter` compila `SpecDDControlPlane` `1.0.0` a archivos Warp Factory
+  `v1alpha1` sin invocar APIs, CLI, modelos ni servicios externos.
+- La configuración Warp vive en un contrato separado: repositorios, modelo/harness,
+  tipos de agentes, environment IDs opcionales y binding GitHub `issue_created`.
+- Genera `factory.yaml`, un único foreman de infraestructura, un archivo por rol
+  canónico y automatizaciones explícitas siempre desactivadas.
+- El foreman conserva nodos, edges y gates como instrucciones; no afirma que eso sea
+  enforcement equivalente del runtime.
+- Evals requeridos detienen el flujo y no generan scorers; esa traducción pertenece a
+  Phase 6.
+- El compilador produce un reporte estructurado y Markdown con códigos estables para
+  graph, approvals, policies, retries, failure routes, artifacts, evals y runtime hints
+  no equivalentes.
+- El ejemplo Issue → Spec → aprobación humana → Developer → Reviewer → Eval → registro
+  de draft PR es un artefacto generado y revisable; todavía no crea un PR ni ejecuta
+  Warp.
+
+### Historial y observabilidad — Control Plane Phase 7
+
+- `@specdd/run-history` define eventos neutrales versionados, validación de identidad,
+  referencias al grafo y reconstrucción de estado/duración con cobertura explícita.
+- Normaliza resultados canónicos de Phase 6 sin inventar eventos faltantes ni asumir
+  formatos privados de proveedores. Actor, modelo y runtime desconocidos no se deducen.
+- Exporta JSONL local inmutable, rechaza duplicados/sobrescrituras y permite inspección
+  de solo lectura. Incluye límites de tamaño y comprobaciones de paths/junctions.
+- El run real `phase7-local-001` registra un eval local aprobado en 459 ms, con hash de
+  evidencia y lectura posterior; el workflow queda honestamente `unknown / partial`.
+- No modifica Harness v1, el piloto aislado ni PR #2. No implementa dashboard, collector
+  alojado, streaming, benchmarking, autenticación ni enforcement del grafo.
+- Diseño, ADR, uso y evidencia: [Phase 7](control-plane/phases/phase-7-run-history.md).
+
+### Benchmarking — Control Plane Phase 8
+
+- `@specdd/benchmarks` compara slices de eval con tarea/evaluador, configuración y
+  repeticiones fijados de antemano. Reutiliza los contratos de Phases 6–7.
+- Valida identidad, cobertura, referencias, puntajes y procedencia de costos; rechaza
+  duplicados, monedas mezcladas y reintentos posteriores a un resultado aprobado.
+- Reporta conteos esperados/observados, estadísticas descriptivas y diferencias contra
+  baseline sólo con métricas completas. No rellena costos, defectos ni intervenciones.
+- Experimento real: dos perfiles Node con flags identificados por hash, tres repeticiones
+  cada uno sobre fixtures fijados; seis aprobaciones y reporte exactamente regenerable.
+- No afirma superioridad de modelos ni instrumentación completa de workflows. No crea
+  propuestas ni modifica Harness, umbrales o baselines automáticamente.
+- Diseño, uso y evidencia: [Phase 8](control-plane/phases/phase-8-benchmarking.md).
 
 ### Greenfield
 
@@ -135,7 +226,13 @@ Brownfield.
 
 La implementación actual fue validada con:
 
-- 70 tests unitarios del wizard SpecDD.
+- 273 tests unitarios: 12 Project Definition, 8 Capability Pack, 11 SpecControl, 14
+  Warp Adapter, 14 Eval Adapters, 26 Run History, 21 Benchmarking, 27 Improvement Proposals, 71 SpecDD,
+  27 SpecForge y 42 SpecDeploy.
+- 11 pruebas E2E: 4 del portal, 3 de SpecDD, 2 de SpecForge y 2 de SpecDeploy.
+- Builds aprobados de los ocho paquetes de arquitectura, el portal y los tres wizards.
+  Persisten avisos no bloqueantes de React/Vite y tamaño de chunk ya documentados.
+- 71 tests unitarios del wizard SpecDD.
 - 3 pruebas E2E del wizard: Greenfield, Brownfield y Brownfield con Harness legacy.
 - Build de `sdd-kit-wizard`.
 - `git diff --check` sin errores de whitespace.
@@ -185,11 +282,21 @@ universal ni una comprensión 100% automática del proyecto.
 - `specdd-kit/.agents/scripts/validate-project.ps1` — orquestador único post-extracción
   con reporte Markdown/JSON y códigos `VERIFIED`/`PARTIAL`/`FAILED`.
 - `specdd-kit/docs/greenfield-vs-brownfield.md` — guía de escenarios y niveles.
+- `docs/control-plane/warp/architecture-mapping.md` — mapping oficial estudiado entre
+  SpecControl y Warp Factory.
+- `packages/warp-adapter/examples/unsupported-features.md` — reporte reproducible de
+  fidelidad y límites del primer adapter.
 
 ## Regla de continuidad
 
-La siguiente sesión debe comenzar revisando este documento y elegir una de las
-evoluciones pendientes: ampliar parsers semánticos por stack, enriquecer la convergencia
-por path y acceptance check, o ampliar fixtures y cobertura de CI. La validación
-post-extracción ya está consolidada en `validate-project.ps1`. Cualquier ampliación
-debe conservar los límites locales, la evidencia, la confianza y la aprobación humana.
+Phase 9 está implementada con aceptación local. Esta consolidación excluye la
+optimización aprobada y sus artefactos de piloto para conservar su revisión en un
+PR separado. Phase 10 sigue pendiente de ese cierre. Evidencia de infraestructura:
+[Phase 9](control-plane/phases/phase-9-improvement-proposals.md).
+Phase 8 aporta `@specdd/benchmarks`: planes/datasets fijados, cobertura de métricas y
+comparaciones descriptivas de slices de eval. Sus seis observaciones locales validan
+la infraestructura; no demuestran superioridad de modelos ni mejoras generales del
+Harness. Toda propuesta futura necesita evidencia pertinente y revisión humana.
+No modificar Harness, specs, grafos, umbrales o baselines automáticamente. Los hallazgos
+de dependencias siguen resueltos y CI incluye benchmarking e improvement proposals. El backlog Brownfield
+continúa separado; no hacer merge ni deployment del piloto.

@@ -10,9 +10,10 @@ in the browser and downloads as a ZIP.
 The centerpiece is the **SpecDD wizard**: it generates a scaffold structured around
 the **SpecDD Harness**, a vendor-neutral agent architecture that any AI coding tool
 (GitHub Copilot, Claude Code, Cursor, Codex, Gemini) consumes through the same core.
-Its companion, the **SpecForge wizard**, generates **Role Packs** (BA / QA / Dev / UX)
-that plug into a harness project — per-role skills, playbooks, workflows and subagent
-seeds, wired in by your agent under your approval.
+Its companion, the **SpecForge wizard**, generates composable **Capability Packs**
+(BA / QA / Dev / UX) alongside backward-compatible Role Pack artifacts — per-role
+skills, playbooks, workflows and inactive subagent seeds, wired in by your agent under
+your approval.
 
 ## Scenarios
 
@@ -24,7 +25,7 @@ The SpecDD wizard branches by scenario on its second step:
 | **Brownfield** | ✅ | Existing project. You pick your project folder; Level 1 analyzes manifests and paths, while opt-in **Level 2 — Assisted semantic analysis** reads a bounded allowlist of safe text files locally. Both pre-fill the flow, require human review of detected context, and generate a collision-safe scaffold: existing files are skipped and reported, never overwritten. Includes `spec-converge`; legacy Harness detection still requires explicit acknowledgment and can generate migration tasks. |
 | **Deploy** (SpecDeploy wizard) | ⏸ deferred | CI/CD + IaC generation works for 6 providers, but refinement is on hold until a real target environment is defined (Azure vs AWS vs Railway vs other). |
 
-## What the generated scaffold contains (SpecDD Harness v1, manifest schema 2)
+## What the generated scaffold contains (Project Definition 1.0.0 + Harness v1)
 
 ```
 AGENTS.md                     Session primer (≤40 lines): stack one-liners, task
@@ -45,8 +46,10 @@ CLAUDE.md / GEMINI.md / ...   ≤5-line pointer adapters, one per selected tool
   scripts/*.ps1               Mechanical gates: validate-project (one run),
                               validate-harness, validate-spec, validate-budget,
                               generate-snapshots
-context/                      project.md, tech-stack.md, constitution.md
-                              (+ scaffold-manifest.json, project-validation.json;
+context/                      project-definition.json (canonical project intent),
+                              project.md, tech-stack.md, constitution.md
+                              (+ scaffold-manifest.json generation receipt,
+                               project-validation.json;
                                brownfield also includes brownfield-analysis.md)
 specs/, templates/, docs/     SDD templates and guides
 .github/                      Copilot prompts/instructions/agents — included ONLY
@@ -59,11 +62,12 @@ carry zero rules), nothing is fabricated (empty baselines, placeholder acceptanc
 checks, `log_only` drift policies), and every "auto-generated" artifact has a
 validator script. See [`specdd-kit/docs/harness.md`](specdd-kit/docs/harness.md).
 
-## What a SpecForge Role Pack contains
+## What a SpecForge Capability Pack contains
 
 For each selected role (example: QA):
 
 ```
+.agents/capabilities/role-qa/capability.json Capability Pack 1.0.0 manifest
 .agents/skills/role-qa/SKILL.md          Role skill: scope, Must/Never rules, verification
 .agents/skills/role-qa/assets/*.md       The playbooks you selected, verbatim
 .agents/evals/rubrics/role-qa.yaml       Drift policy (log_only)
@@ -78,8 +82,10 @@ context/role-pack-report.md              What was generated, harness detection r
                                          to the pack's workflows
 ```
 
-The pack never modifies existing harness files: collisions with the target project are
-skipped and reported, and all wiring happens through the install tasks with a human gate.
+Each role manifest is independent and validated before download. The pack never modifies
+existing harness files: collisions with the target project are skipped and reported,
+and all routing, registry, budget, and Project Definition wiring happens through the
+install tasks with a human gate.
 
 ## Step-by-step guides
 
@@ -159,7 +165,7 @@ so normal project authoring does not look like an extraction error. These finger
 prove path/content fidelity for the generated files; they do not prove semantic
 equivalence or business-rule correctness.
 
-### Role Pack — add BA/QA/Dev/UX roles to a harness project
+### Capability Pack — add BA/QA/Dev/UX roles to a harness project
 
 1. Open the SpecForge wizard. Optionally pick your **target project folder** — the
    wizard detects its SpecDD Harness and computes collisions (skip to get a standard
@@ -179,36 +185,47 @@ scripts (`.agents/scripts/*.ps1`) need PowerShell 7+ and the `powershell-yaml` m
 
 ## Workspaces
 
-npm workspaces monorepo (Node ≥ 20):
+npm workspaces monorepo (Node ≥ 22.12):
 
 | Workspace | Purpose |
 |-----------|---------|
 | [`platform`](platform/) | SpecDD Platform — unified portal: Boreal landing + the three wizards mounted at `/specdd`, `/specforge`, `/specdeploy`. |
 | [`specdd-kit`](specdd-kit/) | The SDD scaffold content + the scenario-branched wizard (Greenfield/Brownfield) that generates the harness ZIP. |
-| [`specforge-kit`](specforge-kit/) | Role Pack wizard (BA/QA/Dev/UX): generates per-role .agents/ extensions (skills + playbooks, workflows, rubrics, subagent seeds) that plug into a SpecDD-Harness project, with optional target-folder ingestion and agent-executed install tasks. |
+| [`specforge-kit`](specforge-kit/) | Capability Pack wizard (BA/QA/Dev/UX): generates one portable manifest per role plus compatible skills, playbooks, workflows, rubrics, and inactive subagent seeds, with optional target-folder ingestion and human-approved install tasks. |
 | [`specdeploy-kit`](specdeploy-kit/) | Deploy wizard: CI/CD pipelines, IaC and runbooks for 6 providers (Azure SWA, Cloudflare, AWS, Vercel, Netlify, on-prem Docker). Providers are data — see [`provider-authoring.md`](specdeploy-kit/docs/provider-authoring.md). |
 | [`packages/ui`](packages/ui/) | `@specdd/ui` — Boreal Design System (shared Stepper + styles for all wizards). |
+| [`packages/project-model`](packages/project-model/) | `@specdd/project-model` — canonical runtime-neutral Project Definition, JSON Schema, TypeScript types, validation, migration, and Harness v1 compatibility boundary. |
+| [`packages/capability-model`](packages/capability-model/) | `@specdd/capability-model` — portable Capability Pack 1.0.0 schema, strict types, semantic validation, role mapping, and explicit legacy migration. |
+| [`packages/control-plane-model`](packages/control-plane-model/) | `@specdd/control-plane-model` — portable SpecControl 1.0.0 workflow, graph, policy, approval, failure, retry, eval-gate, artifact, and runtime-hint contracts. It is declarative and does not execute graphs. |
+| [`packages/warp-adapter`](packages/warp-adapter/) | `@specdd/warp-adapter` — deterministic, side-effect-free compiler from SpecControl 1.0.0 to Warp Factory `v1alpha1` files, with disabled GitHub issue automation and explicit fidelity/unsupported reporting. |
+| [`packages/eval-adapters`](packages/eval-adapters/) | `@specdd/eval-adapters` — canonical single-run eval/results, local outcome normalization and hashed evidence, plus an optional unapplied Warp classification scorer projection. |
+| [`packages/run-history`](packages/run-history/) | `@specdd/run-history` — vendor-neutral run events, explicit coverage gaps, graph-bound eval imports, immutable local JSONL history and read-only inspection. |
+| [`packages/benchmarks`](packages/benchmarks/) | `@specdd/benchmarks` — pinned evaluation-node comparison plans, reproducible datasets, explicit metric coverage and descriptive baseline deltas; no automatic winner or Harness mutation. |
+| [`packages/improvement-proposals`](packages/improvement-proposals/) | `@specdd/improvement-proposals` — evidence-bound proposals, failure observations, human-attested review journals and guarded draft PR handoffs; no automatic Harness mutation. |
 
-**How generation works** (same pattern in all three wizards): a build-time bundle
-script snapshots the kit's real files into `website/src/data/*.json`; pure functions
-in `generators.js` overlay the personalized artifacts from your answers; the wizard
-zips everything client-side with JSZip. The current Brownfield analyzer
+**How generation works:** a build-time bundle script snapshots each kit's real files
+into `website/src/data/*.json`. SpecDD first normalizes approved answers into
+`context/project-definition.json`, then its compatibility projection feeds the existing
+pure Harness v1 renderers. The wizard zips everything client-side with JSZip. The
+current Brownfield analyzer
 (`analyzer.js`) implements both levels. Level 1 uses manifests for stack detection,
 folder structure for domain suggestions and filename patterns for entities. Level 2
 adds a bounded safe text allowlist with evidence/confidence; secrets, environment
 files and binaries are excluded. The approved context is applied defensively by
 `generators.js`.
 SpecForge's target ingestion reads only the path LIST (no content at all) to detect
-the destination harness and compute collisions.
+the destination harness and compute collisions. Its generated manifests describe
+routing and optional Project Definition bindings declaratively; installation remains
+draft and human-gated.
 
-For Brownfield SpecDD generation, the schema-2 manifest also records the approved
+For Brownfield SpecDD generation, the separate schema-2 generation receipt also records the approved
 context, collision decisions, a source baseline and deterministic fingerprints. This
 gives the extracted project one reproducible post-copy validation run without
 silently overwriting existing files.
 
 ## Run it locally
 
-Prerequisites: **Node ≥ 20** and npm. (PowerShell 7 + `powershell-yaml` are only
+Prerequisites: **Node ≥ 22.12** and npm. (PowerShell 7 + `powershell-yaml` are only
 needed by the *generated scaffold's* validation scripts, not to run this app.)
 
 ```powershell
@@ -247,12 +264,14 @@ npm test -w specdd-platform              # Playwright e2e: portal + wizard mount
 npm run build -w specdd-platform         # production build (bundles all kits first)
 ```
 
-CI (`.github/workflows/ci.yml`) runs unit + build per workspace; e2e runs locally.
+CI (`.github/workflows/ci.yml`) runs unit/build checks, dependency audit and browser
+regressions. Run-history usage and local evidence inspection are documented in
+[`packages/run-history/README.md`](packages/run-history/README.md).
 
 ## Repo layout & docs
 
 - `docs/superpowers/specs/` — approved design specs per iteration (Greenfield harness,
-  Brownfield ingestion, legacy-harness deprecation, SpecForge Role Packs).
+  Brownfield ingestion, legacy-harness deprecation, and SpecForge Capability Packs).
 - `docs/superpowers/plans/` — the implementation plans executed task-by-task.
 - `docs/ROADMAP.md` — improvement backlog.
 - `docs/IMPLEMENTATION_STATUS.md` — completed scope, validation flow and the remaining evolution backlog.
