@@ -7,7 +7,7 @@ description: Launch the SpecDD Platform portal (root install, dev server on 4320
 
 Launch the **SpecDD Platform** portal locally (landing + the three wizards).
 
-1. Verify Node.js 20+ is installed (`node --version`).
+1. Verify Node.js 22.12+ is installed (`node --version`).
 2. From the repo root, install everything once: `npm install`.
 3. Start the portal: `npm run dev -w specdd-platform` (its predev bundles the three kits' data).
 4. Open `http://localhost:4320` in Microsoft Edge.

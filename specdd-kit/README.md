@@ -27,9 +27,10 @@ PowerShell 7+ and the `powershell-yaml` module
 
 Running the wizard produces a ZIP containing:
 
-- **`context/`** — `project.md`, `tech-stack.md`, `constitution.md`: the shared
-  understanding every spec is written against, plus the scaffold manifest and the
-  explicit project-validation profile.
+- **`context/`** — `project-definition.json` (canonical machine-readable intent),
+  `project.md`, `tech-stack.md`, and `constitution.md`: the shared understanding every
+  spec is written against, plus the separate scaffold receipt and explicit
+  project-validation profile.
 - **`.github/copilot-instructions.md`** — a ≤5-line pointer adapter that hands
   off to the generated root `AGENTS.md` primer and `.agents/` harness core;
   ships only when GitHub Copilot is among the tools you selected in the wizard.

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/eval/1.0.0/eval.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "id", "version", "name", "method", "rubric", "labels", "passingScore"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"}, "kind": {"const": "SpecDDEval"},
+    "id": {"$ref": "#/$defs/id"}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "name": {"type": "string", "minLength": 1},
+    "method": {"enum": ["mechanical", "classification"]}, "rubric": {"type": "string", "minLength": 1},
+    "passingScore": {"type": "number", "minimum": 0, "maximum": 1},
+    "labels": {"type": "array", "minItems": 2, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "description", "score"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "description": {"type": "string", "minLength": 1}, "score": {"type": "number", "minimum": 0, "maximum": 1}}
+    }}
+  },
+  "$defs": {"id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}}
+}

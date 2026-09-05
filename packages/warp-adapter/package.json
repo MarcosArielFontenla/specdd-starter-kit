@@ -1,0 +1,28 @@
+{
+  "name": "@specdd/warp-adapter",
+  "version": "1.0.0",
+  "description": "Replaceable compiler from SpecControl definitions to Warp Factory v1alpha1 files",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "examples"],
+  "scripts": {
+    "prebuild": "npm run build -w @specdd/control-plane-model",
+    "build": "tsc -p tsconfig.json",
+    "test:unit": "npm run build && node --test",
+    "test": "npm run test:unit"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "@specdd/control-plane-model": "*",
+    "@specdd/project-model": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
+

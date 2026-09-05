@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/control-plane/1.0.0/graph.schema.json",
+  "title": "SpecDD Control Graph",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "description", "entryNodeId", "terminalNodeIds", "nodes", "edges"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "$ref": "#/$defs/nonEmptyString" },
+    "description": { "$ref": "#/$defs/nonEmptyString" },
+    "entryNodeId": { "$ref": "#/$defs/id" },
+    "terminalNodeIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "nodes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/node" } },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+    "extensions": { "$ref": "#/$defs/extensions" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$" },
+    "idArray": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "extensions": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9.-]*/[a-z0-9][a-z0-9._-]*$" },
+      "additionalProperties": true
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "inputArtifactRefs", "outputArtifactRefs", "policyRefs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "kind": { "enum": ["agent", "approval", "eval", "artifact"] },
+        "agentRoleRef": { "$ref": "#/$defs/id" },
+        "approvalRef": { "$ref": "#/$defs/id" },
+        "evalGateRef": { "$ref": "#/$defs/id" },
+        "artifactContractRef": { "$ref": "#/$defs/id" },
+        "inputArtifactRefs": { "$ref": "#/$defs/idArray" },
+        "outputArtifactRefs": { "$ref": "#/$defs/idArray" },
+        "policyRefs": { "$ref": "#/$defs/idArray" },
+        "retryRef": { "$ref": "#/$defs/id" },
+        "failureRouteRef": { "$ref": "#/$defs/id" },
+        "runtimeHintRef": { "$ref": "#/$defs/id" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "agent" } } }, "then": { "required": ["agentRoleRef"] } },
+        { "if": { "properties": { "kind": { "const": "approval" } } }, "then": { "required": ["approvalRef"] } },
+        { "if": { "properties": { "kind": { "const": "eval" } } }, "then": { "required": ["evalGateRef"] } },
+        { "if": { "properties": { "kind": { "const": "artifact" } } }, "then": { "required": ["artifactContractRef"] } }
+      ]
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to", "on"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "from": { "$ref": "#/$defs/id" },
+        "to": { "$ref": "#/$defs/id" },
+        "on": { "enum": ["success", "approved", "rejected", "pass", "fail", "always"] },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    }
+  }
+}
+

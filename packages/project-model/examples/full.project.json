@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDProject",
+  "metadata": {
+    "id": "acme-orders",
+    "name": "Acme Orders",
+    "description": "Order management with an auditable SpecDD Harness",
+    "labels": ["pilot"],
+    "extensions": { "acme.example/portfolio": "commerce" }
+  },
+  "project": {
+    "scenario": "brownfield",
+    "description": "Modernize order intake without replacing verified business rules.",
+    "problem": "Order changes are difficult to trace from intent to implementation.",
+    "personas": ["Operations analyst", "Store administrator"],
+    "outcomes": {
+      "user": "Operators can trace every order change.",
+      "business": "Reduce rework caused by ambiguous requirements."
+    },
+    "constraints": {
+      "business": "Existing approval policy remains mandatory.",
+      "technical": "The PostgreSQL data contract remains backward compatible."
+    },
+    "domains": [{ "id": "orders", "name": "Orders" }],
+    "entities": [{ "id": "order", "name": "Order", "domainRefs": ["orders"] }],
+    "features": [{ "id": "order-audit", "name": "Order audit", "domainRefs": ["orders"], "entityRefs": ["order"] }],
+    "principles": ["Specifications are the source of truth"],
+    "security": { "classification": "internal", "owaspControls": ["A01 Broken Access Control"] },
+    "contextReview": {
+      "required": true,
+      "status": "approved",
+      "findings": [{
+        "group": "domains",
+        "value": "Orders",
+        "selected": true,
+        "status": "implemented",
+        "source": "src/orders",
+        "confidence": "high"
+      }]
+    }
+  },
+  "architecture": {
+    "patterns": ["Modular monolith"],
+    "stack": {
+      "languages": ["TypeScript"],
+      "frontend": "React",
+      "backend": "Node.js",
+      "testing": "Node test runner",
+      "database": "PostgreSQL",
+      "infrastructure": "Containers",
+      "swagger": true,
+      "accessibility": true
+    },
+    "decisionRefs": []
+  },
+  "harness": {
+    "contractVersion": "1.0.0",
+    "sourceRoot": ".agents",
+    "primerPath": "AGENTS.md",
+    "tools": ["Codex"],
+    "mcpServers": ["postgresql"]
+  },
+  "capabilities": [{ "id": "domain-orders", "source": ".agents/skills/orders/SKILL.md", "version": "1.0.0", "enabled": true }],
+  "specs": [{ "id": "entity-order", "kind": "entity", "path": ".agents/specs/order.spec.yaml", "status": "placeholder", "targetRefs": ["order"] }],
+  "workflows": [{
+    "id": "spec-first-feature",
+    "path": ".agents/workflows/spec-first-feature.md",
+    "status": "active",
+    "triggers": ["cross-domain-feature"],
+    "capabilityRefs": ["domain-orders"],
+    "specRefs": ["entity-order"]
+  }],
+  "evals": [{ "id": "domain-orders", "path": ".agents/evals/rubrics/orders.yaml", "mode": "log_only", "capabilityRefs": ["domain-orders"] }],
+  "policies": [{ "id": "project-constitution", "path": "context/constitution.md", "scope": "project", "enforcement": "instruction" }],
+  "telemetry": {
+    "mode": "best_effort",
+    "eventContractPath": ".agents/telemetry/EVENTS.md",
+    "eventTypes": ["session_start", "session_summary"]
+  },
+  "deployment": { "enabled": false },
+  "runtime": {
+    "preferredModel": "team-default",
+    "adapters": [{ "id": "codex", "kind": "codex", "enabled": true }]
+  },
+  "provenance": {
+    "source": "scaffold-manifest",
+    "migratedFrom": { "kind": "scaffold-manifest", "schemaVersion": 2 },
+    "receipt": {
+      "schemaVersion": 2,
+      "generatedFiles": ["AGENTS.md", ".agents/skills/orders/SKILL.md"],
+      "skippedPaths": [],
+      "replacedPaths": [],
+      "fingerprintAlgorithm": "fnv1a32-utf8"
+    }
+  }
+}

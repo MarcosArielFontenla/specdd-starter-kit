@@ -3,19 +3,132 @@ name: CI
 on:
   push:
     branches: [main]
-    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
+    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'scripts/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
   pull_request:
     branches: [main]
-    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
+    paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'scripts/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
 
 jobs:
+  improvement-proposals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/improvement-proposals
+
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/benchmarks
+
+  run-history:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/run-history
+
+  browser-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test -w specdd-platform -w sdd-kit-wizard -w specforge-wizard -w specdeploy-wizard
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm audit --audit-level=low
+
+  eval-adapters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/eval-adapters
+
+  phase5-preparation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build -w @specdd/control-plane-model
+      - run: npm run bundle-all -w specdd-platform
+      - run: npm run test:phase5
+
+  project-model-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/project-model
+
+  capability-model-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/capability-model
+
+  control-plane-model-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/control-plane-model
+
+  warp-adapter-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/warp-adapter
+
   specdd-kit-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm ci
       - run: npm run bundle-kit -w sdd-kit-wizard
       - run: npm run test:unit -w sdd-kit-wizard
@@ -27,7 +140,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm ci
       - run: npm run bundle-skills -w specforge-wizard
       - run: npm run test:unit -w specforge-wizard
@@ -39,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm ci
       - run: npm run bundle-providers -w specdeploy-wizard
       - run: npm run test:unit -w specdeploy-wizard
@@ -51,6 +164,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm ci
       - run: npm run build -w specdd-platform

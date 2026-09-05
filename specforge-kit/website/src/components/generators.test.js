@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generatePack, renderMcpJson, renderRoleSkill, renderRoleRubric, renderRoleSubagent, renderRoleWorkflow, renderRolePrompt, renderInstallTasks, renderPackReport } from './generators.js';
+import { validateCapabilityPack } from '@specdd/capability-model';
+import { capabilityForRole, capabilityManifestPath, generatePack, renderMcpJson, renderRoleSkill, renderRoleRubric, renderRoleSubagent, renderRoleWorkflow, renderRolePrompt, renderInstallTasks, renderPackReport } from './generators.js';
 
 test('renderMcpJson embeds the figma key as an input placeholder, never ADO/Azure servers', () => {
   const json = renderMcpJson({ figma: true, playwright: true });
@@ -60,8 +61,11 @@ test('copilot prompt is a pointer to the workflow', () => {
 test('install tasks: draft, one wiring set per role, C-prefixed gate ids', () => {
   const tasks = renderInstallTasks(packInput, '2026-07-19');
   assert.match(tasks, /status: draft/);
+  assert.match(tasks, /\.agents\/capabilities\/role-qa\/capability\.json/);
   assert.match(tasks, /Quality Analyst work \| \.agents\/skills\/role-qa\/SKILL\.md/);
   assert.match(tasks, /Developer work \| \.agents\/skills\/role-dev\/SKILL\.md/);
+  assert.match(tasks, /context\/project-definition\.json/);
+  assert.match(tasks, /"enabled": true/);
   assert.match(tasks, /40 lines/);
   assert.match(tasks, /C001/);
   assert.match(tasks, /generate-snapshots\.ps1 -Scaffold/);
@@ -88,6 +92,8 @@ test('generatePack assembles per-role artifacts and cross-cutting files', () => 
   const { files, skipped } = generatePack(baseSkills, packInput, '2026-07-19');
   assert.deepEqual(skipped, []);
   assert.ok('.agents/skills/role-qa/SKILL.md' in files);
+  assert.ok('.agents/capabilities/role-qa/capability.json' in files);
+  assert.ok('.agents/capabilities/role-dev/capability.json' in files);
   assert.equal(files['.agents/skills/role-qa/assets/test-case-generation.md'], 'tc playbook');
   assert.ok('.agents/skills/role-dev/assets/code-review.md' in files);
   assert.ok('.agents/evals/rubrics/role-qa.yaml' in files);
@@ -98,6 +104,42 @@ test('generatePack assembles per-role artifacts and cross-cutting files', () => 
   assert.ok('context/role-pack-report.md' in files);
   assert.ok('.vscode/mcp.json' in files);                                     // QA automated -> playwright
   assert.ok(!Object.keys(files).some((p) => p.includes('role-ba')), 'unselected roles absent');
+});
+
+test('each selected role produces an independent valid Capability Pack', () => {
+  const { files } = generatePack(baseSkills, packInput, '2026-07-19');
+  const qa = JSON.parse(files[capabilityManifestPath('QA')]);
+  const dev = JSON.parse(files[capabilityManifestPath('Dev')]);
+
+  assert.equal(validateCapabilityPack(qa).valid, true);
+  assert.equal(validateCapabilityPack(dev).valid, true);
+  assert.equal(qa.metadata.id, 'role-qa');
+  assert.equal(dev.metadata.id, 'role-dev');
+  assert.deepEqual(qa.skills.map((skill) => skill.id), ['role-qa']);
+  assert.deepEqual(dev.skills.map((skill) => skill.id), ['role-dev']);
+  assert.ok(!JSON.stringify(qa).includes('role-dev'));
+  assert.ok(!JSON.stringify(dev).includes('role-qa'));
+});
+
+test('Capability Pack references generated role artifacts and keeps subagents inactive', () => {
+  const { files } = generatePack(baseSkills, packInput, '2026-07-19');
+  const pack = capabilityForRole('QA', packInput);
+  const generatedPaths = [
+    ...pack.skills.map((entry) => entry.path),
+    ...pack.playbooks.map((entry) => entry.path),
+    ...pack.workflows.map((entry) => entry.path),
+    ...pack.evals.map((entry) => entry.path),
+    ...pack.subagents.map((entry) => entry.path),
+  ];
+  for (const path of generatedPaths) assert.ok(path in files, `missing referenced artifact ${path}`);
+  assert.ok(pack.subagents.every((entry) => entry.status === 'inactive'));
+});
+
+test('generation fails closed when a selected playbook source is unavailable', () => {
+  assert.throws(
+    () => generatePack({}, { ...packInput, roles: ['QA'], skillsByRole: { QA: ['missing-playbook'] } }, '2026-07-19'),
+    /references artifacts that were not generated.*missing-playbook/,
+  );
 });
 
 test('copilot projection only when Copilot selected', () => {
@@ -118,6 +160,15 @@ test('collisions with the target are skipped and reported; report is exempt', ()
   assert.ok(!('.agents/evals/rubrics/role-qa.yaml' in files));
   assert.ok('context/role-pack-report.md' in files);                          // exemption
   assert.match(files['context/role-pack-report.md'], /role-qa\.yaml/);        // reported
+});
+
+test('Capability Pack manifest collisions are skipped and reported without overwriting', () => {
+  const path = capabilityManifestPath('QA');
+  const input = { ...packInput, targetPaths: [path], harness: { specdd: true, legacy: false } };
+  const { files, skipped } = generatePack(baseSkills, input, '2026-07-19');
+  assert.ok(!Object.hasOwn(files, path));
+  assert.ok(skipped.includes(path));
+  assert.match(files['context/role-pack-report.md'], /\.agents\/capabilities\/role-qa\/capability\.json/);
 });
 
 test('generated pack carries no private version tags', () => {

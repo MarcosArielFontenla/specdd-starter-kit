@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDControlPlane",
+  "lifecycle": "draft",
+  "metadata": {
+    "id": "manual-review-control",
+    "name": "Manual Review Control",
+    "description": "A minimal manually triggered single-role workflow.",
+    "version": "1.0.0"
+  },
+  "project": {
+    "id": "example-project",
+    "source": "context/project-definition.json",
+    "version": "1.0.0"
+  },
+  "harnesses": [{
+    "id": "project-harness",
+    "source": ".agents/REGISTRY.md",
+    "contractVersion": "1.0.0",
+    "enabled": true
+  }],
+  "capabilityBindings": [],
+  "agentRoles": [{
+    "id": "reviewer",
+    "title": "Reviewer",
+    "purpose": "Review work under the project Harness.",
+    "harnessRef": "project-harness",
+    "capabilityBindingRefs": [],
+    "policyRefs": []
+  }],
+  "workflows": [{
+    "id": "manual-review",
+    "name": "Manual Review",
+    "purpose": "Perform one review when a human starts it.",
+    "graphRef": "manual-review-graph",
+    "triggers": [{ "kind": "manual" }],
+    "inputArtifactRefs": [],
+    "outputArtifactRefs": [],
+    "policyRefs": []
+  }],
+  "graphs": [{
+    "id": "manual-review-graph",
+    "name": "Manual Review Graph",
+    "description": "One finite review node.",
+    "entryNodeId": "review-work",
+    "terminalNodeIds": ["review-work"],
+    "nodes": [{
+      "id": "review-work",
+      "name": "Review work",
+      "kind": "agent",
+      "agentRoleRef": "reviewer",
+      "inputArtifactRefs": [],
+      "outputArtifactRefs": [],
+      "policyRefs": []
+    }],
+    "edges": []
+  }],
+  "approvals": [],
+  "policies": [],
+  "failureRoutes": [],
+  "retries": [],
+  "evalGates": [],
+  "artifactContracts": [],
+  "runtimeHints": []
+}
+

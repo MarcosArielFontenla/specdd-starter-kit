@@ -1,0 +1,27 @@
+{
+  "name": "@specdd/capability-model",
+  "version": "1.0.0",
+  "description": "Runtime-neutral Capability Pack contract for SpecDD and SpecForge",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": "./schema/capability-pack.schema.json"
+  },
+  "files": ["dist", "schema", "examples"],
+  "scripts": {
+    "prebuild": "npm run build -w @specdd/project-model",
+    "build": "tsc -p tsconfig.json",
+    "test:unit": "npm run build && node --test",
+    "test": "npm run test:unit"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "@specdd/project-model": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

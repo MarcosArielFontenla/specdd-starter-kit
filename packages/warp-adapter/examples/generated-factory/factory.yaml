@@ -1,0 +1,7 @@
+schemaVersion: v1alpha1
+name: "specdd-issue-to-draft-pr"
+repositories:
+  - owner: "MarcosArielFontenla"
+    name: "specdd-starter-kit"
+agentDefaults:
+  model: "auto"

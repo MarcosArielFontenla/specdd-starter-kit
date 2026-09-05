@@ -1,0 +1,29 @@
+{
+  "kind": "SpecDDImprovementProposal",
+  "schemaVersion": "1.0.0",
+  "id": "serial-profile-investigation",
+  "title": "Evaluate serial runner profile — evidence does not support adoption",
+  "target": {
+    "path": "packages/benchmarks/scripts/local-experiment.mjs",
+    "beforeSha256": "5801cb2393f1eb7b1da14a9202a7dd82afd5c5509518263a8174d5a7e56d9d90"
+  },
+  "hypothesis": "Serial file execution might reduce latency for the two pinned score fixtures. This retrospective hypothesis is not supported by the Phase 8 observations.",
+  "change": "Consider the serial profile only if scoped latency improves by at least 1 ms without quality regression. No patch is included or authorized.",
+  "risks": "Six local runs cannot establish general Harness performance, causality or model superiority. Cost and human effort are unknown.",
+  "rollback": "Keep the current runner and both profiles unchanged; any future approved patch must retain a separately reviewed rollback.",
+  "source": {
+    "planSha256": "b716a5f9306c49cb5a9bde6c6135fb629702e2337b315d6651613f1197bb80b8",
+    "datasetSha256": "063a22641546828b708cc3fce0666892de08b097b549630b245a5bb36b3b479d"
+  },
+  "benchmark": {
+    "planSha256": "b716a5f9306c49cb5a9bde6c6135fb629702e2337b315d6651613f1197bb80b8",
+    "candidateRef": "serial"
+  },
+  "acceptance": [
+    {
+      "metric": "latencyMs",
+      "direction": "decrease",
+      "minimumDelta": 1
+    }
+  ]
+}

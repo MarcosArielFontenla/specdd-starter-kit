@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/project-definition/1.0.0",
+  "title": "SpecDD Canonical Project Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "kind", "metadata", "project", "architecture", "harness",
+    "capabilities", "specs", "workflows", "evals", "policies", "telemetry",
+    "deployment", "runtime", "provenance"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "kind": { "const": "SpecDDProject" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "type": "string" },
+        "labels": { "$ref": "#/$defs/stringArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario", "description", "problem", "personas", "outcomes", "constraints",
+        "domains", "entities", "features", "principles", "security", "contextReview"
+      ],
+      "properties": {
+        "scenario": { "enum": ["greenfield", "brownfield"] },
+        "description": { "type": "string" },
+        "problem": { "type": "string" },
+        "personas": { "$ref": "#/$defs/stringArray" },
+        "outcomes": { "$ref": "#/$defs/outcomes" },
+        "constraints": { "$ref": "#/$defs/constraints" },
+        "domains": { "type": "array", "items": { "$ref": "#/$defs/namedComponent" }, "minItems": 1 },
+        "entities": { "type": "array", "items": { "$ref": "#/$defs/entityComponent" } },
+        "features": { "type": "array", "items": { "$ref": "#/$defs/featureComponent" } },
+        "principles": { "$ref": "#/$defs/stringArray" },
+        "security": { "$ref": "#/$defs/security" },
+        "contextReview": { "$ref": "#/$defs/contextReview" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["patterns", "stack", "decisionRefs"],
+      "properties": {
+        "patterns": { "$ref": "#/$defs/stringArray" },
+        "stack": { "$ref": "#/$defs/stack" },
+        "decisionRefs": { "$ref": "#/$defs/idArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "sourceRoot", "primerPath", "tools", "mcpServers"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/nonEmptyString" },
+        "sourceRoot": { "$ref": "#/$defs/portablePath" },
+        "primerPath": { "$ref": "#/$defs/portablePath" },
+        "tools": { "$ref": "#/$defs/stringArray" },
+        "mcpServers": { "$ref": "#/$defs/stringArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "capabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" } },
+    "specs": { "type": "array", "items": { "$ref": "#/$defs/spec" } },
+    "workflows": { "type": "array", "items": { "$ref": "#/$defs/workflow" } },
+    "evals": { "type": "array", "items": { "$ref": "#/$defs/eval" } },
+    "policies": { "type": "array", "items": { "$ref": "#/$defs/policy" } },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "eventTypes"],
+      "properties": {
+        "mode": { "enum": ["disabled", "best_effort", "required"] },
+        "eventContractPath": { "$ref": "#/$defs/portablePath" },
+        "eventTypes": { "$ref": "#/$defs/stringArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "provider": { "type": "string" },
+        "manifestPath": { "$ref": "#/$defs/portablePath" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapters"],
+      "properties": {
+        "preferredModel": { "type": "string" },
+        "adapters": { "type": "array", "items": { "$ref": "#/$defs/runtimeAdapter" } },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": { "enum": ["wizard", "scaffold-manifest", "file"] },
+        "migratedFrom": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "schemaVersion"],
+          "properties": {
+            "kind": { "const": "scaffold-manifest" },
+            "schemaVersion": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "receipt": { "$ref": "#/$defs/receipt" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "extensions": { "$ref": "#/$defs/extensions" }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+    },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "stringArray": { "type": "array", "items": { "type": "string" } },
+    "idArray": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+    "portablePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "pattern": "(^/)|(^[A-Za-z]:[\\\\/])|(^|[\\\\/])\\.\\.([\\\\/]|$)" }
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9.-]*/[a-z0-9][a-z0-9._-]*$" },
+      "additionalProperties": true
+    },
+    "outcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["user", "business"],
+      "properties": { "user": { "type": "string" }, "business": { "type": "string" } }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["business", "technical"],
+      "properties": { "business": { "type": "string" }, "technical": { "type": "string" } }
+    },
+    "namedComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "type": "string" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "entityComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "domainRefs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "type": "string" },
+        "domainRefs": { "$ref": "#/$defs/idArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "featureComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "domainRefs", "entityRefs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "type": "string" },
+        "domainRefs": { "$ref": "#/$defs/idArray" },
+        "entityRefs": { "$ref": "#/$defs/idArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "owaspControls"],
+      "properties": {
+        "classification": { "$ref": "#/$defs/nonEmptyString" },
+        "owaspControls": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "contextFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["group", "value", "selected", "status"],
+      "properties": {
+        "group": { "enum": ["stack", "architecture", "domains", "entities", "features"] },
+        "value": { "$ref": "#/$defs/nonEmptyString" },
+        "selected": { "type": "boolean" },
+        "status": { "enum": ["unknown", "planned", "implemented", "architectural"] },
+        "source": { "type": "string" },
+        "confidence": { "enum": ["low", "medium", "high", "unknown"] }
+      }
+    },
+    "contextReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status", "findings"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "status": { "enum": ["not-required", "pending", "approved"] },
+        "findings": { "type": "array", "items": { "$ref": "#/$defs/contextFinding" } }
+      }
+    },
+    "stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["languages", "frontend", "backend", "testing", "database", "infrastructure", "swagger", "accessibility"],
+      "properties": {
+        "languages": { "$ref": "#/$defs/stringArray" },
+        "frontend": { "type": "string" },
+        "backend": { "type": "string" },
+        "testing": { "type": "string" },
+        "database": { "type": "string" },
+        "infrastructure": { "type": "string" },
+        "swagger": { "type": "boolean" },
+        "accessibility": { "type": "boolean" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "enabled"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "source": { "$ref": "#/$defs/nonEmptyString" },
+        "version": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "artifactStatus": { "enum": ["placeholder", "draft", "approved", "active", "inactive"] },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "path", "status", "targetRefs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["project", "entity", "feature", "other"] },
+        "path": { "$ref": "#/$defs/portablePath" },
+        "status": { "$ref": "#/$defs/artifactStatus" },
+        "targetRefs": { "$ref": "#/$defs/idArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "status", "triggers", "capabilityRefs", "specRefs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "$ref": "#/$defs/portablePath" },
+        "status": { "$ref": "#/$defs/artifactStatus" },
+        "triggers": { "$ref": "#/$defs/stringArray" },
+        "capabilityRefs": { "$ref": "#/$defs/idArray" },
+        "specRefs": { "$ref": "#/$defs/idArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "eval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "mode", "capabilityRefs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "$ref": "#/$defs/portablePath" },
+        "mode": { "enum": ["disabled", "log_only", "enforced"] },
+        "capabilityRefs": { "$ref": "#/$defs/idArray" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "scope", "enforcement"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "$ref": "#/$defs/portablePath" },
+        "scope": { "$ref": "#/$defs/nonEmptyString" },
+        "enforcement": { "enum": ["instruction", "validator", "runtime", "repository", "human"] },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "runtimeAdapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "enabled"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "$ref": "#/$defs/nonEmptyString" },
+        "enabled": { "type": "boolean" },
+        "extensions": { "$ref": "#/$defs/extensions" }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "generatedFiles", "skippedPaths", "replacedPaths"],
+      "properties": {
+        "schemaVersion": { "type": "integer", "minimum": 1 },
+        "generatedFiles": { "type": "array", "items": { "$ref": "#/$defs/portablePath" }, "uniqueItems": true },
+        "skippedPaths": { "type": "array", "items": { "$ref": "#/$defs/portablePath" }, "uniqueItems": true },
+        "replacedPaths": { "type": "array", "items": { "$ref": "#/$defs/portablePath" }, "uniqueItems": true },
+        "fingerprintAlgorithm": { "type": "string" },
+        "sourcePathFingerprint": { "type": "string" }
+      }
+    }
+  }
+}

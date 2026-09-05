@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.0.0", "kind": "SpecDDEval", "id": "implementation-quality", "version": "1.0.0",
+  "name": "Documentation conformance", "method": "mechanical",
+  "rubric": "Execute the approved documentation conformance test. Exit zero passes; a completed nonzero exit fails. This measures documentation requirements only, not agent quality or drift.",
+  "labels": [{"id":"passed","description":"Approved tests completed successfully","score":1},{"id":"failed","description":"Approved tests completed with failures","score":0}],
+  "passingScore": 1
+}

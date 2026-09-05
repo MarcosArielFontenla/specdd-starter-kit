@@ -1,4 +1,4 @@
-// Role model for SpecForge Role Packs. Pure — no React imports.
+// Role source model for SpecForge Capability Packs. Pure — no React imports.
 
 export const ROLES = ['BA', 'QA', 'Dev', 'UX'];
 

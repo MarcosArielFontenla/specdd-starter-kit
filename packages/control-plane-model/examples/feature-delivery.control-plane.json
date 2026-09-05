@@ -1,0 +1,161 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDControlPlane",
+  "lifecycle": "active",
+  "metadata": {
+    "id": "feature-delivery-control",
+    "name": "Feature Delivery Control",
+    "description": "A portable human-gated specification, implementation, and verification workflow.",
+    "version": "1.0.0"
+  },
+  "project": {
+    "id": "example-project",
+    "source": "context/project-definition.json",
+    "version": "1.0.0"
+  },
+  "harnesses": [{
+    "id": "project-harness",
+    "source": ".agents/REGISTRY.md",
+    "contractVersion": "1.0.0",
+    "enabled": true
+  }],
+  "capabilityBindings": [
+    { "id": "role-ba", "source": ".agents/capabilities/role-ba/capability.json", "version": "1.0.0", "enabled": true },
+    { "id": "role-dev", "source": ".agents/capabilities/role-dev/capability.json", "version": "1.0.0", "enabled": true }
+  ],
+  "agentRoles": [
+    {
+      "id": "planner",
+      "title": "Planner",
+      "purpose": "Produce a traceable specification from the request.",
+      "harnessRef": "project-harness",
+      "capabilityBindingRefs": ["role-ba"],
+      "policyRefs": ["spec-before-code"]
+    },
+    {
+      "id": "developer",
+      "title": "Developer",
+      "purpose": "Implement only the approved specification.",
+      "harnessRef": "project-harness",
+      "capabilityBindingRefs": ["role-dev"],
+      "policyRefs": ["spec-before-code", "no-production-write"],
+      "runtimeHintRef": "isolated-local-work"
+    }
+  ],
+  "workflows": [{
+    "id": "feature-delivery",
+    "name": "Feature Delivery",
+    "purpose": "Move a request to reviewed implementation evidence without deployment.",
+    "graphRef": "feature-delivery-graph",
+    "triggers": [{ "kind": "manual" }],
+    "inputArtifactRefs": ["feature-request"],
+    "outputArtifactRefs": ["implementation", "review-evidence"],
+    "policyRefs": ["spec-before-code", "human-spec-approval"]
+  }],
+  "graphs": [{
+    "id": "feature-delivery-graph",
+    "name": "Feature Delivery Graph",
+    "description": "Specify, approve, implement, evaluate, and record evidence.",
+    "entryNodeId": "specify",
+    "terminalNodeIds": ["record-evidence"],
+    "nodes": [
+      {
+        "id": "specify",
+        "name": "Specify",
+        "kind": "agent",
+        "agentRoleRef": "planner",
+        "inputArtifactRefs": ["feature-request"],
+        "outputArtifactRefs": ["approved-spec"],
+        "policyRefs": ["spec-before-code"]
+      },
+      {
+        "id": "approve-spec",
+        "name": "Approve specification",
+        "kind": "approval",
+        "approvalRef": "spec-approval",
+        "inputArtifactRefs": ["approved-spec"],
+        "outputArtifactRefs": [],
+        "policyRefs": ["human-spec-approval"]
+      },
+      {
+        "id": "implement",
+        "name": "Implement",
+        "kind": "agent",
+        "agentRoleRef": "developer",
+        "inputArtifactRefs": ["approved-spec"],
+        "outputArtifactRefs": ["implementation"],
+        "policyRefs": ["no-production-write"],
+        "retryRef": "bounded-implementation-retry",
+        "failureRouteRef": "stop-on-implementation-failure",
+        "runtimeHintRef": "isolated-local-work"
+      },
+      {
+        "id": "review",
+        "name": "Review implementation",
+        "kind": "eval",
+        "evalGateRef": "implementation-review",
+        "inputArtifactRefs": ["implementation"],
+        "outputArtifactRefs": ["review-evidence"],
+        "policyRefs": [],
+        "failureRouteRef": "record-review-failure"
+      },
+      {
+        "id": "record-evidence",
+        "name": "Record evidence",
+        "kind": "artifact",
+        "artifactContractRef": "review-evidence",
+        "inputArtifactRefs": ["review-evidence"],
+        "outputArtifactRefs": [],
+        "policyRefs": []
+      }
+    ],
+    "edges": [
+      { "id": "specified", "from": "specify", "to": "approve-spec", "on": "success" },
+      { "id": "approved", "from": "approve-spec", "to": "implement", "on": "approved" },
+      { "id": "implemented", "from": "implement", "to": "review", "on": "success" },
+      { "id": "review-passed", "from": "review", "to": "record-evidence", "on": "pass" }
+    ]
+  }],
+  "approvals": [{
+    "id": "spec-approval",
+    "name": "Specification approval",
+    "mode": "human",
+    "required": true,
+    "instructions": "Confirm scope and acceptance conditions before implementation.",
+    "artifactRefs": ["approved-spec"]
+  }],
+  "policies": [
+    { "id": "spec-before-code", "category": "transition", "effect": "require", "subjectRefs": ["feature-delivery", "developer"], "action": "implement", "resource": "approved specification", "enforcement": "validator" },
+    { "id": "human-spec-approval", "category": "transition", "effect": "require", "subjectRefs": ["feature-delivery"], "action": "approve", "resource": "specification", "enforcement": "human" },
+    { "id": "no-production-write", "category": "permission", "effect": "deny", "subjectRefs": ["developer"], "action": "write", "resource": "production environment", "enforcement": "runtime" }
+  ],
+  "failureRoutes": [
+    { "id": "stop-on-implementation-failure", "graphRef": "feature-delivery-graph", "strategy": "stop", "reason": "Implementation failed after bounded retries." },
+    { "id": "record-review-failure", "graphRef": "feature-delivery-graph", "strategy": "route", "targetNodeRef": "record-evidence", "reason": "Preserve failed review evidence for human inspection." }
+  ],
+  "retries": [{
+    "id": "bounded-implementation-retry",
+    "maxAttempts": 2,
+    "backoff": { "strategy": "fixed", "initialDelaySeconds": 1, "maxDelaySeconds": 1 }
+  }],
+  "evalGates": [{
+    "id": "implementation-review",
+    "evalRef": "role-dev-adherence",
+    "mode": "required",
+    "requiredOutcome": "pass"
+  }],
+  "artifactContracts": [
+    { "id": "feature-request", "name": "Feature request", "kind": "input", "path": "specs/feature/request.md", "required": true },
+    { "id": "approved-spec", "name": "Approved specification", "kind": "output", "path": "specs/feature/spec.md", "required": true },
+    { "id": "implementation", "name": "Implementation diff", "kind": "output", "path": "artifacts/implementation.diff", "required": true },
+    { "id": "review-evidence", "name": "Review evidence", "kind": "evidence", "path": "artifacts/review.json", "required": true, "schemaRef": "schemas/review-evidence.schema.json" }
+  ],
+  "runtimeHints": [{
+    "id": "isolated-local-work",
+    "execution": "local",
+    "isolation": "worktree",
+    "network": "restricted",
+    "interactive": false
+  }]
+}
+

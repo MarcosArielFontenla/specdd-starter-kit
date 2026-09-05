@@ -1,0 +1,5 @@
+{
+  "agents": ["reviewer"],
+  "model": "claude-4-5-haiku",
+  "samplingRate": 25
+}

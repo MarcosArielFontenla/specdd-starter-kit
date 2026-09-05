@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDEvalResult",
+  "runId": "phase6-local-001",
+  "inputRef": "commit:c48f8736c796736bdb7442f89f917186669b87d8",
+  "observedAt": "2026-09-05T00:26:50.459Z",
+  "evalRef": "implementation-quality",
+  "evalVersion": "1.0.0",
+  "definitionSha256": "94eab93a958b96e22285f63e924143151c6e57bb48ba15067d38dea5b6c87717",
+  "adapter": "local-exit-v1",
+  "outcome": "pass", "score": 1, "label": "passed",
+  "evidence": { "sha256": "646c5934dc931a92284639961b788ab1f4f7f2a92ef2d58f2a8d348287055144", "bytes": 1207 },
+  "error": null
+}

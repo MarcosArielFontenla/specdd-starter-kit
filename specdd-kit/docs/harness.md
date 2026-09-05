@@ -17,6 +17,7 @@ The harness validation scripts require:
 | Path | Purpose |
 |------|---------|
 | `AGENTS.md` (root) | Session primer, ≤40 lines. What every agent session loads first. |
+| `context/project-definition.json` | Canonical, runtime-neutral project intent (schema `1.0.0`); editable project source. |
 | `context/scaffold-manifest.json` | Post-extraction manifest: generated paths, collisions, selected context and fidelity fingerprints. |
 | `context/project-validation.json` | Explicit project-level test/build/lint commands executed by the consolidated validator. |
 | `.agents/REGISTRY.md` | Full artifact registry + systems status. Load only when working on the harness itself. |

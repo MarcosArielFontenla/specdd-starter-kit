@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDWarpAdapterConfig",
+  "factoryName": "specdd-issue-to-draft-pr",
+  "repositories": [{
+    "owner": "MarcosArielFontenla",
+    "name": "specdd-starter-kit"
+  }],
+  "agentDefaults": {
+    "model": "auto"
+  },
+  "agentBindings": [
+    { "roleRef": "planner", "agentType": "SPEC" },
+    { "roleRef": "developer", "agentType": "IMPLEMENT" },
+    { "roleRef": "reviewer", "agentType": "REVIEW" }
+  ],
+  "automations": [{
+    "workflowRef": "issue-to-draft-pr",
+    "enabled": false,
+    "triggers": [{
+      "sourceEvent": "issue.created",
+      "provider": "github",
+      "event": "issue_created"
+    }]
+  }]
+}
+

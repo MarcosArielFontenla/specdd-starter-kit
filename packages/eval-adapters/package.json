@@ -1,0 +1,11 @@
+{
+  "name": "@specdd/eval-adapters",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }, "./warp": { "types": "./dist/warp.d.ts", "import": "./dist/warp.js" }, "./schema": "./schema/eval.schema.json", "./schema/result": "./schema/result.schema.json" },
+  "files": ["dist", "schema", "examples", "scripts"],
+  "scripts": { "prebuild": "npm run build -w @specdd/project-model", "build": "tsc -p tsconfig.json", "test:unit": "npm run build && node --test test/*.test.mjs" },
+  "dependencies": { "@specdd/project-model": "*" },
+  "devDependencies": { "typescript": "^5.9.3", "@types/node": "^22.0.0" },
+  "engines": { "node": ">=20.0.0" }
+}

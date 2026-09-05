@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 22.12+
 - npm
 
 ## Run the wizard

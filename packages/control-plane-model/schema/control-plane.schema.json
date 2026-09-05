@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/control-plane/1.0.0/control-plane.schema.json",
+  "title": "SpecDD Control Plane Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "kind", "lifecycle", "metadata", "project", "harnesses",
+    "capabilityBindings", "agentRoles", "workflows", "graphs", "approvals",
+    "policies", "failureRoutes", "retries", "evalGates", "artifactContracts",
+    "runtimeHints"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "kind": { "const": "SpecDDControlPlane" },
+    "lifecycle": { "enum": ["draft", "active", "deprecated"] },
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "project": { "$ref": "#/$defs/projectReference" },
+    "harnesses": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/harness" } },
+    "capabilityBindings": { "type": "array", "items": { "$ref": "#/$defs/capability" } },
+    "agentRoles": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/agentRole" } },
+    "workflows": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/workflow" } },
+    "graphs": { "type": "array", "minItems": 1, "items": { "$ref": "graph.schema.json" } },
+    "approvals": { "type": "array", "items": { "$ref": "#/$defs/approval" } },
+    "policies": { "type": "array", "items": { "$ref": "policy.schema.json" } },
+    "failureRoutes": { "type": "array", "items": { "$ref": "#/$defs/failureRoute" } },
+    "retries": { "type": "array", "items": { "$ref": "#/$defs/retry" } },
+    "evalGates": { "type": "array", "items": { "$ref": "#/$defs/evalGate" } },
+    "artifactContracts": { "type": "array", "items": { "$ref": "#/$defs/artifact" } },
+    "runtimeHints": { "type": "array", "items": { "$ref": "#/$defs/runtimeHint" } },
+    "extensions": { "$ref": "#/$defs/extensions" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$" },
+    "idArray": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "semver": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$" },
+    "portablePath": { "type": "string", "minLength": 1, "not": { "pattern": "(^/)|(^[A-Za-z]:[\\\\/])|(^|[\\\\/])\\.\\.([\\\\/]|$)" } },
+    "extensions": { "type": "object", "propertyNames": { "pattern": "^[a-z0-9][a-z0-9.-]*/[a-z0-9][a-z0-9._-]*$" }, "additionalProperties": true },
+    "metadata": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "description", "version"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/nonEmptyString" }, "description": { "$ref": "#/$defs/nonEmptyString" }, "version": { "$ref": "#/$defs/semver" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "projectReference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source", "version"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "source": { "$ref": "#/$defs/portablePath" }, "version": { "$ref": "#/$defs/semver" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "harness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source", "contractVersion", "enabled"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "source": { "$ref": "#/$defs/portablePath" }, "contractVersion": { "$ref": "#/$defs/semver" }, "enabled": { "type": "boolean" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "capability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source", "version", "enabled"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "source": { "$ref": "#/$defs/portablePath" }, "version": { "$ref": "#/$defs/semver" }, "enabled": { "type": "boolean" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "agentRole": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "purpose", "harnessRef", "capabilityBindingRefs", "policyRefs"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "title": { "$ref": "#/$defs/nonEmptyString" }, "purpose": { "$ref": "#/$defs/nonEmptyString" }, "harnessRef": { "$ref": "#/$defs/id" }, "capabilityBindingRefs": { "$ref": "#/$defs/idArray" }, "policyRefs": { "$ref": "#/$defs/idArray" }, "runtimeHintRef": { "$ref": "#/$defs/id" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "trigger": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": { "kind": { "enum": ["manual", "event"] }, "event": { "$ref": "#/$defs/nonEmptyString" }, "extensions": { "$ref": "#/$defs/extensions" } },
+      "allOf": [{ "if": { "properties": { "kind": { "const": "event" } } }, "then": { "required": ["event"] } }]
+    },
+    "workflow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "purpose", "graphRef", "triggers", "inputArtifactRefs", "outputArtifactRefs", "policyRefs"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/nonEmptyString" }, "purpose": { "$ref": "#/$defs/nonEmptyString" }, "graphRef": { "$ref": "#/$defs/id" }, "triggers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/trigger" } }, "inputArtifactRefs": { "$ref": "#/$defs/idArray" }, "outputArtifactRefs": { "$ref": "#/$defs/idArray" }, "policyRefs": { "$ref": "#/$defs/idArray" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "approval": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "mode", "required", "instructions", "artifactRefs"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/nonEmptyString" }, "mode": { "const": "human" }, "required": { "type": "boolean" }, "instructions": { "$ref": "#/$defs/nonEmptyString" }, "artifactRefs": { "$ref": "#/$defs/idArray" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "failureRoute": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "graphRef", "strategy", "reason"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "graphRef": { "$ref": "#/$defs/id" }, "strategy": { "enum": ["stop", "route"] }, "targetNodeRef": { "$ref": "#/$defs/id" }, "reason": { "$ref": "#/$defs/nonEmptyString" }, "extensions": { "$ref": "#/$defs/extensions" } },
+      "allOf": [{ "if": { "properties": { "strategy": { "const": "route" } } }, "then": { "required": ["targetNodeRef"] }, "else": { "not": { "required": ["targetNodeRef"] } } }]
+    },
+    "retry": {
+      "type": "object", "additionalProperties": false, "required": ["id", "maxAttempts", "backoff"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "maxAttempts": { "type": "integer", "minimum": 1, "maximum": 10 }, "backoff": { "$ref": "#/$defs/backoff" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "backoff": {
+      "type": "object", "additionalProperties": false, "required": ["strategy", "initialDelaySeconds", "maxDelaySeconds"],
+      "properties": { "strategy": { "enum": ["none", "fixed", "exponential"] }, "initialDelaySeconds": { "type": "number", "minimum": 0 }, "maxDelaySeconds": { "type": "number", "minimum": 0 }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "evalGate": {
+      "type": "object", "additionalProperties": false, "required": ["id", "evalRef", "mode", "requiredOutcome"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "evalRef": { "$ref": "#/$defs/id" }, "mode": { "enum": ["advisory", "required"] }, "requiredOutcome": { "const": "pass" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["id", "name", "kind", "path", "required"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/nonEmptyString" }, "kind": { "enum": ["input", "output", "evidence"] }, "path": { "$ref": "#/$defs/portablePath" }, "required": { "type": "boolean" }, "schemaRef": { "$ref": "#/$defs/portablePath" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    },
+    "runtimeHint": {
+      "type": "object", "additionalProperties": false, "required": ["id", "execution", "isolation", "network", "interactive"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "execution": { "enum": ["local", "remote", "either"] }, "isolation": { "enum": ["none", "process", "worktree", "container"] }, "network": { "enum": ["denied", "restricted", "allowed"] }, "interactive": { "type": "boolean" }, "extensions": { "$ref": "#/$defs/extensions" } }
+    }
+  }
+}
+

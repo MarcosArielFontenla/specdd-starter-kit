@@ -36,3 +36,15 @@ PROMPT_SPECDDSTARTERKIT.md
 
 # private working documents (never committed)
 /_private/
+
+# Local Phase 5 generated sandboxes; publish only reviewed/redacted evidence.
+/.phase5/
+
+# Private structured run exports; publish only reviewed evidence.
+/.specdd-runs/
+
+# Local repeated experiments; publish only reviewed datasets/reports.
+/.specdd-benchmarks/
+
+# Per-machine assistant permissions; not project configuration.
+/.claude/settings.local.json

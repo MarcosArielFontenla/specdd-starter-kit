@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.0.0", "kind": "SpecDDEval", "id": "review-evidence", "version": "1.0.0",
+  "name": "Review evidence classification", "method": "classification",
+  "rubric": "Classify whether the review contains concrete acceptance-criteria evidence. Return exactly one declared label. Unsupported claims or absent evidence must be classified as missing. This classification is not execution of acceptance checks.",
+  "labels": [{"id":"supported","description":"Concrete evidence supports the review conclusion","score":1},{"id":"missing","description":"Evidence is missing or unsupported","score":0}],
+  "passingScore": 1
+}

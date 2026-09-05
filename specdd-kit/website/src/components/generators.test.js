@@ -1,11 +1,13 @@
 // src/components/generators.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateFiles, generateScaffold, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks, renderProjectValidation } from './generators.js';
+import { validateProjectDefinition } from '@specdd/project-model';
+import { generateFiles, generateScaffold, PROJECT_DEFINITION_PATH, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks, renderProjectValidation } from './generators.js';
 import { fingerprintPaths, fingerprintText } from './fingerprints.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
+  scenario: 'greenfield',
   project: { name: 'Acme', description: 'desc', problem: 'prob' },
   personas: ['Admin'], outcomes: { user: 'u', business: 'b' },
   constraints: { business: 'bc', technical: 'tc' },
@@ -16,6 +18,8 @@ const input = {
   model: 'gpt-4o',
   security: { classification: 'internal', owaspControls: ['A01'] },
   features: [],
+  domains: ['Core'],
+  entities: [],
 };
 
 const harnessInput = {
@@ -270,6 +274,18 @@ test('scaffold manifest lists generated files and selected context', () => {
   assert.equal(manifest.fidelity.source, null);
 });
 
+test('generated scaffold persists a valid canonical Project Definition as mutable project source', () => {
+  const out = generateFiles(baseWithGithub, harnessInput, '2026-09-03');
+  const definition = JSON.parse(out[PROJECT_DEFINITION_PATH]);
+  assert.deepEqual(validateProjectDefinition(definition), { valid: true, diagnostics: [] });
+  assert.equal(definition.metadata.name, harnessInput.project.name);
+  assert.deepEqual(definition.project.domains.map(({ name }) => name), harnessInput.domains);
+  const receipt = JSON.parse(out[SCAFFOLD_MANIFEST_PATH]);
+  assert.ok(receipt.generatedFiles.includes(PROJECT_DEFINITION_PATH));
+  assert.ok(receipt.fidelity.mutableFiles.includes(PROJECT_DEFINITION_PATH));
+  assert.ok(!receipt.fidelity.generatedFiles[PROJECT_DEFINITION_PATH]);
+});
+
 test('generateScaffold brownfield: collisions excluded and reported, analysis report always emitted', () => {
   const baseWithBoth = { ...base, '.github/prompts/specdd-specify.prompt.md': 'copilot prompt', '.agents/workflows/spec-converge.md': 'converge workflow' };
   const { files, skipped } = generateScaffold(baseWithBoth, brownInput, '2026-07-18');
@@ -375,7 +391,7 @@ test('spec-converge is filtered out of greenfield output even when bundled', () 
 });
 
 test('spec-converge survives in brownfield output', () => {
-  const out = generateFiles(baseWithConverge, { ...harnessInput, scenario: 'brownfield' }, '2026-07-18');
+  const out = generateFiles(baseWithConverge, brownInput, '2026-07-18');
   assert.equal(out['.agents/workflows/spec-converge.md'], 'converge workflow');
 });
 

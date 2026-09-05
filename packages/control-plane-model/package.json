@@ -1,0 +1,30 @@
+{
+  "name": "@specdd/control-plane-model",
+  "version": "1.0.0",
+  "description": "Runtime-neutral SpecControl workflow, graph, and policy contracts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": "./schema/control-plane.schema.json",
+    "./schema/graph": "./schema/graph.schema.json",
+    "./schema/policy": "./schema/policy.schema.json"
+  },
+  "files": ["dist", "schema", "examples"],
+  "scripts": {
+    "prebuild": "npm run build -w @specdd/project-model && npm run build -w @specdd/capability-model",
+    "build": "tsc -p tsconfig.json",
+    "test:unit": "npm run build && node --test",
+    "test": "npm run test:unit"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "@specdd/project-model": "*",
+    "@specdd/capability-model": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

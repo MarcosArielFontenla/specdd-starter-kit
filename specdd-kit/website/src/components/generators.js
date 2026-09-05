@@ -1,4 +1,10 @@
 // Pure generators — no imports of kit-files.json (passed in as `baseFiles`).
+import {
+  createLegacyCompilationContext,
+  createProjectDefinitionFromWizardInput,
+  toHarnessV1Input,
+  validateProjectDefinition,
+} from '@specdd/project-model';
 import { getAnalysisLevel } from './analysis.js';
 import {
   FINGERPRINT_ALGORITHM,
@@ -90,9 +96,11 @@ export function renderProjectValidation() {
 }
 
 export const SCAFFOLD_MANIFEST_PATH = 'context/scaffold-manifest.json';
+export const PROJECT_DEFINITION_PATH = 'context/project-definition.json';
 
 const isMutableFidelityPath = (path) => (
   path === 'context/project.md'
+  || path === PROJECT_DEFINITION_PATH
   || path === 'context/tech-stack.md'
   || path === 'context/constitution.md'
   || path === 'context/project-validation.json'
@@ -160,7 +168,14 @@ export function renderScaffoldManifest(input, generatedFiles, skipped = [], repl
 }
 
 export function generateFiles(baseFiles, input, today = new Date().toISOString().slice(0, 10)) {
-  const effectiveInput = withApprovedContext(input);
+  const reviewedInput = withApprovedContext(input);
+  const projectDefinition = createProjectDefinitionFromWizardInput(reviewedInput);
+  const definitionValidation = validateProjectDefinition(projectDefinition);
+  if (!definitionValidation.valid) {
+    const summary = definitionValidation.diagnostics.map((item) => `${item.code} ${item.path}`).join(', ');
+    throw new TypeError(`Cannot generate Harness v1 from invalid project definition: ${summary}`);
+  }
+  const effectiveInput = toHarnessV1Input(projectDefinition, createLegacyCompilationContext(reviewedInput));
   const tools = effectiveInput.tools || [];
   const hasCopilot = tools.includes('GitHub Copilot');
 
@@ -172,6 +187,7 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
   }
 
   out['context/project.md'] = renderProject(effectiveInput);
+  out[PROJECT_DEFINITION_PATH] = JSON.stringify(projectDefinition, null, 2);
   out['context/tech-stack.md'] = renderTechStack(effectiveInput);
   out['context/constitution.md'] = renderConstitution(effectiveInput);
   out['context/project-validation.json'] = renderProjectValidation();

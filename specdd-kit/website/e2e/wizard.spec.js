@@ -36,6 +36,7 @@ test('greenfield wizard walks all steps and downloads a harness scaffold ZIP', a
   await expect(page.getByTestId('preview')).toContainText('AGENTS.md');
   await expect(page.getByTestId('preview')).toContainText('.agents/skills/auth/SKILL.md');
   await expect(page.getByTestId('preview')).toContainText('.agents/specs/user.spec.yaml');
+  await expect(page.getByTestId('preview')).toContainText('context/project-definition.json');
   await expect(page.getByTestId('preview')).toContainText('context/project.md');
 
   // Boreal stepper: completed steps are marked done and are clickable
@@ -101,6 +102,7 @@ test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', a
 
   await expect(page.getByTestId('preview')).toContainText('.agents/workflows/spec-converge.md');
   await expect(page.getByTestId('preview')).toContainText('context/brownfield-analysis.md');
+  await expect(page.getByTestId('preview')).toContainText('context/project-definition.json');
   await expect(page.getByTestId('preview')).toContainText('.agents/skills/auth/SKILL.md');
   await expect(page.getByTestId('skipped-group')).toContainText('README.md');
 

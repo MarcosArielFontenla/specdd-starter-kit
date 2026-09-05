@@ -7,7 +7,7 @@ description: Launch the specforge-kit wizard (install deps, bundle skills, dev s
 
 Launch the **specforge-kit** wizard locally.
 
-1. Verify Node.js 20+ is installed (`node --version`).
+1. Verify Node.js 22.12+ is installed (`node --version`).
 2. From the repo root, install everything once: `npm install`.
 3. Bundle the skills: `npm run bundle-skills -w specforge-wizard`.
 4. Start the dev server: `npm run dev -w specforge-wizard`.

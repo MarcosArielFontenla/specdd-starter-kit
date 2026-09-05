@@ -1,0 +1,39 @@
+{
+  "name": "@specdd/run-history",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./store": {
+      "types": "./dist/store.d.ts",
+      "import": "./dist/store.js"
+    },
+    "./schema": "./schema/event.schema.json"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "scripts",
+    "examples"
+  ],
+  "scripts": {
+    "prebuild": "npm run build -w @specdd/control-plane-model && npm run build -w @specdd/eval-adapters",
+    "build": "tsc -p tsconfig.json",
+    "test:unit": "npm run build && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@specdd/project-model": "*",
+    "@specdd/control-plane-model": "*",
+    "@specdd/eval-adapters": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

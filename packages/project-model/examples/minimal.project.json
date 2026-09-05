@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDProject",
+  "metadata": {
+    "id": "sample-project",
+    "name": "Sample Project"
+  },
+  "project": {
+    "scenario": "greenfield",
+    "description": "",
+    "problem": "",
+    "personas": [],
+    "outcomes": { "user": "", "business": "" },
+    "constraints": { "business": "", "technical": "" },
+    "domains": [{ "id": "core", "name": "Core" }],
+    "entities": [],
+    "features": [],
+    "principles": [],
+    "security": { "classification": "unspecified", "owaspControls": [] },
+    "contextReview": { "required": false, "status": "not-required", "findings": [] }
+  },
+  "architecture": {
+    "patterns": [],
+    "stack": {
+      "languages": [],
+      "frontend": "",
+      "backend": "",
+      "testing": "",
+      "database": "",
+      "infrastructure": "",
+      "swagger": false,
+      "accessibility": false
+    },
+    "decisionRefs": []
+  },
+  "harness": {
+    "contractVersion": "1.0.0",
+    "sourceRoot": ".agents",
+    "primerPath": "AGENTS.md",
+    "tools": [],
+    "mcpServers": []
+  },
+  "capabilities": [],
+  "specs": [],
+  "workflows": [],
+  "evals": [],
+  "policies": [],
+  "telemetry": { "mode": "disabled", "eventTypes": [] },
+  "deployment": { "enabled": false },
+  "runtime": { "adapters": [] },
+  "provenance": { "source": "file" }
+}

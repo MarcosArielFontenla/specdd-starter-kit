@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDCapabilityPack",
+  "lifecycle": "active",
+  "metadata": {
+    "id": "role-qa",
+    "name": "Quality Analyst Capability",
+    "description": "Test design, validation, defect reporting and regression coverage.",
+    "version": "1.0.0"
+  },
+  "role": {
+    "id": "qa",
+    "title": "Quality Analyst",
+    "scope": "Test design, validation, defect reporting and regression coverage."
+  },
+  "skills": [{ "id": "role-qa", "path": ".agents/skills/role-qa/SKILL.md", "version": "0.1.0" }],
+  "playbooks": [{ "id": "test-case-generation", "path": ".agents/skills/role-qa/assets/test-case-generation.md", "skillRef": "role-qa" }],
+  "workflows": [{
+    "id": "specforge-testcases",
+    "path": ".agents/workflows/role-qa/specforge-testcases.md",
+    "triggers": ["testcases"],
+    "skillRefs": ["role-qa"],
+    "contextRefs": ["project-context", "project-constitution", "entity-specs"]
+  }],
+  "policies": [
+    { "id": "must-001", "effect": "require", "statement": "Derive test cases from acceptance criteria." },
+    { "id": "never-001", "effect": "forbid", "statement": "Fabricate test results or coverage claims." },
+    { "id": "verification", "effect": "verify", "statement": "Test suites map to specification acceptance checks." }
+  ],
+  "evals": [{ "id": "role-qa-adherence", "path": ".agents/evals/rubrics/role-qa.yaml", "mode": "log_only", "targetRefs": ["role-qa"] }],
+  "context": [
+    { "id": "project-context", "path": "context/project.md", "required": true },
+    { "id": "project-constitution", "path": "context/constitution.md", "required": true },
+    { "id": "entity-specs", "path": ".agents/specs", "required": false }
+  ],
+  "subagents": [{
+    "id": "role-qa",
+    "path": ".agents/subagents/role-qa.agent.md",
+    "status": "inactive",
+    "roleRef": "qa",
+    "skillRefs": ["role-qa"],
+    "workflowRefs": ["specforge-testcases"]
+  }],
+  "routing": [{ "id": "role-qa-work", "match": "Quality Analyst work", "priority": 100, "skillRef": "role-qa", "workflowRoot": ".agents/workflows/role-qa/" }],
+  "dependencies": [{ "id": "specdd-harness", "kind": "harness", "versionRange": "^1.0.0", "required": true }]
+}

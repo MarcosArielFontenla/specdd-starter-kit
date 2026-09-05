@@ -1,0 +1,37 @@
+{
+  "name": "@specdd/benchmarks",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema/plan": "./schema/plan.schema.json",
+    "./schema/dataset": "./schema/dataset.schema.json"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "scripts",
+    "examples"
+  ],
+  "scripts": {
+    "prebuild": "npm run build -w @specdd/run-history",
+    "build": "tsc -p tsconfig.json",
+    "test:unit": "npm run build && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@specdd/project-model": "*",
+    "@specdd/control-plane-model": "*",
+    "@specdd/eval-adapters": "*",
+    "@specdd/run-history": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

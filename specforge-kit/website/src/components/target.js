@@ -1,4 +1,4 @@
-// Target-project harness detection for Role Packs. Pure — runs on the RAW ingested
+// Target-project harness detection for Capability Packs. Pure — runs on the RAW ingested
 // path list (root prefix already stripped by the caller).
 
 const HARNESS_ROOT_FILES = new Set([

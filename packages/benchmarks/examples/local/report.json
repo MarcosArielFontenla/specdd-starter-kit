@@ -1,0 +1,294 @@
+{
+  "kind": "SpecDDBenchmarkReport",
+  "schemaVersion": "1.0.0",
+  "benchmarkRef": "local-score-conformance",
+  "planSha256": "b716a5f9306c49cb5a9bde6c6135fb629702e2337b315d6651613f1197bb80b8",
+  "datasetSha256": "063a22641546828b708cc3fce0666892de08b097b549630b245a5bb36b3b479d",
+  "scope": "eval-node",
+  "status": "complete",
+  "currency": null,
+  "groups": [
+    {
+      "configurationRef": "default",
+      "configurationSha256": "ae377dbfaddf1251e1670760f8ad5f513058e43763114765886b032c3db3f27f",
+      "configuration": {
+        "id": "default",
+        "graphRef": "manual-review-graph",
+        "nodeRef": "evaluate",
+        "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+        "runtime": "node-test",
+        "model": null,
+        "harnessRef": null,
+        "capabilityRefs": [],
+        "promptStrategyRef": null,
+        "environmentRef": "sha256:ff5a9186ff9ccc0d36a91806bdfdb63efe0ae5ab58b391a4417c6cf3daac0dab",
+        "executionRef": "sha256:9ed0a1281cc2b9a6d32d525dd4644d8311fcb97d90e07048f1190aa7cc28a360"
+      },
+      "complete": true,
+      "missingRepetitions": [],
+      "metrics": {
+        "score": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "passed": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "executionError": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "latencyMs": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 929.6666666666667,
+          "median": 899,
+          "min": 897,
+          "max": 993
+        },
+        "retries": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "cost": {
+          "expected": 3,
+          "observed": 0,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "max": null
+        }
+      },
+      "humanInterventions": null,
+      "defectRate": null
+    },
+    {
+      "configurationRef": "serial",
+      "configurationSha256": "b0d0419fa0fd04454a9974d4c2b10028fd53e153349f80d70a47309c4432b6aa",
+      "configuration": {
+        "id": "serial",
+        "graphRef": "manual-review-graph",
+        "nodeRef": "evaluate",
+        "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+        "runtime": "node-test",
+        "model": null,
+        "harnessRef": null,
+        "capabilityRefs": [],
+        "promptStrategyRef": null,
+        "environmentRef": "sha256:ff5a9186ff9ccc0d36a91806bdfdb63efe0ae5ab58b391a4417c6cf3daac0dab",
+        "executionRef": "sha256:88bf94f40591afb00e439de53202cf8383ab4175dd619cd662b2f6f20f4ce06b"
+      },
+      "complete": true,
+      "missingRepetitions": [],
+      "metrics": {
+        "score": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "passed": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "executionError": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "latencyMs": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 1648,
+          "median": 1654,
+          "min": 1503,
+          "max": 1787
+        },
+        "retries": {
+          "expected": 3,
+          "observed": 3,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "cost": {
+          "expected": 3,
+          "observed": 0,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "max": null
+        }
+      },
+      "humanInterventions": null,
+      "defectRate": null
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineRef": "default",
+      "candidateRef": "serial",
+      "changedDimensions": [
+        "executionRef"
+      ],
+      "metrics": {
+        "score": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "passed": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "executionError": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "latencyMs": {
+          "comparable": true,
+          "deltaMean": 718.3333333333333
+        },
+        "retries": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "cost": {
+          "comparable": false,
+          "deltaMean": null
+        }
+      }
+    }
+  ],
+  "samples": [
+    {
+      "configurationRef": "default",
+      "repetition": 1,
+      "runId": "local-default-1",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 897,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "0516de6f235e6ac7267bd226e9b1559d58f80e2d5fa2ba88e1e9ab90665f3183"
+    },
+    {
+      "configurationRef": "default",
+      "repetition": 2,
+      "runId": "local-default-2",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 899,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "4944d4afefdfa20a79f70148ab5322e36c8bfb734b926d375f549562ae90a32b"
+    },
+    {
+      "configurationRef": "default",
+      "repetition": 3,
+      "runId": "local-default-3",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 993,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "07d84a8a815977239e7d5335aaaeeae808551bab07f224c1906afa2da0794687"
+    },
+    {
+      "configurationRef": "serial",
+      "repetition": 1,
+      "runId": "local-serial-1",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 1654,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "bc019b70d5cdd8a7581fe0761ff316d44229104b56cacdc594ccc584a1b59591"
+    },
+    {
+      "configurationRef": "serial",
+      "repetition": 2,
+      "runId": "local-serial-2",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 1503,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "d03737100d14a6c118b951eae10f93dce68491aa8c5d85efecf1564b24ee2a60"
+    },
+    {
+      "configurationRef": "serial",
+      "repetition": 3,
+      "runId": "local-serial-3",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 1787,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "a35277a4c47d73281df092430793069b74d76043b432e43fd69f69d0c27825f7"
+    }
+  ],
+  "limits": [
+    "Descriptive observations, not statistical significance or proof of model superiority",
+    "Quality means this canonical eval only; latency covers its node slice, not the whole workflow",
+    "Null metrics are unknown; error scores are not imputed and remain in the pass-rate denominator",
+    "Prompt/execution/environment identity is caller-attested; hashes do not authenticate runtime execution",
+    "Human interventions and defect rate are not measured in eval-node scope"
+  ]
+}

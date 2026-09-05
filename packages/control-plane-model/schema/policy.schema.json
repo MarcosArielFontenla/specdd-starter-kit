@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/control-plane/1.0.0/policy.schema.json",
+  "title": "SpecDD Control Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "category", "effect", "subjectRefs", "action", "resource", "enforcement"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "category": { "enum": ["permission", "risk", "transition"] },
+    "effect": { "enum": ["allow", "deny", "require"] },
+    "subjectRefs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "action": { "$ref": "#/$defs/nonEmptyString" },
+    "resource": { "$ref": "#/$defs/nonEmptyString" },
+    "enforcement": { "enum": ["instruction", "validator", "runtime", "human"] },
+    "condition": { "$ref": "#/$defs/nonEmptyString" },
+    "extensions": { "$ref": "#/$defs/extensions" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$" },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "extensions": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9.-]*/[a-z0-9][a-z0-9._-]*$" },
+      "additionalProperties": true
+    }
+  }
+}
+

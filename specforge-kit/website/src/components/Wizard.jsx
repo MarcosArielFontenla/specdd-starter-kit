@@ -89,9 +89,10 @@ export default function Wizard() {
         <div className="b-main__body">
           {stepName === 'Welcome' && (
             <p className="b-lead">
-              Build a Role Pack for your SpecDD Harness project: per-role skills,
-              playbooks, workflows and subagent seeds for BA, QA, Dev and UX. Click
-              Next to start.
+              Build composable Capability Packs for your SpecDD Harness project:
+              one validated manifest per BA, QA, Dev or UX role, with compatible
+              skills, playbooks, workflows and inactive subagent seeds. Click Next
+              to start.
             </p>
           )}
 

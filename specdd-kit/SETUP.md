@@ -5,7 +5,7 @@ This guide walks a new project through adopting `specdd-kit`, in order:
 
 ## 1. Prerequisites
 
-- **Node.js 20+** (Node 22 recommended) to run the wizard locally.
+- **Node.js 22.12+** to run the wizard locally.
 - **VS Code** with the **GitHub Copilot** and **GitHub Copilot Chat** extensions
   (for `.github/copilot-instructions.md`, `.github/instructions/*`, and
   `.github/prompts/*` to be picked up automatically). Other agents — Claude Code,

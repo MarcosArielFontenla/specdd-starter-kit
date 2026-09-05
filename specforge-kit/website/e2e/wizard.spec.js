@@ -24,6 +24,8 @@ test('standalone multi-role pack: roles gate, conditional options, ZIP download'
   await page.getByTestId('next-btn').click(); // -> Preview
 
   await expect(page.getByTestId('preview')).toContainText('.agents/skills/role-qa/SKILL.md');
+  await expect(page.getByTestId('preview')).toContainText('.agents/capabilities/role-qa/capability.json');
+  await expect(page.getByTestId('preview')).toContainText('.agents/capabilities/role-dev/capability.json');
   await expect(page.getByTestId('preview')).toContainText('.agents/workflows/role-qa/specforge-playwright.md');
   await expect(page.getByTestId('preview')).toContainText('.agents/specs/tasks/role-pack-install.tasks.md');
   await expect(page.getByTestId('preview')).toContainText('.github/prompts/specforge-implement.prompt.md');

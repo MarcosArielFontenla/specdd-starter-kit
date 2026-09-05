@@ -1,0 +1,28 @@
+{
+  "node": "v24.16.0",
+  "platform": "win32",
+  "arch": "x64",
+  "cpus": 16,
+  "profiles": [
+    {
+      "id": "default",
+      "flags": [],
+      "executionRef": "sha256:9ed0a1281cc2b9a6d32d525dd4644d8311fcb97d90e07048f1190aa7cc28a360"
+    },
+    {
+      "id": "serial",
+      "flags": [
+        "--test-concurrency=1"
+      ],
+      "executionRef": "sha256:88bf94f40591afb00e439de53202cf8383ab4175dd619cd662b2f6f20f4ce06b"
+    }
+  ],
+  "taskFiles": [
+    "score.test.mjs",
+    "invalid.test.mjs",
+    "@specdd/eval-adapters implementation"
+  ],
+  "warmup": "none",
+  "order": "alternating per repetition",
+  "limits": "Inherited environment and system load not fully captured"
+}

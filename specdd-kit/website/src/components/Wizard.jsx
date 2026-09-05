@@ -84,7 +84,9 @@ export default function Wizard() {
   function approveContext(contextReview) { setData((d) => applyReviewedContext(d, contextReview)); }
 
   const last = step === steps.length - 1;
-  const needsScaffold = last || stepName === 'Ingest & Analyze';
+  // Brownfield has no valid project definition until folder analysis produces
+  // project/domain evidence. Collision counts become available immediately after that.
+  const needsScaffold = last || (stepName === 'Ingest & Analyze' && Boolean(data.analysis));
   const { files, skipped, replaced } = needsScaffold ? generateScaffold(kitFiles, data) : { files: {}, skipped: [], replaced: [] };
 
   async function download() {

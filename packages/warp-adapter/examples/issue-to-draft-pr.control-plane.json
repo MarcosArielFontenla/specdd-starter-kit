@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDControlPlane",
+  "lifecycle": "active",
+  "metadata": {
+    "id": "issue-to-draft-pr-control",
+    "name": "Issue to Draft PR Control",
+    "description": "Canonical human-gated issue, specification, implementation, review, eval, and draft-PR workflow.",
+    "version": "1.0.0"
+  },
+  "project": {
+    "id": "specdd-starter-kit",
+    "source": "context/project-definition.json",
+    "version": "1.0.0"
+  },
+  "harnesses": [{
+    "id": "project-harness",
+    "source": ".agents/REGISTRY.md",
+    "contractVersion": "1.0.0",
+    "enabled": true
+  }],
+  "capabilityBindings": [
+    { "id": "business-analysis", "source": ".agents/capabilities/role-ba/capability.json", "version": "1.0.0", "enabled": true },
+    { "id": "development", "source": ".agents/capabilities/role-dev/capability.json", "version": "1.0.0", "enabled": true },
+    { "id": "quality-review", "source": ".agents/capabilities/role-qa/capability.json", "version": "1.0.0", "enabled": true }
+  ],
+  "agentRoles": [
+    {
+      "id": "planner",
+      "title": "Planner",
+      "purpose": "Turn the accepted issue into a traceable specification artifact.",
+      "harnessRef": "project-harness",
+      "capabilityBindingRefs": ["business-analysis"],
+      "policyRefs": ["spec-before-code"]
+    },
+    {
+      "id": "developer",
+      "title": "Developer",
+      "purpose": "Implement only the human-approved specification on the work branch.",
+      "harnessRef": "project-harness",
+      "capabilityBindingRefs": ["development"],
+      "policyRefs": ["spec-before-code", "no-merge", "no-production-write"],
+      "runtimeHintRef": "remote-isolated-work"
+    },
+    {
+      "id": "reviewer",
+      "title": "Reviewer",
+      "purpose": "Review the implementation independently and record actionable evidence.",
+      "harnessRef": "project-harness",
+      "capabilityBindingRefs": ["quality-review"],
+      "policyRefs": ["no-merge"]
+    }
+  ],
+  "workflows": [{
+    "id": "issue-to-draft-pr",
+    "name": "Issue to Draft PR",
+    "purpose": "Prepare a reviewed draft pull request record without merge or deployment.",
+    "graphRef": "issue-to-draft-pr-graph",
+    "triggers": [{ "kind": "event", "event": "issue.created" }],
+    "inputArtifactRefs": ["github-issue"],
+    "outputArtifactRefs": ["draft-pr-record"],
+    "policyRefs": ["spec-before-code", "human-spec-approval", "no-merge"]
+  }],
+  "graphs": [{
+    "id": "issue-to-draft-pr-graph",
+    "name": "Issue to Draft PR Graph",
+    "description": "Plan, approve, implement, review, evaluate, and prepare a draft PR record.",
+    "entryNodeId": "plan-specification",
+    "terminalNodeIds": ["prepare-draft-pr-record"],
+    "nodes": [
+      {
+        "id": "plan-specification",
+        "name": "Plan specification",
+        "kind": "agent",
+        "agentRoleRef": "planner",
+        "inputArtifactRefs": ["github-issue"],
+        "outputArtifactRefs": ["specification"],
+        "policyRefs": ["spec-before-code"]
+      },
+      {
+        "id": "approve-specification",
+        "name": "Approve specification",
+        "kind": "approval",
+        "approvalRef": "specification-approval",
+        "inputArtifactRefs": ["specification"],
+        "outputArtifactRefs": [],
+        "policyRefs": ["human-spec-approval"]
+      },
+      {
+        "id": "implement-specification",
+        "name": "Implement specification",
+        "kind": "agent",
+        "agentRoleRef": "developer",
+        "inputArtifactRefs": ["specification"],
+        "outputArtifactRefs": ["implementation"],
+        "policyRefs": ["no-merge", "no-production-write"],
+        "retryRef": "bounded-implementation-retry",
+        "failureRouteRef": "stop-on-implementation-failure",
+        "runtimeHintRef": "remote-isolated-work"
+      },
+      {
+        "id": "review-implementation",
+        "name": "Review implementation",
+        "kind": "agent",
+        "agentRoleRef": "reviewer",
+        "inputArtifactRefs": ["implementation"],
+        "outputArtifactRefs": ["review-evidence"],
+        "policyRefs": ["no-merge"]
+      },
+      {
+        "id": "run-canonical-eval",
+        "name": "Run canonical eval",
+        "kind": "eval",
+        "evalGateRef": "implementation-quality-gate",
+        "inputArtifactRefs": ["implementation", "review-evidence"],
+        "outputArtifactRefs": ["eval-evidence"],
+        "policyRefs": [],
+        "failureRouteRef": "stop-on-eval-failure"
+      },
+      {
+        "id": "prepare-draft-pr-record",
+        "name": "Prepare draft PR record",
+        "kind": "artifact",
+        "artifactContractRef": "draft-pr-record",
+        "inputArtifactRefs": ["implementation", "review-evidence", "eval-evidence"],
+        "outputArtifactRefs": ["draft-pr-record"],
+        "policyRefs": ["no-merge"]
+      }
+    ],
+    "edges": [
+      { "id": "specification-planned", "from": "plan-specification", "to": "approve-specification", "on": "success" },
+      { "id": "specification-approved", "from": "approve-specification", "to": "implement-specification", "on": "approved" },
+      { "id": "implementation-complete", "from": "implement-specification", "to": "review-implementation", "on": "success" },
+      { "id": "review-complete", "from": "review-implementation", "to": "run-canonical-eval", "on": "success" },
+      { "id": "eval-passed", "from": "run-canonical-eval", "to": "prepare-draft-pr-record", "on": "pass" }
+    ]
+  }],
+  "approvals": [{
+    "id": "specification-approval",
+    "name": "Specification approval",
+    "mode": "human",
+    "required": true,
+    "instructions": "Confirm scope, acceptance conditions, and architecture impact before implementation.",
+    "artifactRefs": ["specification"]
+  }],
+  "policies": [
+    { "id": "spec-before-code", "category": "transition", "effect": "require", "subjectRefs": ["issue-to-draft-pr", "developer"], "action": "implement", "resource": "approved specification", "enforcement": "validator" },
+    { "id": "human-spec-approval", "category": "transition", "effect": "require", "subjectRefs": ["issue-to-draft-pr"], "action": "approve", "resource": "specification", "enforcement": "human" },
+    { "id": "no-merge", "category": "permission", "effect": "deny", "subjectRefs": ["issue-to-draft-pr", "developer", "reviewer"], "action": "merge", "resource": "pull request", "enforcement": "runtime" },
+    { "id": "no-production-write", "category": "permission", "effect": "deny", "subjectRefs": ["developer"], "action": "write", "resource": "production environment", "enforcement": "runtime" }
+  ],
+  "failureRoutes": [
+    { "id": "stop-on-implementation-failure", "graphRef": "issue-to-draft-pr-graph", "strategy": "stop", "reason": "Implementation failed after bounded attempts." },
+    { "id": "stop-on-eval-failure", "graphRef": "issue-to-draft-pr-graph", "strategy": "stop", "reason": "Canonical eval did not produce passing evidence." }
+  ],
+  "retries": [{
+    "id": "bounded-implementation-retry",
+    "maxAttempts": 2,
+    "backoff": { "strategy": "fixed", "initialDelaySeconds": 1, "maxDelaySeconds": 1 }
+  }],
+  "evalGates": [{
+    "id": "implementation-quality-gate",
+    "evalRef": "implementation-quality",
+    "mode": "required",
+    "requiredOutcome": "pass"
+  }],
+  "artifactContracts": [
+    { "id": "github-issue", "name": "GitHub issue", "kind": "input", "path": "artifacts/github-issue.json", "required": true },
+    { "id": "specification", "name": "Feature specification", "kind": "output", "path": "specs/features/issue-spec.md", "required": true },
+    { "id": "implementation", "name": "Implementation diff", "kind": "output", "path": "artifacts/implementation.diff", "required": true },
+    { "id": "review-evidence", "name": "Review evidence", "kind": "evidence", "path": "artifacts/review.json", "required": true },
+    { "id": "eval-evidence", "name": "Canonical eval evidence", "kind": "evidence", "path": "artifacts/eval.json", "required": true },
+    { "id": "draft-pr-record", "name": "Draft pull request record", "kind": "output", "path": "artifacts/draft-pr.json", "required": true }
+  ],
+  "runtimeHints": [{
+    "id": "remote-isolated-work",
+    "execution": "remote",
+    "isolation": "container",
+    "network": "restricted",
+    "interactive": false
+  }]
+}
+

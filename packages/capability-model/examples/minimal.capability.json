@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecDDCapabilityPack",
+  "lifecycle": "draft",
+  "metadata": {
+    "id": "role-reviewer",
+    "name": "Reviewer Capability",
+    "description": "Review specified work without modifying it.",
+    "version": "1.0.0"
+  },
+  "role": {
+    "id": "reviewer",
+    "title": "Reviewer",
+    "scope": "Review specifications and changes."
+  },
+  "skills": [{ "id": "role-reviewer", "path": ".agents/skills/role-reviewer/SKILL.md", "version": "0.1.0" }],
+  "playbooks": [],
+  "workflows": [],
+  "policies": [{ "id": "verification", "effect": "verify", "statement": "Record findings with evidence." }],
+  "evals": [{ "id": "reviewer-adherence", "path": ".agents/evals/rubrics/role-reviewer.yaml", "mode": "log_only", "targetRefs": ["role-reviewer"] }],
+  "context": [{ "id": "project-context", "path": "context/project.md", "required": true }],
+  "subagents": [],
+  "routing": [{ "id": "reviewer-work", "match": "Reviewer work", "priority": 100, "skillRef": "role-reviewer", "workflowRoot": ".agents/workflows/role-reviewer/" }],
+  "dependencies": [{ "id": "specdd-harness", "kind": "harness", "versionRange": "^1.0.0", "required": true }]
+}
