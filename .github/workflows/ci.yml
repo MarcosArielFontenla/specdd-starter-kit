@@ -18,6 +18,9 @@ jobs:
           node-version: '22'
       - run: npm ci
       - run: npm run test:unit -w @specdd/improvement-proposals
+      - run: node node_modules/typescript/bin/tsc -p packages/improvement-proposals/pilot/tsconfig.json
+      - run: node packages/improvement-proposals/pilot/verify.mjs
+      - run: node --test packages/improvement-proposals/pilot/candidate-regression.test.mjs
 
   benchmarks:
     runs-on: ubuntu-latest

@@ -1,6 +1,6 @@
 import { structuralValidator } from '@specdd/project-model';
 import { compareBenchmark, fingerprint, type BenchmarkPlan, type Dataset } from '@specdd/benchmarks';
-import schema from '../schema/proposal.schema.json' with { type: 'json' };
+import schema from '../../schema/proposal.schema.json' with { type: 'json' };
 
 type Metric = 'score' | 'passed' | 'executionError' | 'latencyMs' | 'retries' | 'cost';
 export interface Proposal {

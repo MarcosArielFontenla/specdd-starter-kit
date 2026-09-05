@@ -1,0 +1,65 @@
+{
+  "kind": "SpecDDBenchmark",
+  "schemaVersion": "1.0.0",
+  "id": "proposal-summary-reuse",
+  "version": "1.0.0",
+  "scope": "eval-node",
+  "task": {
+    "id": "assessment-equivalence-batch",
+    "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+    "sha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d"
+  },
+  "workflowRef": "manual-review",
+  "repetitions": 5,
+  "baselineRef": "baseline",
+  "eval": {
+    "kind": "SpecDDEval",
+    "schemaVersion": "1.0.0",
+    "id": "score-conformance",
+    "version": "1.0.0",
+    "name": "Pinned score fixture conformance",
+    "method": "mechanical",
+    "rubric": "Run 30 assessments and require exact baseline output and input preservation. Exit zero passes; nonzero fails. Latency includes process startup.",
+    "labels": [
+      {
+        "id": "passed",
+        "description": "Assessment equivalence batch passed",
+        "score": 1
+      },
+      {
+        "id": "failed",
+        "description": "Assessment equivalence batch failed",
+        "score": 0
+      }
+    ],
+    "passingScore": 1
+  },
+  "configurations": [
+    {
+      "id": "baseline",
+      "graphRef": "manual-review-graph",
+      "nodeRef": "evaluate",
+      "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+      "runtime": "node-test",
+      "model": null,
+      "harnessRef": null,
+      "capabilityRefs": [],
+      "promptStrategyRef": null,
+      "environmentRef": "sha256:ff5a9186ff9ccc0d36a91806bdfdb63efe0ae5ab58b391a4417c6cf3daac0dab",
+      "executionRef": "sha256:22450a116c8f13794c738dede27dbe66c2c938d3de914bddd16639515b179f78"
+    },
+    {
+      "id": "candidate",
+      "graphRef": "manual-review-graph",
+      "nodeRef": "evaluate",
+      "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+      "runtime": "node-test",
+      "model": null,
+      "harnessRef": null,
+      "capabilityRefs": [],
+      "promptStrategyRef": null,
+      "environmentRef": "sha256:ff5a9186ff9ccc0d36a91806bdfdb63efe0ae5ab58b391a4417c6cf3daac0dab",
+      "executionRef": "sha256:8058f6d8f3afa9a947891becfc26ba3dfa7251d4251e0624a1049f3907d22203"
+    }
+  ]
+}
