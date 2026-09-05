@@ -1,7 +1,7 @@
 # Phase 9 pilot-001 — review package
 
-Status: **approved**, prepared in local production source; not committed, published,
-merged or adopted through a remote PR.
+Status: **pr-recorded**. Published as [draft PR #3](https://github.com/MarcosArielFontenla/specdd-starter-kit/pull/3)
+on `codex/phase9-proposal-pilot`, against main. Not merged, deployed or adopted.
 
 The initial experiment authorization was separate from the subsequent explicit
 user message, "si aprobada la propuesta". The latter is recorded as approval of
@@ -59,7 +59,7 @@ node packages/improvement-proposals/pilot/verify.mjs
 node --test packages/improvement-proposals/pilot/candidate-regression.test.mjs
 ```
 
-Expected: `eligibleForReview: true`, state `approved`, 27 tests passing.
+Expected: `eligibleForReview: true`, state `pr-recorded`, 27 tests passing.
 Verification now checks production source/build equality with the approved measured
 candidate. The old preimage was verified before editing. `pr-handoff.json` was
 prepared at that point and is historical metadata: its `applied: false` field
@@ -73,10 +73,13 @@ does not inherit this proposal's review automatically.
 
 ## Human decision / remaining work
 
-`reuse-validated-source-report` is approved and prepared locally. Publication still
-requires separate authorization and a clean, appropriately based PR. This repo
+The user separately authorized the ordered PR publication workflow. GitHub CLI
+verified PR #3 is OPEN and draft, with no merged timestamp. Initial head:
+`7f9ceddbbdd9db6b4acd2282e4b5c4b64f753be1`. The journal records that observation.
+The evidence and approval hashes are unchanged. This repo
 now has its infrastructure base published to `main` at
 `4fb6f0b908a7354c713131e68d4287e4b2f301b7` (2026-09-05). The pilot was deliberately
-excluded and remains local. Use that base for the separately authorized pilot PR;
-do not include unrelated changes. The approval and original evidence remain intact.
-No existing PR was changed. No merge/deployment is included. Phase 10 remains gated.
+excluded from that consolidation and is now in its own authorized PR.
+Base CI succeeded; PR CI independently validates the pilot, including the journal
+and compiled-candidate equivalence. No changes to PR #2, merge or deployment.
+Phase 9 closes at the reviewed draft-PR boundary after CI verification, not adoption.

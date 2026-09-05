@@ -1,7 +1,7 @@
 # Estado de implementación — SpecDD Harness
 
-**Actualizado:** 2026-09-04
-**Estado:** Harness Fases 1–6 implementadas; Control Plane Phases 1–4 remediadas, Phase 5 validada mediante piloto documental humano-asistido y Phases 6–8 implementadas con aceptación local. Warp sigue opcional y sin ejecución alojada. Phase 9 implementada con aceptación local; piloto aprobado por el usuario y preparado localmente; publicación del PR pendiente antes de Phase 10. Evidencia y límites: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md). Los 8 hallazgos de dependencias fueron corregidos: npm audit continúa en 0, con regresiones aprobadas. Evidencia: [remediación de seguridad](control-plane/audits/2026-09-04-dependency-security.md). Workspace: Node 22.12+.
+**Actualizado:** 2026-09-05
+**Estado:** Harness Fases 1–6 implementadas; Control Plane Phases 1–4 remediadas, Phase 5 validada mediante piloto documental humano-asistido y Phases 6–8 implementadas con aceptación local. Warp sigue opcional y sin ejecución alojada. Phase 9 implementada con aceptación local; piloto aprobado y publicado en PR #3 draft; cierre hasta PR, sin merge ni deployment. Evidencia y límites: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md). Los 8 hallazgos de dependencias fueron corregidos: npm audit continúa en 0, con regresiones aprobadas. Evidencia: [remediación de seguridad](control-plane/audits/2026-09-04-dependency-security.md). Workspace: Node 22.12+.
 
 Este documento deja asentado qué está implementado y cuál es el siguiente incremento
 del proyecto para poder retomarlo en una sesión futura sin perder contexto.
@@ -289,10 +289,9 @@ universal ni una comprensión 100% automática del proyecto.
 
 ## Regla de continuidad
 
-Phase 9 está implementada con aceptación local: propuestas ligadas a evidencia,
-análisis de fallos observados, revisión humana declarada y preparación controlada
-de PR. Falta validar una propuesta útil mediante revisión humana específica y PR
-autorizado antes de liberar Phase 10. No se inventaron aprobaciones ni PRs.
+Phase 9 alcanzó el cierre práctico hasta PR: propuesta aprobada, evidencia medida,
+publicación autorizada y PR #3 abierto en borrador. Verificar sus checks finales
+antes de comenzar la especificación de Phase 10. No se hizo merge ni deployment.
 Evidencia: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md).
 Phase 8 aporta `@specdd/benchmarks`: planes/datasets fijados, cobertura de métricas y
 comparaciones descriptivas de slices de eval. Sus seis observaciones locales validan

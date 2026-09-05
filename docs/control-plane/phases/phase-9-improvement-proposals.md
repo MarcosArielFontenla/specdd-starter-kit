@@ -1,17 +1,20 @@
 # Phase 9 — Improvement proposals
 
-Status: implementation complete with local acceptance; live human-review/PR pilot
-pending. Phase 10 is not automatically released by this evidence.
+Status: complete to the human-reviewed draft-PR boundary. Live pilot is published
+as [PR #3](https://github.com/MarcosArielFontenla/specdd-starter-kit/pull/3), not merged
+or deployed. Final PR CI must be verified independently of the successful base CI.
 
 Follow-up 2026-09-05: [pilot-001 review package](../../../packages/improvement-proposals/pilot/README.md)
 now contains a real isolated candidate and ten passing benchmark runs. Observed
 batch latency improved by 41.6 ms (about 4.62%); 27 candidate regressions passed.
 Evidence qualified for review. The user subsequently approved the specific proposal;
-journal state is now `approved`, and the exact measured candidate is prepared in
-local production source. Package build, 27 proposal tests, 21 benchmark tests and
-approval/evidence replay passed. No commit, PR publication, merge or deployment
-has occurred for the pilot. Infrastructure base `4fb6f0b908a7354c713131e68d4287e4b2f301b7`
-was published separately to main; pilot PR publication authorization remains pending.
+journal state is now `pr-recorded`. Package build, 27 proposal tests, 27 isolated
+candidate regressions, 21 benchmark tests and approval/evidence replay passed.
+The user explicitly authorized publication after approving the exact proposal.
+GitHub CLI verified PR #3 is OPEN and draft against infrastructure base
+`4fb6f0b908a7354c713131e68d4287e4b2f301b7`; initial pilot commit is
+`7f9ceddbbdd9db6b4acd2282e4b5c4b64f753be1`. CI now includes pilot replay and compiled
+candidate equality. No merge, deployment or adoption receipt is claimed.
 
 ## Entry and delivery
 
@@ -66,11 +69,9 @@ Existing React/Vite deprecation and chunk-size warnings remain non-blocking.
 
 ## Exit gate, deferred work and risks
 
-Local infrastructure acceptance is satisfied. A live positive proposal → human
-review → PR cycle is **not yet complete**: pilot-001 has relevant measured evidence,
-explicit human approval and a locally prepared change; remote PR creation remains
-pending. Before Phase 10, agree the PR base/scope and explicitly authorize its
-publication without including unrelated pre-existing work. The
+Local infrastructure acceptance and the real proposal → human review → draft PR
+cycle are satisfied. Verify the final PR checks before starting Phase 10. This
+does not authorize merging the pilot or deploying anything. The
 current serial-profile example is not eligible for adoption and should not be
 approved just to pass a phase gate.
 
