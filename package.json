@@ -15,6 +15,7 @@
     "packages/run-history",
     "packages/benchmarks",
     "packages/improvement-proposals",
+    "packages/delivery-model",
     "platform",
     "specdd-kit/website",
     "specforge-kit/website",

@@ -5,10 +5,21 @@ on:
     branches: [main]
     paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'scripts/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
   pull_request:
-    branches: [main]
+    # Phase 10 is reviewed as a stacked PR until the separate Phase 9 PR is merged.
+    branches: [main, 'codex/phase9-proposal-pilot']
     paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'scripts/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
 
 jobs:
+  delivery-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/delivery-model
+
   improvement-proposals:
     runs-on: ubuntu-latest
     steps:

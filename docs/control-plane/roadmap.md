@@ -18,15 +18,30 @@ This tracker is subordinate to `SpecDD Platform Evolution — Agentic Control Pl
 | 7 — Run history and observability | Complete — structured artifacts and local acceptance | Stable graph, run and eval identities | [Phase 7 evidence](phases/phase-7-run-history.md): versioned events, explicit partial coverage, graph-bound eval imports, immutable JSONL history, 26 tests and a real observed eval slice |
 | 8 — Benchmarking | Complete — eval-node scope and local acceptance | Phase 7 events and pinned task/eval/configuration identities | [Phase 8 evidence](phases/phase-8-benchmarking.md): strict plans/datasets, explicit metric coverage, deterministic report, 21 tests and six real local runs; unmeasured costs/interventions/defects stay null |
 | 9 — Improvement proposals | Complete — human-reviewed draft PR #3; no adoption | Canonical benchmark and run-history evidence available | [Phase 9 evidence](phases/phase-9-improvement-proposals.md): qualified pilot, explicit human approval, exact candidate applied locally, 27 proposal and 21 benchmark tests; no silent Harness mutation |
-| 10 — SpecDeploy integration | Ready for specification after final PR checks | Controlled development loop proven | Delivery graph integration while SpecDeploy retains delivery knowledge |
+| 10 — SpecDeploy integration | Complete — explicit bounded local acceptance | Phase 9 final PR CI succeeded | [Acceptance decision](phases/phase-10-acceptance.md), [A1](phases/phase-10-delivery-contracts.md), [A2](phases/phase-10-wizard-export.md), [B1](phases/phase-10-local-rehearsal.md), [B2](phases/phase-10-local-promotion.md): actual approved local promotion/post-deploy; cloud adapters explicitly deferred, not implemented or validated |
 
 ## Current gate
+
+Phases 0–10 have scoped acceptance. The current task is the
+[cross-phase closure audit and regression](audits/2026-09-05-evolution-closure.md),
+with the [unified practical guide](../GUIA_DE_USO.md) now available; publication and
+integration remain separately authorized steps.
+Project/company-specific SpecDeploy execution remains future work, not a condition
+for this local architectural closure. Existing contracts/fixtures remain preserved.
 
 Phase 9 reached its real human-reviewed draft-PR boundary with
 [PR #3](https://github.com/MarcosArielFontenla/specdd-starter-kit/pull/3).
 The user approved the exact proposal and separately authorized publication.
 The hash-linked journal records the verified OPEN/draft PR; no merge or adoption.
-Base CI succeeded. Verify the final PR checks before beginning Phase 10 specification.
+Base and final PR CI succeeded (run `33965393351`, head `debc4447a944796bd2c7a5990912a0a5dd3f20fb`).
+Phase 10 A1 contracts/graph generation and A2 opt-in SpecDeploy export are implemented
+on a separate local branch. B1 adds bounded local staging and smoke to an approval
+pause. B2 consumed the user's specific approval and successfully promoted those
+same bytes to the second local slot, with real HTTP post-deploy verification.
+Gate C is now satisfied by the user's explicit [local scope acceptance](phases/phase-10-acceptance.md).
+Phase 10 is closed with that bounded scope. Cloud adapters and real delivery remain
+future work, not validated capabilities. Publication/hosted CI and any real deployment
+require separate follow-up; this acceptance does not authorize them.
 The pilot remains on its separate branch; main retains the consolidated baseline.
 Phase 8 has accepted
 [scoped benchmark evidence](phases/phase-8-benchmarking.md): two local Node profiles,

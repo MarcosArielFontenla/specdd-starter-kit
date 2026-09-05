@@ -3,6 +3,10 @@
 Phase 9 local control-plane infrastructure. Node 22.12+, vendor-neutral, no Warp
 account or external service required. **Observer → Proposal**, never direct mutation.
 
+Two distinct examples are retained: the retrospective serial-profile example below
+does not qualify for approval; the [reviewed Phase 9 pilot](pilot/README.md) qualified
+and reached draft PR #3. Neither example claims a merged/adopted improvement.
+
 ## Reproduce the real evidence assessment
 
 From the repository root after `npm ci`:

@@ -1,0 +1,8 @@
+{
+  "name": "@specdd/delivery-model", "version": "1.0.0", "private": true,
+  "type": "module", "engines": { "node": ">=22.12.0" },
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }, "./node": { "types": "./dist/node.d.ts", "import": "./dist/node.js" }, "./schema": "./schema/definition.schema.json", "./schema/receipt": "./schema/receipt.schema.json" },
+  "scripts": { "prebuild": "npm run build -w @specdd/run-history", "build": "tsc -p tsconfig.json", "test:unit": "npm run build && node --test test/*.test.mjs", "rehearse": "node scripts/rehearse.mjs" },
+  "dependencies": { "@specdd/project-model": "*", "@specdd/control-plane-model": "*", "@specdd/eval-adapters": "*", "@specdd/run-history": "*" },
+  "devDependencies": { "typescript": "^5.9.3", "@types/node": "^22.0.0" }
+}

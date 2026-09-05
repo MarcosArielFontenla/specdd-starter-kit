@@ -7,6 +7,10 @@ in the browser and downloads as a ZIP.
 
 > Specifications are the source of truth. Code is the output.
 
+**Start here:** [Guía única de uso de SpecDD Platform](docs/GUIA_DE_USO.md)
+— recorrido práctico en español, carpetas correctas, revisión humana, comandos y
+límites reales de SpecDD, SpecForge, SpecControl, evals, historial y propuestas.
+
 The centerpiece is the **SpecDD wizard**: it generates a scaffold structured around
 the **SpecDD Harness**, a vendor-neutral agent architecture that any AI coding tool
 (GitHub Copilot, Claude Code, Cursor, Codex, Gemini) consumes through the same core.
@@ -202,6 +206,7 @@ npm workspaces monorepo (Node ≥ 22.12):
 | [`packages/run-history`](packages/run-history/) | `@specdd/run-history` — vendor-neutral run events, explicit coverage gaps, graph-bound eval imports, immutable local JSONL history and read-only inspection. |
 | [`packages/benchmarks`](packages/benchmarks/) | `@specdd/benchmarks` — pinned evaluation-node comparison plans, reproducible datasets, explicit metric coverage and descriptive baseline deltas; no automatic winner or Harness mutation. |
 | [`packages/improvement-proposals`](packages/improvement-proposals/) | `@specdd/improvement-proposals` — evidence-bound proposals, failure observations, human-attested review journals and guarded draft PR handoffs; no automatic Harness mutation. |
+| [`packages/delivery-model`](packages/delivery-model/) | `@specdd/delivery-model` — Phase 10 contracts, draft graph and fixed local delivery rehearsal with exact human approval, promotion and HTTP verification; no cloud deployment or pipeline activation. |
 
 **How generation works:** a build-time bundle script snapshots each kit's real files
 into `website/src/data/*.json`. SpecDD first normalizes approved answers into

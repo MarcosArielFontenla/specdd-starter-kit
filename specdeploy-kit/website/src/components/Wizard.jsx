@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import providers from '../data/providers.json';
-import { generateFiles, slugify } from './generators.js';
+import { generateFilesWithDelivery, slugify } from './generators.js';
+import { deliveryInputError } from './delivery-export.js';
 import Stepper from '@specdd/ui/stepper';
 import { ChevronLeft, ChevronRight, Download, Copy, TriangleAlert } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const initial = {
   envs: 'prod',
   approvalGate: false,
   ack: false,
+  delivery: { enabled: false, projectId: '', repositoryRef: '', sourceRevision: '', stagingDestinationRef: '', productionDestinationRef: '' },
 };
 const pad2 = (n) => String(n).padStart(2, '0');
 
@@ -37,6 +39,7 @@ export default function Wizard() {
   const [error, setError] = useState('');
   const [previewPath, setPreviewPath] = useState('specdeploy.json');
   const [ready, setReady] = useState(false);
+  const [generation, setGeneration] = useState({ input: null, files: {}, error: '' });
   useEffect(() => { setReady(true); }, []);
 
   const set = (patch) => setData((d) => ({ ...d, ...patch }));
@@ -72,6 +75,7 @@ export default function Wizard() {
       for (const f of provider?.fields || []) { const e = fieldError(f); if (e) return e; }
     }
     if (i === 3 && data.ci.length === 0) return 'Pick at least one CI/CD system.';
+    if (i === 3 && deliveryInputError(data)) return deliveryInputError(data);
     if (i === 4 && !data.ack) return 'Please acknowledge the secrets checklist.';
     return '';
   }
@@ -89,12 +93,27 @@ export default function Wizard() {
   function jump(i) { if (i <= maxVisited) { setError(''); setStep(i); } }
 
   const last = step === STEPS.length - 1;
-  const files = last ? generateFiles(providers, data) : {};
+  useEffect(() => {
+    if (!last) return;
+    let cancelled = false;
+    generateFilesWithDelivery(providers, data).then(
+      files => { if (!cancelled) setGeneration({ input: data, files, error: '' }); },
+      error => { if (!cancelled) setGeneration({ input: data, files: {}, error: error.message }); }
+    );
+    return () => { cancelled = true; };
+  }, [last, data]);
+  const generated = last && generation.input === data;
+  const files = generated ? generation.files : {};
+  const generationError = generated ? generation.error : '';
+  useEffect(() => {
+    if (generated && !generationError && !Object.hasOwn(files, previewPath)) setPreviewPath('specdeploy.json');
+  }, [generated, generationError, files, previewPath]);
   const apiUnsupported = data.app.api !== 'none' && provider && !provider.supportsApi;
 
   async function download() {
+    if (!generated || generationError) return;
     const zip = new JSZip();
-    for (const [path, contents] of Object.entries(generateFiles(providers, data))) zip.file(path, contents);
+    for (const [path, contents] of Object.entries(files)) zip.file(path, contents);
     const blob = await zip.generateAsync({ type: 'blob' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -210,6 +229,37 @@ export default function Wizard() {
                   onChange={(e) => set({ approvalGate: e.target.checked })} />
                 Approval gate for prod
               </label>
+              <hr />
+              <label className="b-check">
+                <input type="checkbox" data-testid="delivery-enabled" checked={data.delivery.enabled}
+                  onChange={(e) => set({ delivery: { ...data.delivery, enabled: e.target.checked } })} />
+                Export delivery contract and graph (draft only)
+              </label>
+              {data.delivery.enabled && (
+                <>
+                  <p className="b-help" data-testid="delivery-warning">
+                    Not executable. {provider?.label} has no controlled-delivery runtime adapter.
+                    This adds draft files only; existing pipelines do not implement these gates.
+                    No merge, deployment or promotion approval is performed. Warp is not required.
+                  </p>
+                  {[
+                    ['projectId', 'Canonical project ID'], ['repositoryRef', 'Repository ID'],
+                    ['sourceRevision', 'Full source commit hash (40 or 64 lowercase characters)'],
+                    ['stagingDestinationRef', 'Staging destination ID'], ['productionDestinationRef', 'Production destination ID'],
+                  ].map(([key, label]) => (
+                    <div key={key}>
+                      <label htmlFor={`delivery-${key}`}>{label} *</label>
+                      <input id={`delivery-${key}`} data-testid={`delivery-${key}`} value={data.delivery[key]}
+                        onChange={(e) => set({ delivery: { ...data.delivery, [key]: e.target.value } })} />
+                    </div>
+                  ))}
+                  <p className="b-help">
+                    Use logical IDs, not URLs or credentials. Destinations must differ and are independent
+                    of the legacy environment selector. Supply context/project-definition.json and
+                    .agents/REGISTRY.md separately. A commit hash is not proof of merge.
+                  </p>
+                </>
+              )}
             </>
           )}
 
@@ -232,6 +282,9 @@ export default function Wizard() {
 
           {step === 5 && (
             <>
+              {!generated && <p role="status">Preparing files…</p>}
+              {generationError && <p role="alert" data-testid="generation-error">{generationError}</p>}
+              {data.delivery.enabled && <p data-testid="delivery-review-warning" className="b-help">Delivery export is draft and not executable. Provider runtime unsupported; legacy pipelines have not gained these graph protections. No approval has been granted.</p>}
               <p className="b-lead">{Object.keys(files).length} files ready for {provider?.label}.</p>
               <pre className="b-preview" data-testid="preview">{Object.keys(files).sort().join('\n')}</pre>
               <label>Preview file</label>
@@ -251,7 +304,7 @@ export default function Wizard() {
         <div className="b-nav">
           <button className="b-btn b-btn--ghost" onClick={back} disabled={step === 0}><ChevronLeft size={16} />Back</button>
           {last
-            ? <button className="b-btn b-btn--primary" data-testid="download-btn" onClick={download}><Download size={16} />Download ZIP</button>
+            ? <button className="b-btn b-btn--primary" data-testid="download-btn" disabled={!generated || !!generationError} onClick={download}><Download size={16} />Download ZIP</button>
             : <button className="b-btn b-btn--primary" data-testid="next-btn" onClick={next}>Next<ChevronRight size={16} /></button>}
         </div>
       </main>

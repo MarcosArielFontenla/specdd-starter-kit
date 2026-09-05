@@ -1,5 +1,6 @@
 // Pure generators — the providers bundle is passed in (no import of providers.json).
 import { renderTemplate } from './render-template.js';
+import { generateDeliveryFiles } from './delivery-export.js';
 
 export const KIT_VERSION = '1.0.0';
 
@@ -77,4 +78,15 @@ export function generateFiles(providersBundle, input) {
   }, null, 2);
   out['.env.example'] = renderEnvExample(provider);
   return out;
+}
+
+/** Opt-in async wrapper. The legacy synchronous generator and outputs stay intact. */
+export async function generateFilesWithDelivery(providersBundle, input) {
+  const snapshot = structuredClone(input);
+  const provider = structuredClone(providersBundle[snapshot.providerId]);
+  const files = generateFiles({ [snapshot.providerId]: provider }, snapshot);
+  if (!snapshot.delivery?.enabled) return files;
+  const delivery = await generateDeliveryFiles(provider, snapshot);
+  for (const path of Object.keys(delivery)) if (Object.hasOwn(files, path)) throw new Error(`Delivery export collision: ${path}`);
+  return { ...files, ...delivery };
 }
