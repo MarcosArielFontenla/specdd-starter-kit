@@ -1,0 +1,29 @@
+{
+  "kind": "SpecDDImprovementProposal",
+  "schemaVersion": "1.0.0",
+  "id": "reuse-validated-source-report",
+  "title": "Reuse validated source report within proposal assessment",
+  "target": {
+    "path": "packages/improvement-proposals/src/index.ts",
+    "beforeSha256": "4389dd0f275cdbf13a19bb6ce0ed6a118e81562de0981981062059aac449e65d"
+  },
+  "hypothesis": "Avoid repeating source benchmark comparison within one assessProposal call while preserving exact output and validation behavior. Static inspection identified three comparisons where two suffice.",
+  "change": "Extract a private summarizeValidatedReport helper. Public analyzeHistory still validates using compareBenchmark. assessProposal passes its already validated local source report to the helper. No cross-call cache or trusted imported reports.",
+  "risks": "Measured latency is scoped to 30 assessments of pinned fixtures, including process startup. Five repetitions do not establish general performance or statistical significance. Hashes and profile execution are locally attested.",
+  "rollback": "Keep original source unchanged until approval; restore its pinned preimage if an approved future change needs rollback.",
+  "source": {
+    "planSha256": "d3e8b96b34c58022747ee366e73f1a3671317f67d78e8a0abb2f82b5df4fea5c",
+    "datasetSha256": "9d52783143947440639cd20bfa890c19e9e0247d09fdc9fb00fcb2c60947f552"
+  },
+  "benchmark": {
+    "planSha256": "d3e8b96b34c58022747ee366e73f1a3671317f67d78e8a0abb2f82b5df4fea5c",
+    "candidateRef": "candidate"
+  },
+  "acceptance": [
+    {
+      "metric": "latencyMs",
+      "direction": "decrease",
+      "minimumDelta": 1
+    }
+  ]
+}

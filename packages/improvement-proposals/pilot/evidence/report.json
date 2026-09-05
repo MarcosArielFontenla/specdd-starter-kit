@@ -1,0 +1,358 @@
+{
+  "kind": "SpecDDBenchmarkReport",
+  "schemaVersion": "1.0.0",
+  "benchmarkRef": "proposal-summary-reuse",
+  "planSha256": "d3e8b96b34c58022747ee366e73f1a3671317f67d78e8a0abb2f82b5df4fea5c",
+  "datasetSha256": "9d52783143947440639cd20bfa890c19e9e0247d09fdc9fb00fcb2c60947f552",
+  "scope": "eval-node",
+  "status": "complete",
+  "currency": null,
+  "groups": [
+    {
+      "configurationRef": "baseline",
+      "configurationSha256": "e4e94fb6984b02b738dd8bb75a8041cb8428a27d0c6a2cd5343fa3fe646ccb95",
+      "configuration": {
+        "id": "baseline",
+        "graphRef": "manual-review-graph",
+        "nodeRef": "evaluate",
+        "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+        "runtime": "node-test",
+        "model": null,
+        "harnessRef": null,
+        "capabilityRefs": [],
+        "promptStrategyRef": null,
+        "environmentRef": "sha256:ff5a9186ff9ccc0d36a91806bdfdb63efe0ae5ab58b391a4417c6cf3daac0dab",
+        "executionRef": "sha256:22450a116c8f13794c738dede27dbe66c2c938d3de914bddd16639515b179f78"
+      },
+      "complete": true,
+      "missingRepetitions": [],
+      "metrics": {
+        "score": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "passed": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "executionError": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "latencyMs": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 900.2,
+          "median": 896,
+          "min": 892,
+          "max": 912
+        },
+        "retries": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "cost": {
+          "expected": 5,
+          "observed": 0,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "max": null
+        }
+      },
+      "humanInterventions": null,
+      "defectRate": null
+    },
+    {
+      "configurationRef": "candidate",
+      "configurationSha256": "8b24e18054b2d631eab7305165964e2d89be17575d96a1d54d3d8506dbf9e192",
+      "configuration": {
+        "id": "candidate",
+        "graphRef": "manual-review-graph",
+        "nodeRef": "evaluate",
+        "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+        "runtime": "node-test",
+        "model": null,
+        "harnessRef": null,
+        "capabilityRefs": [],
+        "promptStrategyRef": null,
+        "environmentRef": "sha256:ff5a9186ff9ccc0d36a91806bdfdb63efe0ae5ab58b391a4417c6cf3daac0dab",
+        "executionRef": "sha256:8058f6d8f3afa9a947891becfc26ba3dfa7251d4251e0624a1049f3907d22203"
+      },
+      "complete": true,
+      "missingRepetitions": [],
+      "metrics": {
+        "score": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "passed": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 1,
+          "median": 1,
+          "min": 1,
+          "max": 1
+        },
+        "executionError": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "latencyMs": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 858.6000000000001,
+          "median": 859,
+          "min": 841,
+          "max": 871
+        },
+        "retries": {
+          "expected": 5,
+          "observed": 5,
+          "mean": 0,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "cost": {
+          "expected": 5,
+          "observed": 0,
+          "mean": null,
+          "median": null,
+          "min": null,
+          "max": null
+        }
+      },
+      "humanInterventions": null,
+      "defectRate": null
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineRef": "baseline",
+      "candidateRef": "candidate",
+      "changedDimensions": [
+        "executionRef"
+      ],
+      "metrics": {
+        "score": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "passed": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "executionError": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "latencyMs": {
+          "comparable": true,
+          "deltaMean": -41.59999999999991
+        },
+        "retries": {
+          "comparable": true,
+          "deltaMean": 0
+        },
+        "cost": {
+          "comparable": false,
+          "deltaMean": null
+        }
+      }
+    }
+  ],
+  "samples": [
+    {
+      "configurationRef": "baseline",
+      "repetition": 1,
+      "runId": "local-baseline-1",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 912,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "6bb102ce6bff43e43022fc510c06fca734f7fe0495eff7b40f8013244551562b"
+    },
+    {
+      "configurationRef": "baseline",
+      "repetition": 2,
+      "runId": "local-baseline-2",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 894,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "5b14b406d8f8038d8aaf3fc30b8db1abf5bd2eec93d59d31f088eb0dcb6e5ddb"
+    },
+    {
+      "configurationRef": "baseline",
+      "repetition": 3,
+      "runId": "local-baseline-3",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 907,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "d5dd92ef9c27f86c5d9bcd610e28a3b5c665c4ef6286e525ec343b4889558b35"
+    },
+    {
+      "configurationRef": "baseline",
+      "repetition": 4,
+      "runId": "local-baseline-4",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 892,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "37b1ab9fd7e5fbca92fef0859887e6ff8cdb182adaf5ec56ec097e46b1930198"
+    },
+    {
+      "configurationRef": "baseline",
+      "repetition": 5,
+      "runId": "local-baseline-5",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 896,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "2feb5746a28ff01fe22d100ab3744d34701a72138c40ee0bdcae6a7e1ba9b67e"
+    },
+    {
+      "configurationRef": "candidate",
+      "repetition": 1,
+      "runId": "local-candidate-1",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 870,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "206e5896cf131a2be62ba60739ed48ff06158ec875ec228f8b2db4f2460d245a"
+    },
+    {
+      "configurationRef": "candidate",
+      "repetition": 2,
+      "runId": "local-candidate-2",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 852,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "4a85d0897f0f321293435ae9808d84ca1f665c560edb90d877e5c43f78c203ea"
+    },
+    {
+      "configurationRef": "candidate",
+      "repetition": 3,
+      "runId": "local-candidate-3",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 871,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "26029fe80f3fce3b022cdb6fefa876cf0e940239791093c9cecde66551911e55"
+    },
+    {
+      "configurationRef": "candidate",
+      "repetition": 4,
+      "runId": "local-candidate-4",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 841,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "65e7a26662a0ecbaaa6730d37579c9a1ea09c6dc00fd00a0e974812e6a029ad0"
+    },
+    {
+      "configurationRef": "candidate",
+      "repetition": 5,
+      "runId": "local-candidate-5",
+      "status": "measured",
+      "reasons": [],
+      "runCoverage": "partial",
+      "score": 1,
+      "passed": 1,
+      "executionError": 0,
+      "latencyMs": 859,
+      "retries": 0,
+      "cost": null,
+      "currency": null,
+      "eventsSha256": "464ddcf00cc18c4277206346de8045a01903b41651fa847c7c42157105ec037b"
+    }
+  ],
+  "limits": [
+    "Descriptive observations, not statistical significance or proof of model superiority",
+    "Quality means this canonical eval only; latency covers its node slice, not the whole workflow",
+    "Null metrics are unknown; error scores are not imputed and remain in the pass-rate denominator",
+    "Prompt/execution/environment identity is caller-attested; hashes do not authenticate runtime execution",
+    "Human interventions and defect rate are not measured in eval-node scope"
+  ]
+}

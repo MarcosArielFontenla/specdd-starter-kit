@@ -1,7 +1,7 @@
 # Estado de implementación — SpecDD Harness
 
 **Actualizado:** 2026-09-04
-**Estado:** Harness Fases 1–6 implementadas; Control Plane Phases 1–4 remediadas, Phase 5 validada mediante piloto documental humano-asistido y Phases 6–8 implementadas con aceptación local. Warp sigue opcional y sin ejecución alojada. Phase 9 implementada con aceptación local; piloto excluido de esta consolidación para un PR separado antes de Phase 10. Evidencia y límites: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md). Los 8 hallazgos de dependencias fueron corregidos: npm audit continúa en 0, con regresiones aprobadas. Evidencia: [remediación de seguridad](control-plane/audits/2026-09-04-dependency-security.md). Workspace: Node 22.12+.
+**Estado:** Harness Fases 1–6 implementadas; Control Plane Phases 1–4 remediadas, Phase 5 validada mediante piloto documental humano-asistido y Phases 6–8 implementadas con aceptación local. Warp sigue opcional y sin ejecución alojada. Phase 9 implementada con aceptación local; piloto aprobado por el usuario y preparado localmente; publicación del PR pendiente antes de Phase 10. Evidencia y límites: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md). Los 8 hallazgos de dependencias fueron corregidos: npm audit continúa en 0, con regresiones aprobadas. Evidencia: [remediación de seguridad](control-plane/audits/2026-09-04-dependency-security.md). Workspace: Node 22.12+.
 
 Este documento deja asentado qué está implementado y cuál es el siguiente incremento
 del proyecto para poder retomarlo en una sesión futura sin perder contexto.
@@ -289,10 +289,11 @@ universal ni una comprensión 100% automática del proyecto.
 
 ## Regla de continuidad
 
-Phase 9 está implementada con aceptación local. Esta consolidación excluye la
-optimización aprobada y sus artefactos de piloto para conservar su revisión en un
-PR separado. Phase 10 sigue pendiente de ese cierre. Evidencia de infraestructura:
-[Phase 9](control-plane/phases/phase-9-improvement-proposals.md).
+Phase 9 está implementada con aceptación local: propuestas ligadas a evidencia,
+análisis de fallos observados, revisión humana declarada y preparación controlada
+de PR. Falta validar una propuesta útil mediante revisión humana específica y PR
+autorizado antes de liberar Phase 10. No se inventaron aprobaciones ni PRs.
+Evidencia: [Phase 9](control-plane/phases/phase-9-improvement-proposals.md).
 Phase 8 aporta `@specdd/benchmarks`: planes/datasets fijados, cobertura de métricas y
 comparaciones descriptivas de slices de eval. Sus seis observaciones locales validan
 la infraestructura; no demuestran superioridad de modelos ni mejoras generales del

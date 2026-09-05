@@ -1,0 +1,1677 @@
+{
+  "kind": "SpecDDBenchmarkDataset",
+  "schemaVersion": "1.0.0",
+  "planSha256": "d3e8b96b34c58022747ee366e73f1a3671317f67d78e8a0abb2f82b5df4fea5c",
+  "samples": [
+    {
+      "configurationRef": "baseline",
+      "configurationSha256": "e4e94fb6984b02b738dd8bb75a8041cb8428a27d0c6a2cd5343fa3fe646ccb95",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 1,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-baseline-1",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:33.221Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-baseline-1",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:34.133Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-baseline-1",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:34.133Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "5ea76e30d4eb60d82dfed3a50e0533e9393e2a641074d6052e54ed5d6761c018",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "candidate",
+      "configurationSha256": "8b24e18054b2d631eab7305165964e2d89be17575d96a1d54d3d8506dbf9e192",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 1,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-candidate-1",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:34.166Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-candidate-1",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:35.036Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-candidate-1",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:35.036Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "650f5e7e2576a10af9316f709d6f9eb7896f6c20c21b28a944adf679c716c2d6",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "candidate",
+      "configurationSha256": "8b24e18054b2d631eab7305165964e2d89be17575d96a1d54d3d8506dbf9e192",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 2,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-candidate-2",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:35.042Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-candidate-2",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:35.894Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-candidate-2",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:35.894Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "7abd0c23b6c6df0c562112f12b0351afb4a9e876de7ec05e121f309858d14b80",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "baseline",
+      "configurationSha256": "e4e94fb6984b02b738dd8bb75a8041cb8428a27d0c6a2cd5343fa3fe646ccb95",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 2,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-baseline-2",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:35.902Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-baseline-2",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:36.796Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-baseline-2",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:36.796Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "97c8d3abeaebd8781bfeb509e5d4ce35db5b2bbc8d6e7712d86d97636ab1dfc8",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "baseline",
+      "configurationSha256": "e4e94fb6984b02b738dd8bb75a8041cb8428a27d0c6a2cd5343fa3fe646ccb95",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 3,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-baseline-3",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:36.804Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-baseline-3",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:37.711Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-baseline-3",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:37.711Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "a37b2a730ead689be7636f1e55f691d15eda0a66a4d2fe8be62130f3570ffb1d",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "candidate",
+      "configurationSha256": "8b24e18054b2d631eab7305165964e2d89be17575d96a1d54d3d8506dbf9e192",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 3,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-candidate-3",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:37.718Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-candidate-3",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:38.589Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-candidate-3",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:38.589Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "da6f7971f3a2c5aa723e5990e77ecfe003300e94fb097da736a62a7f76edc0df",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "candidate",
+      "configurationSha256": "8b24e18054b2d631eab7305165964e2d89be17575d96a1d54d3d8506dbf9e192",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 4,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-candidate-4",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:38.608Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-candidate-4",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:39.449Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-candidate-4",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:39.449Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "11d26d921bfe945a03773a571787deb90c97da752da6ec31bbd04ff334545353",
+                "bytes": 300
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "baseline",
+      "configurationSha256": "e4e94fb6984b02b738dd8bb75a8041cb8428a27d0c6a2cd5343fa3fe646ccb95",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 4,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-baseline-4",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:39.474Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-baseline-4",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:40.366Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-baseline-4",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:40.366Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "fa91fc766839bc7b0fb0704ebca0b77f9d8deb64af3ce4b6e235836bed67db65",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "baseline",
+      "configurationSha256": "e4e94fb6984b02b738dd8bb75a8041cb8428a27d0c6a2cd5343fa3fe646ccb95",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 5,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-baseline-5",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:40.385Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-baseline-5",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:41.281Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-baseline-5",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:41.281Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "81918740cf90e07d36e128e9020185b7eb3f108818a0dd9431a2ecc8d0fa1bc5",
+                "bytes": 300
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    },
+    {
+      "configurationRef": "candidate",
+      "configurationSha256": "8b24e18054b2d631eab7305165964e2d89be17575d96a1d54d3d8506dbf9e192",
+      "taskSha256": "2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+      "repetition": 5,
+      "controlPlane": {
+        "schemaVersion": "1.0.0",
+        "kind": "SpecDDControlPlane",
+        "lifecycle": "draft",
+        "metadata": {
+          "id": "benchmark-local-control",
+          "name": "Manual Review Control",
+          "description": "A minimal manually triggered single-role workflow.",
+          "version": "1.0.0"
+        },
+        "project": {
+          "id": "example-project",
+          "source": "context/project-definition.json",
+          "version": "1.0.0"
+        },
+        "harnesses": [
+          {
+            "id": "project-harness",
+            "source": ".agents/REGISTRY.md",
+            "contractVersion": "1.0.0",
+            "enabled": true
+          }
+        ],
+        "capabilityBindings": [],
+        "agentRoles": [
+          {
+            "id": "reviewer",
+            "title": "Reviewer",
+            "purpose": "Review work under the project Harness.",
+            "harnessRef": "project-harness",
+            "capabilityBindingRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "workflows": [
+          {
+            "id": "manual-review",
+            "name": "Manual Review",
+            "purpose": "Perform one review when a human starts it.",
+            "graphRef": "manual-review-graph",
+            "triggers": [
+              {
+                "kind": "manual"
+              }
+            ],
+            "inputArtifactRefs": [],
+            "outputArtifactRefs": [],
+            "policyRefs": []
+          }
+        ],
+        "graphs": [
+          {
+            "id": "manual-review-graph",
+            "name": "Manual Review Graph",
+            "description": "One finite review node.",
+            "entryNodeId": "evaluate",
+            "terminalNodeIds": [
+              "evaluate"
+            ],
+            "nodes": [
+              {
+                "id": "evaluate",
+                "name": "Evaluate pinned score fixtures",
+                "kind": "eval",
+                "evalGateRef": "score-conformance",
+                "inputArtifactRefs": [],
+                "outputArtifactRefs": [],
+                "policyRefs": []
+              }
+            ],
+            "edges": []
+          }
+        ],
+        "approvals": [],
+        "policies": [],
+        "failureRoutes": [],
+        "retries": [],
+        "evalGates": [
+          {
+            "id": "score-conformance",
+            "evalRef": "score-conformance",
+            "mode": "required",
+            "requiredOutcome": "pass"
+          }
+        ],
+        "artifactContracts": [],
+        "runtimeHints": []
+      },
+      "events": [
+        {
+          "runId": "local-candidate-5",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.start",
+          "timestamp": "2026-09-05T11:45:41.288Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.start"
+          },
+          "event": "eval.started",
+          "data": {
+            "attempt": 1,
+            "evalRef": "score-conformance"
+          }
+        },
+        {
+          "runId": "local-candidate-5",
+          "workflowRef": "manual-review",
+          "graphRef": "manual-review-graph",
+          "nodeRef": "evaluate",
+          "controlPlaneSha256": "e556e480476da5221bd4f369fa8b1db40f81dfd69a42823dc90024226bc7cf3c",
+          "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+          "agentRef": null,
+          "capabilityRefs": [],
+          "runtime": "node-test",
+          "model": null,
+          "harnessRef": null,
+          "schemaVersion": "1.0.0",
+          "kind": "SpecDDRunEvent",
+          "id": "evaluation.end",
+          "timestamp": "2026-09-05T11:45:42.147Z",
+          "source": {
+            "adapter": "eval-result-v1",
+            "eventId": "evaluation.end"
+          },
+          "event": "eval.completed",
+          "data": {
+            "attempt": 1,
+            "result": {
+              "schemaVersion": "1.0.0",
+              "kind": "SpecDDEvalResult",
+              "runId": "local-candidate-5",
+              "inputRef": "sha256:2101ff99a1efff65de32798cee9624d6c261e267ee1298ad30ab4ff63a002b1d",
+              "observedAt": "2026-09-05T11:45:42.147Z",
+              "evalRef": "score-conformance",
+              "evalVersion": "1.0.0",
+              "definitionSha256": "7fa33298ee00ac980bebb7b10d8988654956cb4d70fcdebd8fc6a5f8d28b5023",
+              "adapter": "local-exit-v1",
+              "outcome": "pass",
+              "score": 1,
+              "label": "passed",
+              "evidence": {
+                "sha256": "1ba56c11d159eec7e95447e9811728280b46df99bdab74ced50801c5dcf4b30c",
+                "bytes": 301
+              },
+              "error": null
+            }
+          }
+        }
+      ],
+      "cost": null
+    }
+  ]
+}

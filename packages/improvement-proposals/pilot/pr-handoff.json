@@ -1,0 +1,22 @@
+{
+  "kind": "SpecDDImprovementPRHandoff",
+  "schemaVersion": "1.0.0",
+  "draft": true,
+  "title": "Reuse validated source report within proposal assessment",
+  "proposalSha256": "721ef86e096d9a231e696fa3e41dfc2cd6adbb3ada674f58ff8a7e9eba676c3e",
+  "reviewHeadSha256": "68691ed9b6b32c9be709c8d6eb94d83a385883f2d69d600acc1d9fb276f24ea7",
+  "assessmentSha256": "835794eb94c2906acc57c361ecf7bf33f6b54c5c0850a3a925240799e1c3b85d",
+  "target": {
+    "path": "packages/improvement-proposals/src/index.ts",
+    "beforeSha256": "4389dd0f275cdbf13a19bb6ce0ed6a118e81562de0981981062059aac449e65d"
+  },
+  "body": "Avoid repeating source benchmark comparison within one assessProposal call while preserving exact output and validation behavior. Static inspection identified three comparisons where two suffice.\n\nExtract a private summarizeValidatedReport helper. Public analyzeHistory still validates using compareBenchmark. assessProposal passes its already validated local source report to the helper. No cross-call cache or trusted imported reports.\n\nRisks: Measured latency is scoped to 30 assessments of pinned fixtures, including process startup. Five repetitions do not establish general performance or statistical significance. Hashes and profile execution are locally attested.\n\nRollback: Keep original source unchanged until approval; restore its pinned preimage if an approved future change needs rollback.",
+  "applied": false,
+  "createdPR": false,
+  "requirements": [
+    "Authenticate reviewer outside this local library",
+    "Review target/change relevance and actual diff",
+    "Recheck target preimage before applying",
+    "Create PR only with explicit user authority; no merge or deployment implied"
+  ]
+}

@@ -3,9 +3,15 @@
 Status: implementation complete with local acceptance; live human-review/PR pilot
 pending. Phase 10 is not automatically released by this evidence.
 
-Main consolidation boundary: the locally approved optimization and its pilot
-artifacts are excluded and will follow in a separately authorized PR. This document
-records infrastructure acceptance, not completion of that remote PR workflow.
+Follow-up 2026-09-05: [pilot-001 review package](../../../packages/improvement-proposals/pilot/README.md)
+now contains a real isolated candidate and ten passing benchmark runs. Observed
+batch latency improved by 41.6 ms (about 4.62%); 27 candidate regressions passed.
+Evidence qualified for review. The user subsequently approved the specific proposal;
+journal state is now `approved`, and the exact measured candidate is prepared in
+local production source. Package build, 27 proposal tests, 21 benchmark tests and
+approval/evidence replay passed. No commit, PR publication, merge or deployment
+has occurred for the pilot. Infrastructure base `4fb6f0b908a7354c713131e68d4287e4b2f301b7`
+was published separately to main; pilot PR publication authorization remains pending.
 
 ## Entry and delivery
 
@@ -60,9 +66,11 @@ Existing React/Vite deprecation and chunk-size warnings remain non-blocking.
 
 ## Exit gate, deferred work and risks
 
-Local infrastructure acceptance is satisfied. The positive live proposal/review/PR
-cycle remains outside this base consolidation. Phase 10 stays gated until its
-separate PR is authorized and verified. The
+Local infrastructure acceptance is satisfied. A live positive proposal → human
+review → PR cycle is **not yet complete**: pilot-001 has relevant measured evidence,
+explicit human approval and a locally prepared change; remote PR creation remains
+pending. Before Phase 10, agree the PR base/scope and explicitly authorize its
+publication without including unrelated pre-existing work. The
 current serial-profile example is not eligible for adoption and should not be
 approved just to pass a phase gate.
 

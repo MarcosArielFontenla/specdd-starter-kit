@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "SpecDDImprovementReviewEvent",
+    "schemaVersion": "1.0.0",
+    "id": "pilot-001-review-request",
+    "timestamp": "2026-09-05T11:47:53.506Z",
+    "previousSha256": null,
+    "proposalSha256": "721ef86e096d9a231e696fa3e41dfc2cd6adbb3ada674f58ff8a7e9eba676c3e",
+    "assessmentSha256": "835794eb94c2906acc57c361ecf7bf33f6b54c5c0850a3a925240799e1c3b85d",
+    "action": "requested",
+    "actorRef": "assistant-local-pilot-preparer",
+    "reason": "Request user review of exact isolated candidate and measured evidence; experiment authorization is not individual improvement approval.",
+    "prUrl": null,
+    "mergedCommit": null
+  },
+  {
+    "kind": "SpecDDImprovementReviewEvent",
+    "schemaVersion": "1.0.0",
+    "id": "pilot-001-human-approval",
+    "timestamp": "2026-09-05T11:50:55.471Z",
+    "previousSha256": "656e71c8d3da8ed65fe9065ef351c2a6c839927ac3fdb3540b80c55f0a46dc27",
+    "proposalSha256": "721ef86e096d9a231e696fa3e41dfc2cd6adbb3ada674f58ff8a7e9eba676c3e",
+    "assessmentSha256": "835794eb94c2906acc57c361ecf7bf33f6b54c5c0850a3a925240799e1c3b85d",
+    "action": "approved",
+    "actorRef": "user-current-conversation",
+    "reason": "Explicit user message: si aprobada la propuesta. Approves reuse-validated-source-report and local source preparation; does not authorize PR publication, merge or deployment. Recorded by assistant from this conversation; not a signed identity assertion.",
+    "prUrl": null,
+    "mergedCommit": null
+  }
+]

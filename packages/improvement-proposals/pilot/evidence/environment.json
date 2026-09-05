@@ -1,0 +1,31 @@
+{
+  "node": "v24.16.0",
+  "platform": "win32",
+  "arch": "x64",
+  "cpus": 16,
+  "profiles": [
+    {
+      "id": "baseline",
+      "flags": [],
+      "executionRef": "sha256:22450a116c8f13794c738dede27dbe66c2c938d3de914bddd16639515b179f78"
+    },
+    {
+      "id": "candidate",
+      "flags": [],
+      "executionRef": "sha256:8058f6d8f3afa9a947891becfc26ba3dfa7251d4251e0624a1049f3907d22203"
+    }
+  ],
+  "taskFiles": [
+    "improvement-proposals/pilot/worker.test.mjs",
+    "eval-adapters/dist/index.js",
+    "pilot/baseline/index.js",
+    "pilot/candidate/index.js",
+    "improvement-proposals/schema/proposal.schema.json",
+    "improvement-proposals/examples/serial-profile.proposal.json",
+    "examples/local/plan.json",
+    "examples/local/dataset.json"
+  ],
+  "warmup": "none",
+  "order": "alternating per repetition",
+  "limits": "Inherited environment and system load not fully captured"
+}
