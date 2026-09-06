@@ -20,7 +20,7 @@ const initial = {
   project: { name: '', description: '', problem: '' },
   personas: [], outcomes: { user: '', business: '' },
   constraints: { business: '', technical: '' },
-  domains: [], entities: [], features: [], architecture: [],
+  domains: [], entities: [], features: [], architecture: [], projectChecks: [],
   stack: { languages: [], frontend: '', backend: '', testing: '', database: '', infra: '', swagger: false, a11y: false },
   principles: ['Specifications are the source of truth'],
   mcp: [], tools: ['GitHub Copilot'], model: '',
@@ -72,6 +72,8 @@ export default function Wizard() {
         backend: analysis.stack.backend || d.stack.backend,
         testing: analysis.stack.testing || d.stack.testing,
         database: analysis.stack.database || d.stack.database,
+        infra: analysis.stack.infra || d.stack.infra,
+        swagger: analysis.stack.swagger || d.stack.swagger,
         languages: analysis.stack.languages.length ? analysis.stack.languages : d.stack.languages,
       },
       domains: analysis.domains.length ? analysis.domains : d.domains,
@@ -84,9 +86,12 @@ export default function Wizard() {
   function approveContext(contextReview) { setData((d) => applyReviewedContext(d, contextReview)); }
 
   const last = step === steps.length - 1;
-  // Brownfield has no valid project definition until folder analysis produces
-  // project/domain evidence. Collision counts become available immediately after that.
-  const needsScaffold = last || (stepName === 'Ingest & Analyze' && Boolean(data.analysis));
+  const scaffoldRequiredSteps = ['Project', 'Tech Stack', 'Domains & Entities', 'Agents & Tools'];
+  const scaffoldReady = scaffoldRequiredSteps.every((name) => stepError(name, data) === '');
+  // Analysis may legitimately produce no domain suggestion. Do not generate an
+  // invalid Harness merely to preview collisions; the user can complete the
+  // missing context in the normal wizard steps.
+  const needsScaffold = scaffoldReady && (last || (stepName === 'Ingest & Analyze' && Boolean(data.analysis)));
   const { files, skipped, replaced } = needsScaffold ? generateScaffold(kitFiles, data) : { files: {}, skipped: [], replaced: [] };
 
   async function download() {
@@ -135,6 +140,7 @@ export default function Wizard() {
 
           {stepName === 'Ingest & Analyze' && (
             <IngestStep data={data} skippedCount={skipped.length} replacedCount={replaced.length}
+              collisionPreviewReady={scaffoldReady}
               onAnalyzed={applyAnalysis} onAck={(v) => set({ legacyAck: v })}
               onAnalysisDepthChange={(analysisDepth) => set({ analysisDepth })} />
           )}

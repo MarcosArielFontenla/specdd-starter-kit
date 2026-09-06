@@ -1,4 +1,4 @@
-import { REVIEW_STATUSES, reviewStatusLabel } from './review.js';
+import { REVIEW_STATUSES, classifySelectedContext, reviewStatusLabel, selectedUnknownCount } from './review.js';
 
 function updateItem(review, group, index, patch, onChange) {
   onChange({
@@ -68,6 +68,7 @@ export default function ContextReviewStep({ data, onReviewChange, onApprove }) {
   if (!review) return <p className="b-error">Run the analysis before reviewing its context.</p>;
   const semantic = data.analysis?.semantic;
   const update = (next) => onReviewChange(next);
+  const unknownCount = selectedUnknownCount(review);
   const listProps = (group, title) => ({
     group,
     title,
@@ -91,9 +92,40 @@ export default function ContextReviewStep({ data, onReviewChange, onApprove }) {
       <FindingList {...listProps('entities', 'Primary entities')} />
       <FindingList {...listProps('features', 'Features')} />
       <FindingList {...listProps('architecture', 'Architecture signals')} />
+      <section className="b-review-section">
+        <div className="b-review-section__heading">
+          <h3>Proposed project checks</h3>
+          <span>{(review.projectChecks || []).length} detected</span>
+        </div>
+        {(review.projectChecks || []).length === 0 && <p className="b-review-empty">No safe build or test commands were inferred.</p>}
+        <div className="b-review-list">
+          {(review.projectChecks || []).map((check, index) => (
+            <article className={`b-review-item${check.selected ? '' : ' b-review-item--excluded'}`} key={check.id}>
+              <div className="b-review-item__main">
+                <strong>{check.label}</strong>
+                <code>{check.command}</code>
+                <small>{check.source}</small>
+              </div>
+              <div className="b-review-item__controls">
+                <label className="b-review-item__include">
+                  <input type="checkbox" checked={check.selected}
+                    onChange={(event) => updateItem(review, 'projectChecks', index, { selected: event.target.checked }, onReviewChange)} />
+                  Run during project verification
+                </label>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
       <div className="b-review__footer">
-        <p className="b-help">Approval applies the selected names to the next wizard steps and preserves their classifications in the Brownfield report.</p>
-        <button type="button" className="b-btn b-btn--primary" data-testid="context-approve" onClick={() => onApprove(review)}>
+        <p className="b-help">Approval applies the selected names and project checks to the generated Harness. Selected findings must be classified first.</p>
+        {unknownCount > 0 && <p className="b-error" data-testid="context-unknown-warning">{unknownCount} selected finding(s) still need classification.</p>}
+        <button type="button" className="b-btn" data-testid="context-classify"
+          onClick={() => update(classifySelectedContext(review))} disabled={unknownCount === 0}>
+          Classify detected context
+        </button>
+        <button type="button" className="b-btn b-btn--primary" data-testid="context-approve"
+          disabled={unknownCount > 0} onClick={() => onApprove(review)}>
           {review.approved ? 'Context approved' : 'Approve context'}
         </button>
       </div>

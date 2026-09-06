@@ -52,5 +52,10 @@ export function errorFor(stepName, data) {
   if (stepName === 'Review Context' && !data.contextReview?.approved) {
     return 'Review and approve the detected context before continuing.';
   }
+  if (stepName === 'Review Context') {
+    const hasUnknown = ['stack', 'domains', 'entities', 'features', 'architecture']
+      .some((group) => (data.contextReview?.[group] || []).some((item) => item.selected && item.status === 'unknown'));
+    if (hasUnknown) return 'Classify every selected context finding before continuing.';
+  }
   return '';
 }

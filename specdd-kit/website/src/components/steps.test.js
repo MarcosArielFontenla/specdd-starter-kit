@@ -56,4 +56,5 @@ test('ingest step blocks on unacknowledged legacy harness', () => {
 test('review context requires explicit approval', () => {
   assert.match(errorFor('Review Context', { ...valid, contextReview: null }), /approve/i);
   assert.equal(errorFor('Review Context', { ...valid, contextReview: { approved: true } }), '');
+  assert.match(errorFor('Review Context', { ...valid, contextReview: { approved: true, domains: [{ selected: true, status: 'unknown' }] } }), /Classify/i);
 });

@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProjectDefinition } from '@specdd/project-model';
-import { generateFiles, generateScaffold, PROJECT_DEFINITION_PATH, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderMigrationTasks, renderProjectValidation } from './generators.js';
+import { generateFiles, generateScaffold, PROJECT_DEFINITION_PATH, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderBrownfieldConvergenceTasks, renderMigrationTasks, renderProjectValidation } from './generators.js';
 import { fingerprintPaths, fingerprintText } from './fingerprints.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
@@ -55,6 +55,25 @@ test('project validation profile starts explicit and empty', () => {
   assert.equal(profile.schemaVersion, 1);
   assert.deepEqual(profile.checks, []);
   assert.match(profile.notes, /validate-project\.ps1/);
+});
+
+test('project validation includes only checks explicitly selected during review', () => {
+  const profile = JSON.parse(renderProjectValidation({
+    projectChecks: [{ id: 'frontend-build', command: 'npm run build --prefix frontend', source: 'frontend/package.json' }],
+  }));
+  assert.deepEqual(profile.checks, [{ id: 'frontend-build', command: 'npm run build --prefix frontend', expectedExitCode: 0 }]);
+  assert.match(profile.notes, /explicitly selected/);
+});
+
+test('brownfield convergence queue is evidence-first and ends at both verification gates', () => {
+  const tasks = renderBrownfieldConvergenceTasks({
+    entities: ['Appointment'], features: ['booking'],
+    projectChecks: [{ command: 'dotnet test backend/Bloom.slnx', source: 'backend/Bloom.slnx' }],
+  }, '2026-09-06');
+  assert.match(tasks, /Reconcile the entity contract for `Appointment`/);
+  assert.match(tasks, /Reconcile the feature or capability `booking`/);
+  assert.match(tasks, /extractionStatus: VERIFIED/);
+  assert.match(tasks, /projectReadinessStatus: VERIFIED/);
 });
 
 test('fingerprints are deterministic for content and source paths', () => {
@@ -293,6 +312,7 @@ test('generateScaffold brownfield: collisions excluded and reported, analysis re
   assert.ok(!('.github/prompts/specdd-specify.prompt.md' in files));     // collision dropped
   assert.deepEqual(skipped, ['.github/prompts/specdd-specify.prompt.md', 'README.md']);
   assert.ok('.agents/workflows/spec-converge.md' in files);              // converge ships
+  assert.ok('.agents/specs/tasks/brownfield-convergence.tasks.md' in files);
   const report = files['context/brownfield-analysis.md'];
   assert.match(report, /acme-shop/);
   assert.match(report, /Analysis level: Level 1 — Structural bootstrap/);
@@ -444,4 +464,5 @@ test('greenfield returns empty replaced and no migration artifacts', () => {
   assert.deepEqual(skipped, []);
   assert.deepEqual(replaced, []);
   assert.ok(!Object.keys(files).some((p) => p.includes('harness-migration')));
+  assert.ok(!Object.keys(files).some((p) => p.includes('brownfield-convergence')));
 });

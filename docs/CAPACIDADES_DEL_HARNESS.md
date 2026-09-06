@@ -670,19 +670,25 @@ El analizador actual implementa ambos niveles:
 
 - en Nivel 1 lee contenido únicamente de manifests conocidos y usa solo paths para
   el resto de los archivos;
-- en Nivel 2 lee solo archivos de texto de la allowlist segura, con límites de 96
-  archivos, 120.000 caracteres por archivo y 500.000 caracteres totales;
+- en Nivel 2 lee solo archivos de texto de la allowlist segura, con límites de 256
+  archivos, 120.000 caracteres por archivo y 2.000.000 de caracteres totales;
 - ignora dependencias, builds, coverage, virtual environments y otras carpetas de
-  ruido;
-- toma el manifest más cercano a la raíz;
+  ruido, incluyendo salidas Angular `out-tsc`;
+- inspecciona manifests anidados además del manifest principal;
 - detecta stack por dependencias o textos de manifests;
 - sugiere hasta ocho dominios por estructura de carpetas;
-- sugiere hasta doce entidades por nombres y ubicación de archivos;
+- en .NET prioriza entidades persistidas declaradas mediante `DbSet<>` y conserva
+  hasta 64 sugerencias con truncamiento explícito;
+- detecta features desde carpetas `features`, capas `.Application`, endpoints y
+  servicios con evidencia semántica, hasta 32 sugerencias con truncamiento explícito;
+- propone comandos de build/test desde manifests y soluciones, desactivados hasta
+  que el usuario los seleccione;
 - limita el análisis visible a 20.000 paths y reporta truncamiento.
 
 Después del análisis existe un paso `Review Context`. El usuario puede editar,
 excluir y clasificar lenguajes, tecnologías, señales de arquitectura, dominios,
-entidades y features. La aprobación es obligatoria para continuar y el generador
+entidades, features y checks propuestos. Ningún hallazgo seleccionado puede permanecer
+como `unknown`; la clasificación y aprobación son obligatorias para continuar. El generador
 aplica esa selección como fuente efectiva, incluso si existieran valores obsoletos
 en el estado del wizard.
 
@@ -702,7 +708,8 @@ aprobación solo confirma el contexto de partida; no aprueba reglas de negocio n
 convierte una spec YAML en un contrato aprobado.
 
 `context/scaffold-manifest.json` registra los paths generados, las colisiones, los
-reemplazos y la selección aprobada para que el destino pueda validar la extracción.
+reemplazos y la evidencia de cobertura para validar la extracción. La preparación
+contextual se valida desde la fuente canónica `context/project-definition.json`.
 
 ### Política de colisiones
 
@@ -711,7 +718,9 @@ lista en `context/brownfield-analysis.md`. No se fusiona ni se sobrescribe
 silenciosamente.
 
 El reporte de análisis se genera siempre para dejar kickoff, detecciones y lista de
-skips. Luego el workflow `spec-converge` guía la reconciliación.
+skips. Además se genera `.agents/specs/tasks/brownfield-convergence.tasks.md` como cola
+evidence-first para reconciliar entidades, capacidades, contratos y checks sin aprobarlos
+automáticamente. Luego el workflow `spec-converge` guía la reconciliación.
 
 Después de extraer el ZIP, el comando recomendado es
 `pwsh .agents/scripts/validate-project.ps1`. El reporte resultante concentra el

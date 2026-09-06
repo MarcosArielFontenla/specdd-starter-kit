@@ -4,7 +4,7 @@
 export const FINGERPRINT_ALGORITHM = 'fnv1a32-utf8';
 
 export const FIDELITY_IGNORED_DIRS = new Set([
-  'node_modules', '.git', 'dist', 'build', 'out', 'coverage', 'vendor',
+  'node_modules', '.git', 'dist', 'build', 'out', 'out-tsc', 'coverage', 'vendor',
   'venv', '.venv', '__pycache__', 'bin', 'obj', 'target',
 ]);
 

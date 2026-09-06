@@ -3,19 +3,23 @@
 Use this workflow when the codebase predates its spec: migrations, legacy adoption,
 resumed features, or a fresh harness dropped onto an existing project.
 
-1. Load the spec and its `acceptanceChecks`. ABORT if the spec has no executable
-   checks — there is nothing to converge toward; write real checks first (see
-   `.agents/workflows/spec-first-feature.md`, stages 1–3).
-2. Run `pwsh .agents/scripts/validate-spec.ps1 -Run -SpecPath [spec]`.
+1. Load `.agents/specs/tasks/brownfield-convergence.tasks.md` when present, then load
+   the target spec and its `acceptanceChecks`.
+2. If the spec is still a placeholder, inspect the referenced production code, tests,
+   routes and repository checks. Propose requirements plus executable acceptance checks
+   (or a reasoned waiver), append the proposal to the convergence task, and STOP for
+   human approval. Never promote the contract automatically.
+3. Once the contract is approved, run
+   `pwsh .agents/scripts/validate-spec.ps1 -Run -SpecPath [spec]`.
    Failing checks = the measurable delta between the codebase and the spec.
-3. Audit the codebase against the spec's requirements for gaps no check covers yet.
+4. Audit the codebase against the spec's requirements for gaps no check covers yet.
    Propose new acceptanceChecks for those gaps — the human approves them; they amend
    the spec.
-4. APPEND the remaining work to the feature's tasks file
+5. APPEND the remaining work to the feature's tasks file
    (`.agents/specs/tasks/[feature-slug].tasks.md`, create it if absent).
    Never rewrite or uncheck completed tasks — converge adds, it does not rewrite
    history.
-5. The human reviews the delta before any implementation resumes.
+6. The human reviews the delta before any implementation resumes.
 
 Constraints: converge never touches `designContract.status` · never retro-approves
 anything · its output is always tasks, never direct edits.

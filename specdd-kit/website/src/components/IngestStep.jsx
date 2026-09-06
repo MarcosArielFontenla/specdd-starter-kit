@@ -8,8 +8,8 @@ const summarizeManifests = (manifests = []) => {
 };
 
 // Folder ingestion for the Brownfield scenario. All analysis happens in-browser via
-// the File API; only manifest files are ever read.
-export default function IngestStep({ data, skippedCount, replacedCount, onAnalyzed, onAck, onAnalysisDepthChange }) {
+// the File API; Level 1 reads manifests and Level 2 adds bounded, allowlisted text files.
+export default function IngestStep({ data, skippedCount, replacedCount, collisionPreviewReady, onAnalyzed, onAck, onAnalysisDepthChange }) {
   const [busy, setBusy] = useState(false);
   const [showFolderConsent, setShowFolderConsent] = useState(false);
   const [pickerError, setPickerError] = useState('');
@@ -157,16 +157,25 @@ export default function IngestStep({ data, skippedCount, replacedCount, onAnalyz
             <div className="b-card">
               <strong>Suggestions</strong>
               <p>{a.domains.length} domains · {a.entities.length} entities · {a.features?.length || 0} features — editable in the next steps</p>
+              {(a.suggestionLimits?.entities?.truncated || a.suggestionLimits?.features?.truncated) && (
+                <p className="b-error">Suggestion limits were reached; omitted counts are recorded for manual review.</p>
+              )}
             </div>
             {a.semantic && (
               <div className="b-card">
                 <strong>Semantic context</strong>
-                <p>{a.semantic.filesRead.length} safe files read · {a.semantic.evidence.length} evidence items · confidence: {a.semantic.confidence}</p>
+                <p>{a.semantic.filesRead.length} safe files read · {a.semantic.filesSkipped.length} omitted by safety/budget limits · {a.semantic.evidence.length} evidence items · confidence: {a.semantic.confidence}</p>
               </div>
             )}
             <div className="b-card">
+              <strong>Project checks</strong>
+              <p>{a.projectChecks?.length || 0} build/test command(s) proposed for explicit approval</p>
+            </div>
+            <div className="b-card">
               <strong>Collisions</strong>
-              <p>{skippedCount} file(s) skipped · {replacedCount} legacy harness file(s) replaced on extract</p>
+              <p>{collisionPreviewReady
+                ? `${skippedCount} file(s) skipped · ${replacedCount} legacy harness file(s) replaced on extract`
+                : 'Pending required project context — complete any missing domain or stack fields in the next steps.'}</p>
             </div>
           </div>
           {a.legacyHarness?.detected && (

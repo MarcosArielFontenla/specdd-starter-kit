@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyReviewedContext, createContextReview, reviewStatusLabel } from './review.js';
+import { applyReviewedContext, classifySelectedContext, createContextReview, reviewStatusLabel, selectedUnknownCount } from './review.js';
 
 const analysis = {
   stack: { frontend: 'React', backend: 'ASP.NET Core', testing: 'xUnit', database: 'PostgreSQL' },
@@ -42,4 +42,13 @@ test('approved context keeps only selected findings and updates the harness inpu
 test('unknown review status has a safe label', () => {
   assert.equal(reviewStatusLabel('planned'), 'Planned');
   assert.equal(reviewStatusLabel('not-a-status'), 'Unknown / verify');
+});
+
+test('bulk classification requires an explicit action and uses category-safe defaults', () => {
+  const review = createContextReview(analysis);
+  assert.ok(selectedUnknownCount(review) > 0);
+  const classified = classifySelectedContext(review);
+  assert.equal(selectedUnknownCount(classified), 0);
+  assert.ok(classified.stack.every((item) => item.status === 'implemented'));
+  assert.ok(classified.architecture.every((item) => item.status === 'architectural'));
 });

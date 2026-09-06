@@ -52,6 +52,13 @@ runs approved specs and acceptance checks when `powershell-yaml` is available, c
 the context budget, and executes commands declared in `context/project-validation.json`.
 It writes `context/harness-validation-report.md` and `.json`.
 
+The JSON and Markdown reports distinguish extraction integrity from project readiness.
+`extractionStatus: VERIFIED` means structure, immutable generated files and the source
+inventory match the ingestion receipt. `projectReadinessStatus: VERIFIED` additionally
+requires classified canonical context, real contracts and successful project checks.
+Context readiness is read from `context/project-definition.json`, not from duplicated
+mutable status in the extraction receipt.
+
 Exit codes are intentionally explicit: `0` means `VERIFIED`, `2` means `PARTIAL`
 (the scaffold is usable but evidence or checks are incomplete), and `1` means a
 structural, integrity or declared check failed. A newly generated scaffold normally
@@ -83,14 +90,21 @@ Do not put credentials or interactive commands in this file.
 ## Brownfield additions
 
 For an existing project, the wizard adds `context/brownfield-analysis.md` and keeps
-`.agents/workflows/spec-converge.md`. The analysis can run at two levels: structural
+`.agents/workflows/spec-converge.md`. It also creates the mutable, evidence-first queue
+`.agents/specs/tasks/brownfield-convergence.tasks.md` so the first agent session has a
+concrete path from detected context to approved contracts and both verification gates.
+The analysis can run at two levels: structural
 manifest/path detection or opt-in semantic analysis over a bounded safe text
-allowlist. Level 2 records evidence, confidence, architecture signals and skipped
-files; it does not read secrets or modify source code.
+allowlist of up to 256 files and 2,000,000 total characters. Level 2 excludes generated
+outputs such as `out-tsc`, records evidence, confidence, architecture signals and every
+file omitted by its limits, and proposes repository-backed build/test checks for explicit
+selection. It does not read secrets or modify source code.
 
 Before generation, `Review Context` requires a human to keep, edit, exclude and
-classify the detected stack, architecture, domains, entities and features. The
-approved selection is applied defensively to generated skills, context and feature
+classify the detected stack, architecture, domains, entities and features; selected
+findings cannot remain `unknown`. Repository-backed project checks are proposed in
+the same view and remain disabled unless explicitly selected. The approved selection
+is applied defensively to generated skills, context and feature
 artifacts. Entity contracts remain `designContract: placeholder`: context approval
 is not spec approval. Existing destination files are still skipped and reported;
 reconciliation belongs to `spec-converge`. Run the consolidated validator before the

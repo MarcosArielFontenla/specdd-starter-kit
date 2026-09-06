@@ -87,11 +87,13 @@ OWASP focus: ${(input.security?.owaspControls || []).join(', ') || 'baseline'}
 `;
 }
 
-export function renderProjectValidation() {
+export function renderProjectValidation(input = {}) {
   return JSON.stringify({
     schemaVersion: 1,
-    checks: [],
-    notes: 'Add explicit, human-approved PowerShell commands here when the project is ready for test/build/lint verification. The single validate-project.ps1 run will execute them from the project root.',
+    checks: (input.projectChecks || []).map(({ id, command }) => ({ id, command, expectedExitCode: 0 })),
+    notes: (input.projectChecks || []).length
+      ? 'These project checks were detected from repository evidence and explicitly selected during Brownfield context review.'
+      : 'Add explicit, human-approved PowerShell commands here when the project is ready for test/build/lint verification. The single validate-project.ps1 run will execute them from the project root.',
   }, null, 2);
 }
 
@@ -159,6 +161,8 @@ export function renderScaffoldManifest(input, generatedFiles, skipped = [], repl
         analysisTruncated: Boolean(input.analysis?.truncated),
         manifests: input.analysis?.manifestsFound || [],
         contentFingerprints: sourceContentFingerprints,
+        semanticFilesRead: input.analysis?.semantic?.filesRead?.length ?? 0,
+        semanticFilesSkipped: input.analysis?.semantic?.filesSkipped || [],
       } : null,
     },
     generatedFiles: generated,
@@ -175,7 +179,12 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
     const summary = definitionValidation.diagnostics.map((item) => `${item.code} ${item.path}`).join(', ');
     throw new TypeError(`Cannot generate Harness v1 from invalid project definition: ${summary}`);
   }
-  const effectiveInput = toHarnessV1Input(projectDefinition, createLegacyCompilationContext(reviewedInput));
+  const effectiveInput = {
+    ...toHarnessV1Input(projectDefinition, createLegacyCompilationContext(reviewedInput)),
+    // Project checks are operational evidence selected by the human, not portable
+    // project intent, so they remain outside the canonical definition.
+    projectChecks: reviewedInput.projectChecks || [],
+  };
   const tools = effectiveInput.tools || [];
   const hasCopilot = tools.includes('GitHub Copilot');
 
@@ -190,7 +199,7 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
   out[PROJECT_DEFINITION_PATH] = JSON.stringify(projectDefinition, null, 2);
   out['context/tech-stack.md'] = renderTechStack(effectiveInput);
   out['context/constitution.md'] = renderConstitution(effectiveInput);
-  out['context/project-validation.json'] = renderProjectValidation();
+  out['context/project-validation.json'] = renderProjectValidation(effectiveInput);
 
   out['AGENTS.md'] = renderPrimer(effectiveInput, today);
   out['.agents/REGISTRY.md'] = renderRegistry(effectiveInput, today);
@@ -210,6 +219,9 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
 
   if ((effectiveInput.mcp || []).length > 0) out['.vscode/mcp.json'] = renderMcpJson(effectiveInput.mcp);
   if ((effectiveInput.features || []).length > 0) out['specs/features-spec.md'] = renderFeaturesSpec(effectiveInput);
+  if (effectiveInput.scenario === 'brownfield') {
+    out['.agents/specs/tasks/brownfield-convergence.tasks.md'] = renderBrownfieldConvergenceTasks(effectiveInput, today);
+  }
   out[SCAFFOLD_MANIFEST_PATH] = renderScaffoldManifest(
     effectiveInput,
     [...Object.keys(out), SCAFFOLD_MANIFEST_PATH],
@@ -527,12 +539,12 @@ export function renderBrownfieldAnalysis(input, skipped, replaced, today) {
 \`pwsh .agents/scripts/validate-project.ps1\` after extraction; it produces one consolidated
 report with structure, integrity, baseline fidelity, specs and budget. Then get the human's
 approval on \`.agents/specs/tasks/harness-migration.tasks.md\`, execute it, and run
-\`.agents/workflows/spec-converge.md\` to measure the delta between this codebase and the
-specs in \`.agents/specs/\`.`
+the evidence queue in \`.agents/specs/tasks/brownfield-convergence.tasks.md\` through
+\`.agents/workflows/spec-converge.md\`.`
     : `First run \`pwsh .agents/scripts/validate-project.ps1\` after extraction. It produces
 one consolidated report and makes clear whether the scaffold is VERIFIED or still PARTIAL.
-Then run \`.agents/workflows/spec-converge.md\` to measure the delta between this codebase
-and the specs in \`.agents/specs/\`. Treat the suggestions below as leads, not facts.`;
+Then process \`.agents/specs/tasks/brownfield-convergence.tasks.md\` with
+\`.agents/workflows/spec-converge.md\`. Treat the suggestions below as leads, not facts.`;
   const legacyBlock = deprecating
     ? `
 ## Legacy harness detected
@@ -583,6 +595,9 @@ ${list((review.features || []).map(reviewItemLabel))}
 
 ### Architecture signal classifications
 ${list((review.architecture || []).map(reviewItemLabel))}
+
+### Project checks selected for verification
+${list((review.projectChecks || []).filter((item) => item.selected).map((item) => `${item.label} — ${item.command} · ${item.source}`))}
 `
     : '';
   return `# Brownfield Analysis — ${a.projectName || input.project?.name || 'Project'}
@@ -609,6 +624,10 @@ ${list(a.entities)}
 
 ## Suggested features (from folder structure)
 ${list(a.features)}
+
+## Suggestion coverage
+- Entities: ${a.suggestionLimits?.entities?.returned ?? a.entities?.length ?? 0} returned / ${a.suggestionLimits?.entities?.detected ?? a.entities?.length ?? 0} detected${a.suggestionLimits?.entities?.truncated ? ' (truncated)' : ''}
+- Features: ${a.suggestionLimits?.features?.returned ?? a.features?.length ?? 0} returned / ${a.suggestionLimits?.features?.detected ?? a.features?.length ?? 0} detected${a.suggestionLimits?.features?.truncated ? ' (truncated)' : ''}
 ${semanticBlock}
 ${reviewBlock}
 
@@ -662,6 +681,45 @@ the same report; do not mark this phase complete from a partial result.
 ## Questions for the human (content judgment — answer before Phase 2)
 - Which legacy knowledge files are still authoritative vs dead? Mark each K-task's
   integrate/archive choice accordingly before approving.
+`;
+}
+
+export function renderBrownfieldConvergenceTasks(input, today) {
+  const entities = input.entities || [];
+  const features = input.features || [];
+  const checks = input.projectChecks || [];
+  const rows = (items, prefix, action) => items.length
+    ? items.map((item, index) => `- [ ] ${prefix}${String(index + 1).padStart(3, '0')} ${action} \`${item}\` from code and test evidence; do not infer unsupported business rules`).join('\n')
+    : '- [ ] (none detected — confirm this is intentional)';
+  return `---
+feature: brownfield-convergence
+status: draft
+createdAt: ${today}
+---
+
+# Tasks — Brownfield semantic convergence
+
+This file turns the local scan into an approval-ready work queue. The scanner supplies
+evidence and candidates; an agent proposes contract content, but only a human can approve
+business rules, waivers or executable checks.
+
+## Phase 1 — Confirm detected model
+${rows(entities, 'E', 'Reconcile the entity contract for')}
+
+## Phase 2 — Confirm capabilities
+${rows(features, 'F', 'Reconcile the feature or capability')}
+
+## Phase 3 — Approve executable evidence
+${checks.length ? checks.map((check, index) => `- [ ] C${String(index + 1).padStart(3, '0')} Confirm and execute \`${check.command}\` (${check.source})`).join('\n') : '- [ ] C001 Add at least one representative project build/test check with human approval'}
+- [ ] C900 Replace every selected entity's placeholder contract with approved requirements plus real acceptance checks or a documented waiver
+- [ ] C901 Keep \`context/project-definition.json\` aligned with the approved classifications
+
+## Phase 4 — Done gate
+- [ ] G001 Run \`pwsh .agents/scripts/validate-project.ps1\`
+- [ ] G002 Require \`extractionStatus: VERIFIED\` and \`projectReadinessStatus: VERIFIED\`
+
+Use \`.agents/workflows/spec-converge.md\` for this queue. Stop for human approval before
+changing a design contract to \`approved\` or activating a proposed project check.
 `;
 }
 

@@ -1,0 +1,7 @@
+{
+  "name": "brownfield-no-domain",
+  "description": "A small brownfield fixture without an inferable business domain.",
+  "dependencies": {
+    "react": "18.3.0"
+  }
+}

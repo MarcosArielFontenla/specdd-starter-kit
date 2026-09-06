@@ -58,6 +58,7 @@ import { dirname, join } from 'node:path';
 
 const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'brownfield-sample');
 const legacyFixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'brownfield-legacy');
+const noDomainFixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'brownfield-no-domain');
 
 test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', async ({ page }) => {
   await page.goto('/');
@@ -86,6 +87,7 @@ test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', a
   await expect(page.getByTestId('analysis-summary')).toContainText('Semantic context');
   await page.getByTestId('next-btn').click(); // -> Review Context
   await expect(page.getByTestId('context-review')).toBeVisible();
+  await page.getByTestId('context-classify').click();
   await page.getByTestId('context-approve').click();
   await page.getByTestId('next-btn').click(); // -> Project (pre-filled)
 
@@ -101,6 +103,7 @@ test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', a
   await page.getByTestId('next-btn').click(); // -> Preview
 
   await expect(page.getByTestId('preview')).toContainText('.agents/workflows/spec-converge.md');
+  await expect(page.getByTestId('preview')).toContainText('.agents/specs/tasks/brownfield-convergence.tasks.md');
   await expect(page.getByTestId('preview')).toContainText('context/brownfield-analysis.md');
   await expect(page.getByTestId('preview')).toContainText('context/project-definition.json');
   await expect(page.getByTestId('preview')).toContainText('.agents/skills/auth/SKILL.md');
@@ -111,6 +114,29 @@ test('brownfield wizard analyzes a folder, pre-fills steps, skips collisions', a
     page.getByTestId('download-btn').click(),
   ]);
   expect(download.suggestedFilename()).toContain('scaffold.zip');
+});
+
+test('brownfield analysis with no inferred domain stays usable and defers validation', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.b-shell[data-ready="true"]').waitFor();
+
+  await page.getByTestId('next-btn').click();
+  await page.getByTestId('scenario-brownfield').click();
+  await page.getByTestId('next-btn').click();
+
+  await page.getByTestId('folder-input').setInputFiles(noDomainFixtureDir);
+  await expect(page.getByTestId('analysis-summary')).toContainText('0 domains');
+  await expect(page.getByTestId('analysis-summary')).toContainText('Pending required project context');
+  await page.getByTestId('next-btn').click();
+  await page.getByTestId('context-classify').click();
+  await page.getByTestId('context-approve').click();
+  await page.getByTestId('next-btn').click();
+  await page.getByTestId('next-btn').click();
+  await page.getByTestId('next-btn').click();
+
+  await expect(page.getByTestId('step-title')).toHaveText('Domains & Entities');
+  await page.getByTestId('next-btn').click();
+  await expect(page.getByTestId('error')).toContainText('Add at least one domain');
 });
 
 test('brownfield with legacy harness: warning gates next, replaced group and migration tasks appear', async ({ page }) => {
@@ -132,6 +158,7 @@ test('brownfield with legacy harness: warning gates next, replaced group and mig
   await page.getByTestId('legacy-ack').check();
   await page.getByTestId('next-btn').click(); // -> Review Context
   await expect(page.getByTestId('context-review')).toBeVisible();
+  await page.getByTestId('context-classify').click();
   await page.getByTestId('context-approve').click();
   await page.getByTestId('next-btn').click(); // -> Project
 

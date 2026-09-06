@@ -5,12 +5,23 @@ export const REVIEW_STATUSES = Object.freeze([
   Object.freeze({ id: 'unknown', label: 'Unknown / verify' }),
 ]);
 
+export const REVIEW_GROUPS = Object.freeze(['stack', 'domains', 'entities', 'features', 'architecture']);
+
+const DEFAULT_REVIEW_STATUS = Object.freeze({
+  stack: 'implemented',
+  domains: 'implemented',
+  entities: 'implemented',
+  features: 'implemented',
+  architecture: 'architectural',
+});
+
 const STACK_FIELDS = [
   ['languages', 'Languages'],
   ['frontend', 'Frontend'],
   ['backend', 'Backend'],
   ['testing', 'Testing'],
   ['database', 'Database'],
+  ['infra', 'Infrastructure'],
 ];
 
 const evidenceFor = (analysis, category, value) => {
@@ -43,6 +54,22 @@ export function createContextReview(analysis) {
       source: item.source,
       confidence: item.confidence,
     })),
+    projectChecks: (analysis.projectChecks || []).map((check) => ({ ...check, selected: false })),
+  };
+}
+
+export function selectedUnknownCount(review) {
+  return REVIEW_GROUPS.reduce((count, group) => count + (review?.[group] || [])
+    .filter((item) => item.selected && item.status === 'unknown').length, 0);
+}
+
+export function classifySelectedContext(review) {
+  return {
+    ...review,
+    approved: false,
+    ...Object.fromEntries(REVIEW_GROUPS.map((group) => [group, (review[group] || []).map((item) => (
+      item.selected && item.status === 'unknown' ? { ...item, status: DEFAULT_REVIEW_STATUS[group] } : item
+    ))])),
   };
 }
 
@@ -65,6 +92,7 @@ export function applyReviewedContext(data, review) {
     entities: selectedValues(review.entities),
     features: selectedValues(review.features),
     architecture: selectedValues(review.architecture),
+    projectChecks: (review.projectChecks || []).filter((check) => check.selected),
   };
 }
 

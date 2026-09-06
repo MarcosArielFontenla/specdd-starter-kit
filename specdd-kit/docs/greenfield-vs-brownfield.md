@@ -37,9 +37,11 @@ Brownfield has an explicit analysis-depth choice, independent from the scenario:
   paths only. It detects the stack, suggests domains and entities, detects legacy
   harnesses, and generates a collision-safe scaffold.
 - **Level 2 — Assisted semantic analysis (available, opt-in):** a bounded local
-  analysis of safe documentation, manifests, models, routes and tests. It reports
-  evidence, confidence, architecture signals and skipped files before any human
-  context review or convergence work.
+  analysis of up to 256 safe documentation, manifest, model, route and test files
+  with a 2,000,000-character total budget. It excludes generated outputs such as
+  `out-tsc`, reports every budget omission, proposes repository-backed build/test
+  checks, and reports evidence, confidence and architecture signals before any
+  human context review or convergence work.
 
 The wizard exposes and executes both levels. Level 2 never reads secrets,
 environment files or binaries. Neither level should invent business rules, approve
@@ -52,8 +54,9 @@ YAML-backed spec/budget checks and any commands declared in
 `PARTIAL` is expected while contracts or project commands are still placeholders.
 
 1. **Review and approve the detected context before generating the Harness.** Keep,
-   edit, exclude and classify technologies, architecture signals, domains, entities
-   and features. This approval confirms detection context; it does not approve
+   edit, exclude and classify technologies, architecture signals, domains, entities,
+   features and proposed project checks. Selected findings cannot remain `unknown`.
+   This approval confirms detection context; it does not approve
    entity contracts or business rules.
 2. **Write `context/tech-stack.md` from what's actually there**, not what you wish
    were there. Run through the file's own Definition of Done: every tool a plan

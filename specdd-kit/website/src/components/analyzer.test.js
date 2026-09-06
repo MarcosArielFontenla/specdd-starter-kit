@@ -33,6 +33,18 @@ test('node/react project: stack from package.json + tsconfig', async () => {
   assert.equal(a.truncated, false);
 });
 
+test('nested package manifests contribute stack and independent build checks', async () => {
+  const files = {
+    'package.json': JSON.stringify({ name: 'workspace', dependencies: { react: '19' }, scripts: { build: 'build-root' } }),
+    'apps/admin/package.json': JSON.stringify({ dependencies: { '@angular/core': '21', express: '5' }, scripts: { build: 'ng build' } }),
+  };
+  const a = await analyzeProject({ folderName: 'workspace', paths: Object.keys(files), readFile: reader(files) });
+  assert.equal(a.stack.frontend, 'React / Angular');
+  assert.equal(a.stack.backend, 'Express');
+  assert.deepEqual(a.manifestsFound, Object.keys(files).sort());
+  assert.deepEqual(a.projectChecks.map((check) => check.command), ['npm run build', 'npm run build --prefix apps/admin']);
+});
+
 test('python/django project', async () => {
   const files = { 'requirements.txt': 'django==5.0\npsycopg2==2.9\n' };
   const a = await analyzeProject({
@@ -105,6 +117,27 @@ test('semantic allowlist excludes sensitive and binary paths', () => {
   assert.equal(isSemanticSafePath('src/API/appsettings.json'), false);
   assert.equal(isSemanticSafePath('public/logo.png'), false);
   assert.deepEqual(selectSemanticPaths(['README.md', '.env', 'public/logo.png', 'src/domain/Product.cs']), ['README.md', 'src/domain/Product.cs']);
+  assert.deepEqual(selectSemanticPaths(['frontend/out-tsc/app.js', 'src/domain/Product.cs']), ['src/domain/Product.cs']);
+});
+
+test('semantic mode reports candidates omitted by its file cap', async () => {
+  const paths = Array.from({ length: 260 }, (_, i) => `src/domain/Entity${String(i).padStart(3, '0')}.cs`);
+  const a = await analyzeProject({
+    folderName: 'large', analysisDepth: 'semantic', paths,
+    readFile: () => Promise.resolve('public class Entity {}'),
+  });
+  assert.equal(a.semantic.filesRead.length, 256);
+  assert.equal(a.semantic.filesSkipped.length, 4);
+  assert.ok(a.semantic.filesSkipped.every((item) => item.reason === 'file-count-cap'));
+});
+
+test('semantic .NET analysis prefers persisted DbSet entities over filename guesses', async () => {
+  const files = {
+    'backend/src/Bloom.Application/Abstractions/IAppDbContext.cs': 'DbSet<Appointment> Appointments { get; }\nDbSet<ServiceCategory> Categories { get; }',
+    'backend/src/Bloom.Domain/PhoneNormalizer.cs': 'public static class PhoneNormalizer {}',
+  };
+  const a = await analyzeProject({ folderName: 'Bloom', analysisDepth: 'semantic', paths: Object.keys(files), readFile: reader(files) });
+  assert.deepEqual(a.entities, ['Appointment', 'ServiceCategory']);
 });
 
 test('unreadable manifest is skipped without crashing', async () => {
@@ -179,6 +212,17 @@ test('domains prefer backend modules and features are detected separately', () =
   assert.deepEqual(suggestFeatures(paths), ['catalog', 'inventory']);
 });
 
+test('domains detect a nested .NET Domain project and ignore technical siblings', () => {
+  const paths = [
+    'backend/src/Bloom.Domain/Appointment.cs',
+    'backend/src/Bloom.Domain/PhoneNormalizer.cs',
+    'backend/src/Bloom.Api/Program.cs',
+    'backend/src/Bloom.Infrastructure/BloomDbContext.cs',
+    'backend/tests/Bloom.Domain.Tests/PhoneNormalizerTests.cs',
+  ];
+  assert.deepEqual(suggestDomains(paths), ['Bloom']);
+});
+
 test('entities from models/ dirs and *.entity/*.model filenames', () => {
   const entities = suggestEntities([
     'models/user.py', 'models/invoice.py', 'models/__init__.py',
@@ -188,9 +232,9 @@ test('entities from models/ dirs and *.entity/*.model filenames', () => {
   assert.deepEqual([...entities].sort(), ['Invoice', 'Order', 'Product', 'User']);
 });
 
-test('entities are deduplicated and capped at 12', () => {
+test('entities are deduplicated and retain broader bounded coverage', () => {
   const paths = Array.from({ length: 15 }, (_, i) => `models/entity${String(i).padStart(2, '0')}.py`);
-  assert.equal(suggestEntities(paths).length, 12);
+  assert.equal(suggestEntities(paths).length, 15);
   assert.equal(suggestEntities(['models/user.py', 'src/x/User.entity.ts']).length, 1);
 });
 
@@ -201,7 +245,49 @@ test('entities include .Domain folders but exclude status and infrastructure con
     'backend/src/Modules/Catalog/TacticArgStore.Modules.Catalog.Domain/Entities/Product.cs',
     'backend/src/Modules/Catalog/TacticArgStore.Modules.Catalog.Domain/Entities/ProductStatus.cs',
     'backend/src/Modules/Orders/TacticArgStore.Modules.Orders.Domain/OrderStatus.cs',
-  ]), ['InventoryItem', 'InventoryMovement', 'Product']);
+  ]), ['Product', 'InventoryItem', 'InventoryMovement']);
+});
+
+test('features keep public UI areas and infer application capabilities', () => {
+  assert.deepEqual(suggestFeatures([
+    'frontend/src/app/features/admin/dashboard.ts',
+    'frontend/src/app/features/public/booking.ts',
+    'backend/src/Bloom.Application/Booking/BookingService.cs',
+    'backend/src/Bloom.Application/Auth/AuthService.cs',
+  ]), ['admin', 'auth', 'booking', 'public']);
+});
+
+test('build and test checks are proposed from repository manifests', async () => {
+  const files = {
+    'frontend/package.json': JSON.stringify({ scripts: { build: 'ng build', test: 'ng test' }, dependencies: { '@angular/core': '21' } }),
+  };
+  const a = await analyzeProject({
+    folderName: 'Bloom',
+    paths: ['frontend/package.json', 'backend/Bloom.slnx'],
+    readFile: reader(files),
+  });
+  assert.deepEqual(a.projectChecks.map((check) => check.command), [
+    'npm run build --prefix frontend',
+    'dotnet test backend/Bloom.slnx --configuration Release',
+  ]);
+});
+
+test('project check proposals cover common ecosystems without activating arbitrary scripts', async () => {
+  const files = {
+    'package.json': JSON.stringify({ scripts: { test: 'vitest run', dangerous: 'do-not-run' } }),
+    'pyproject.toml': '[project]\ndependencies = ["pytest"]',
+    'pom.xml': '<project />',
+  };
+  const a = await analyzeProject({
+    folderName: 'polyglot',
+    paths: [...Object.keys(files), 'go.mod', 'Cargo.toml', 'gradlew.bat'],
+    readFile: reader(files),
+  });
+  assert.deepEqual(a.projectChecks.map((check) => check.command), [
+    'npm test', 'python -m pytest', 'mvn -f pom.xml test',
+    'go test ./...', 'cargo test', './gradlew.bat test',
+  ]);
+  assert.ok(a.projectChecks.every((check) => !check.command.includes('do-not-run')));
 });
 
 test('suggestions never contain markdown-table-breaking characters', () => {
@@ -241,6 +327,12 @@ test('detectLegacyHarness classifies mechanism vs knowledge', () => {
 test('no false positives on a harness-free repo', () => {
   const r = detectLegacyHarness(['src/index.js', 'README.md', '.github/workflows/ci.yml', 'docs/agents-overview.md']);
   assert.deepEqual(r, { detected: false, mechanism: [], knowledge: [] });
+});
+
+test('local-only assistant settings are not treated as a legacy project harness', () => {
+  assert.deepEqual(detectLegacyHarness(['.claude/settings.local.json']), {
+    detected: false, mechanism: [], knowledge: [],
+  });
 });
 
 test('analyzeProject exposes legacyHarness from RAW paths (dot-folders included)', async () => {

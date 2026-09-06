@@ -14,6 +14,7 @@
 param(
   [string]$Root = ".",
   [string]$ManifestPath = "context/scaffold-manifest.json",
+  [string]$ProjectDefinitionPath = "context/project-definition.json",
   [string]$ProjectChecksPath = "context/project-validation.json",
   [string]$ReportPath = "context/harness-validation-report.md",
   [string]$JsonReportPath = "context/harness-validation-report.json"
@@ -26,7 +27,7 @@ $results = [System.Collections.Generic.List[object]]::new()
 $scanWarnings = [System.Collections.Generic.List[string]]::new()
 
 $ignoredDirs = @(
-  "node_modules", ".git", "dist", "build", "out", "coverage", "vendor",
+  "node_modules", ".git", "dist", "build", "out", "out-tsc", "coverage", "vendor",
   "venv", ".venv", "__pycache__", "bin", "obj", "target"
 )
 $ignoredPaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
@@ -184,6 +185,24 @@ function Read-Manifest {
   }
 }
 
+function Read-ProjectDefinition {
+  if (Is-UnsafeRelative $ProjectDefinitionPath) {
+    Add-Result "project-definition" "Canonical project definition" "FAIL" "Project Definition path must remain relative to the project root: $ProjectDefinitionPath"
+    return $null
+  }
+  $path = Full-Path $ProjectDefinitionPath
+  if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+    Add-Result "project-definition" "Canonical project definition" "PARTIAL" "No canonical Project Definition exists at $ProjectDefinitionPath."
+    return $null
+  }
+  try {
+    return Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+  } catch {
+    Add-Result "project-definition" "Canonical project definition" "FAIL" "Project Definition is not valid JSON: $($_.Exception.Message)"
+    return $null
+  }
+}
+
 function Test-GeneratedIntegrity($Manifest) {
   $fidelity = $Manifest.fidelity
   if (-not $fidelity -or $fidelity.fingerprintAlgorithm -ne "fnv1a32-utf8") {
@@ -269,7 +288,9 @@ function Test-SourceFidelity($Manifest) {
 
   $evidence = @(
     "Expected source paths: $expectedCount / $expectedFingerprint",
-    "Current source paths: $currentCount / $currentFingerprint"
+    "Current source paths: $currentCount / $currentFingerprint",
+    "Content-fingerprinted source files: $(@($source.contentFingerprints.PSObject.Properties).Count) / $expectedCount",
+    "Semantic files omitted by declared limits: $(@($source.semanticFilesSkipped).Count)"
   )
   if ($contentFailures.Count) { $evidence += $contentFailures }
   if ($source.analysisTruncated -eq $true) { $evidence += "The browser analysis was truncated at its scan cap." }
@@ -283,10 +304,10 @@ function Test-SourceFidelity($Manifest) {
   }
 }
 
-function Test-ContextReadiness($Manifest) {
+function Test-ContextReadiness($Manifest, $Definition) {
   $issues = [System.Collections.Generic.List[string]]::new()
   if ([string]$Manifest.scenario -eq "brownfield") {
-    if (-not $Manifest.contextReview -or $Manifest.contextReview.approved -ne $true) {
+    if (-not $Definition -or [string]$Definition.project.contextReview.status -ne "approved") {
       $issues.Add("human context review is not approved")
     }
     if ($Manifest.fidelity.source.analysisTruncated -eq $true) {
@@ -294,12 +315,17 @@ function Test-ContextReadiness($Manifest) {
     }
   }
 
-  $reviewStatuses = $Manifest.contextReview.statuses
-  if ($reviewStatuses) {
-    foreach ($group in $reviewStatuses.PSObject.Properties) {
+  $findings = @($Definition.project.contextReview.findings)
+  foreach ($item in $findings) {
+    if ($item.selected -eq $true -and [string]$item.status -eq "unknown") {
+      $issues.Add("selected $($item.group) context item '$($item.value)' remains unknown")
+    }
+  }
+  if (-not $Definition -and $Manifest.contextReview.statuses) {
+    foreach ($group in $Manifest.contextReview.statuses.PSObject.Properties) {
       foreach ($item in @($group.Value)) {
         if ($item.selected -eq $true -and [string]$item.status -eq "unknown") {
-          $issues.Add("selected $($group.Name) context item '$($item.value)' remains unknown")
+          $issues.Add("legacy receipt has selected $($group.Name) context item '$($item.value)' marked unknown")
         }
       }
     }
@@ -372,6 +398,7 @@ function Test-ProjectChecks {
 }
 
 $manifest = Read-Manifest
+$definition = Read-ProjectDefinition
 $manifestRelative = Normalize-Relative $ManifestPath
 $harnessScript = Join-Path $rootPath ".agents/scripts/validate-harness.ps1"
 $specScript = Join-Path $rootPath ".agents/scripts/validate-spec.ps1"
@@ -391,13 +418,21 @@ if (Get-Module -ListAvailable -Name powershell-yaml) {
 if ($manifest) {
   Test-GeneratedIntegrity $manifest
   Test-SourceFidelity $manifest
-  Test-ContextReadiness $manifest
+  Test-ContextReadiness $manifest $definition
   Test-ProjectChecks
 }
 
 $hasFailures = @($results | Where-Object { $_.status -eq "FAIL" }).Count -gt 0
 $hasPartial = @($results | Where-Object { $_.status -in @("PARTIAL", "SKIP") }).Count -gt 0
 $overall = if ($hasFailures) { "FAILED" } elseif ($hasPartial) { "PARTIAL" } else { "VERIFIED" }
+$extractionResults = @($results | Where-Object { $_.id -in @("structure", "integrity", "source-baseline") })
+$extractionStatus = if (@($extractionResults | Where-Object status -eq "FAIL").Count) {
+  "FAILED"
+} elseif ($extractionResults.Count -lt 3 -or @($extractionResults | Where-Object { $_.status -in @("PARTIAL", "SKIP") }).Count) {
+  "PARTIAL"
+} else {
+  "VERIFIED"
+}
 $finishedAt = [DateTime]::UtcNow
 
 $nextActions = [System.Collections.Generic.List[string]]::new()
@@ -409,6 +444,8 @@ $reportObject = [ordered]@{
   schemaVersion = 1
   status = $overall
   verified = ($overall -eq "VERIFIED")
+  extractionStatus = $extractionStatus
+  projectReadinessStatus = $overall
   startedAt = $startedAt.ToString("o")
   finishedAt = $finishedAt.ToString("o")
   root = $rootPath
@@ -434,6 +471,8 @@ $markdown = @(
   "# Harness Validation Report"
   ""
   "- **Status:** $overall"
+  "- **Extraction integrity:** $extractionStatus"
+  "- **Project readiness:** $overall"
   "- **Generated:** $($finishedAt.ToString("yyyy-MM-dd HH:mm:ss")) UTC"
   "- **Root:** ``$rootPath``"
   "- **Manifest:** ``$manifestRelative``"

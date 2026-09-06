@@ -116,8 +116,11 @@ install tasks with a human gate.
    explicit opt-in that reads only a bounded allowlist of safe documentation,
    manifests, models, routes and tests. Both run 100% in your browser.
 2. Open **Review Context** and edit, exclude or classify each detected language,
-   technology, architecture signal, domain, entity and feature. Approval is required
-   before the wizard can continue.
+   technology, architecture signal, domain, entity and feature. Selected findings
+   cannot remain `unknown`. The wizard can classify detected current context in one
+   explicit action, but you can still mark individual findings as planned or exclude
+   them. Review any build/test commands inferred from manifests and select only the
+   commands that are safe and representative for this repository.
 3. If a previous agent harness is detected, read the warning and check the
    acknowledgment — its mechanism files will be deprecated, its knowledge triaged.
 4. Walk the remaining steps (pre-filled), check the preview — including the
@@ -130,8 +133,9 @@ install tasks with a human gate.
    acknowledged legacy harness, the replaced harness paths).
 7. First agent session — one line:
    `Read AGENTS.md and follow it. Then read context/brownfield-analysis.md and do what its Kickoff section says.`
-   The agent will ask for your approval on the pre-generated migration tasks (if a
-   legacy harness existed) and then run `spec-converge` against your specs.
+   The agent will work from `.agents/specs/tasks/brownfield-convergence.tasks.md`,
+   ask for approval before promoting contracts or checks, handle migration tasks if
+   a legacy harness existed, and then run `spec-converge` against your specs.
 
 #### Brownfield analysis depth
 
@@ -140,8 +144,11 @@ The scenario and the analysis depth are separate decisions:
 - **Level 1 — Structural bootstrap:** reads known manifests and file paths only;
   detects technologies, suggests domains/entities, and detects legacy harnesses.
 - **Level 2 — Assisted semantic analysis:** an opt-in local analysis over a bounded
-  safe allowlist. It records safe files read, evidence, confidence, architecture
-  signals and skipped files; it never reads secrets, environment files or binaries.
+  safe allowlist. It reads up to 256 files and 2,000,000 characters, prioritizes
+  manifests, domain models, routes and tests, ignores generated outputs such as
+  `out-tsc`, and records every file omitted by count, size or total-budget limits.
+  It also proposes evidence-backed project checks; none are activated without the
+  user's explicit selection. It never reads secrets, environment files or binaries.
 
 Neither level invents business rules, approves specs automatically, or modifies
 existing source code. Brownfield context approval is not spec approval: generated
@@ -169,6 +176,13 @@ keeps context, draft skills/specs/features and the project-validation profile mu
 so normal project authoring does not look like an extraction error. These fingerprints
 prove path/content fidelity for the generated files; they do not prove semantic
 equivalence or business-rule correctness.
+
+The report separates `extractionStatus` from `projectReadinessStatus`. Extraction
+integrity can be `VERIFIED` immediately when structure, fingerprints and the source
+inventory match, while project readiness remains `PARTIAL` until selected context is
+classified, entity contracts are real and the approved project checks pass. Canonical
+context readiness is read from `context/project-definition.json`; the scaffold manifest
+remains the extraction receipt.
 
 ### Capability Pack — add BA/QA/Dev/UX roles to a harness project
 
