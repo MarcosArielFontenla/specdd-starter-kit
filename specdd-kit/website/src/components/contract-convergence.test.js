@@ -264,8 +264,21 @@ test('a generated Brownfield scaffold converges through the real validator with 
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const sourceText = '\ufeffpublic sealed class Customer {}\r\n';
   const sourcePath = 'src/customer.cs';
+  const legacyCanonicalPaths = [
+    'AGENTS.md',
+    'context/project.md',
+    'context/project-definition.json',
+    'context/tech-stack.md',
+    'context/constitution.md',
+    'context/project-validation.json',
+  ];
+  const validationReportPaths = [
+    'context/harness-validation-report.md',
+    'context/harness-validation-report.json',
+  ];
   const input = {
     scenario: 'brownfield',
+    legacyAck: true,
     project: { name: 'Contract fixture', description: 'Round-trip fixture', problem: 'Placeholder contract' },
     personas: ['Operator'],
     outcomes: { user: 'A verified contract', business: 'Auditable convergence' },
@@ -280,17 +293,22 @@ test('a generated Brownfield scaffold converges through the real validator with 
     tools: [],
     mcp: [],
     model: 'default',
-    existingPaths: [sourcePath],
+    existingPaths: [sourcePath, ...legacyCanonicalPaths, ...validationReportPaths],
     projectChecks: [{ id: 'fixture', command: "pwsh -NoProfile -Command 'exit 0'", source: sourcePath }],
     analysis: {
       analysisDepth: 'semantic', projectName: 'Contract fixture', fileCount: 1, truncated: false,
+      legacyHarness: { detected: true, mechanism: ['AGENTS.md'], knowledge: [] },
       stack: { languages: ['C#'], backend: '.NET', testing: 'PowerShell' },
       domains: ['Core'], entities: ['Customer'], features: [], manifestsFound: [],
       manifestFingerprints: {},
       semantic: {
-        filesRead: [sourcePath], filesSkipped: [], totalChars: sourceText.length, confidence: 'high',
+        filesRead: [sourcePath, ...validationReportPaths], filesSkipped: [], totalChars: sourceText.length, confidence: 'high',
         architecture: [{ value: 'Layered', source: sourcePath, confidence: 'high' }],
-        evidence: [], fileFingerprints: { [sourcePath]: fingerprintText(sourceText) },
+        evidence: [], fileFingerprints: {
+          [sourcePath]: fingerprintText(sourceText),
+          [validationReportPaths[0]]: fingerprintText('previous markdown report\n'),
+          [validationReportPaths[1]]: fingerprintText('{"previous":true}\n'),
+        },
       },
     },
     contextReview: {
@@ -306,9 +324,21 @@ test('a generated Brownfield scaffold converges through the real validator with 
   const kitFilesPath = join(here, '..', 'data', 'kit-files.json');
   const baseFiles = JSON.parse(readFileSync(kitFilesPath, 'utf8'));
   const { files } = generateScaffold(baseFiles, input, '2026-09-06');
+  const receipt = JSON.parse(files['context/scaffold-manifest.json']);
+  for (const path of legacyCanonicalPaths) {
+    assert.ok(receipt.replacedPaths.includes(path), `${path} must be an explicit legacy replacement`);
+    assert.ok(receipt.generatedFiles.includes(path), `${path} must ship in the replacement archive`);
+  }
   const sourceFull = join(root, ...sourcePath.split('/'));
   mkdirSync(dirname(sourceFull), { recursive: true });
   writeFileSync(sourceFull, sourceText);
+  for (const path of legacyCanonicalPaths) {
+    const full = join(root, ...path.split('/'));
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, `legacy value for ${path}\n`);
+  }
+  writeFileSync(join(root, ...validationReportPaths[0].split('/')), 'previous markdown report\n');
+  writeFileSync(join(root, ...validationReportPaths[1].split('/')), '{"previous":true}\n');
   for (const [relative, contents] of Object.entries(files)) {
     const full = join(root, ...relative.split('/'));
     mkdirSync(dirname(full), { recursive: true });

@@ -83,8 +83,14 @@ if ($manifest) {
 
   $skippedPaths = @($manifest.skippedPaths | ForEach-Object { Normalize-Relative ([string]$_) })
   $replacedPaths = @($manifest.replacedPaths | ForEach-Object { Normalize-Relative ([string]$_) })
-  foreach ($path in @($skippedPaths + $replacedPaths)) {
-    if ($generatedPaths -contains $path) { Fail "collision path is also listed as generated: $path" }
+  foreach ($path in $skippedPaths) {
+    if ($generatedPaths -contains $path) { Fail "skipped collision path is also listed as generated: $path" }
+  }
+  foreach ($path in $replacedPaths) {
+    # A legacy replacement is deliberately both generated and recorded: the
+    # archive supplies the new file while the receipt preserves why it replaced
+    # an existing Harness path.  Replacements that are not shipped are unsafe.
+    if ($generatedPaths -notcontains $path) { Fail "replaced Harness path is not listed as generated: $path" }
   }
 
   $requiredFiles = @('AGENTS.md', '.agents/REGISTRY.md', '.agents/orchestration/ROUTING.md', '.agents/cold-start/budget-manifest.yaml')

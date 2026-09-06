@@ -173,6 +173,7 @@ test('brownfield with legacy harness: warning gates next, replaced group and mig
 
   await expect(page.getByTestId('preview')).toContainText('.agents/specs/tasks/harness-migration.tasks.md');
   await expect(page.getByTestId('replaced-group')).toContainText('AGENTS.md');
+  await expect(page.getByTestId('replaced-group')).toContainText('context/project-definition.json');
   await expect(page.getByTestId('skipped-group')).toContainText('README.md');
 
   const [download] = await Promise.all([

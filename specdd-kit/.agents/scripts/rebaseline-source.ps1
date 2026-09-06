@@ -221,6 +221,10 @@ try {
   $manifest = Read-Manifest $manifestFullPath
   $source = $manifest.fidelity.source
   Assert-PathInventory $manifest
+  $generatedSourcePaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  foreach ($path in @($manifest.generatedFiles)) { $null = $generatedSourcePaths.Add((Canonical-Path ([string]$path))) }
+  $existingGeneratedSourcePaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  foreach ($path in @($source.existingGeneratedPaths)) { $null = $existingGeneratedSourcePaths.Add((Canonical-Path ([string]$path))) }
   $fingerprintProperties = @($source.contentFingerprints.PSObject.Properties)
   $fingerprintByPath = @{}
   foreach ($property in $fingerprintProperties) {
@@ -242,6 +246,7 @@ try {
     $changes = [System.Collections.Generic.List[object]]::new()
     foreach ($property in $fingerprintProperties) {
       $canonical = Canonical-Path $property.Name
+      if ($generatedSourcePaths.Contains($canonical) -and $existingGeneratedSourcePaths.Contains($canonical)) { continue }
       $actual = Fingerprint-File $property.Name
       if ($actual -eq [string]$property.Value) { continue }
       if ($allowed -notcontains $canonical) {
@@ -323,6 +328,7 @@ try {
   foreach ($change in @($subject.changes)) { $changeByPath[(Canonical-Path $change.path)] = $change }
   foreach ($property in $fingerprintProperties) {
     $canonical = Canonical-Path $property.Name
+    if ($generatedSourcePaths.Contains($canonical) -and $existingGeneratedSourcePaths.Contains($canonical)) { continue }
     $actual = Fingerprint-File $property.Name
     if ($changeByPath.ContainsKey($canonical)) {
       $change = $changeByPath[$canonical]

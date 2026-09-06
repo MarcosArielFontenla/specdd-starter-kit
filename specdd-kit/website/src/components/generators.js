@@ -10,6 +10,7 @@ import {
   FINGERPRINT_ALGORITHM,
   fingerprintPaths,
   fingerprintText,
+  isFidelityIgnoredPath,
   normalizeFidelityPath,
 } from './fingerprints.js';
 
@@ -126,7 +127,8 @@ export function renderScaffoldManifest(input, generatedFiles, skipped = [], repl
     ? Object.fromEntries([
       ...Object.entries(input.analysis?.manifestFingerprints || {}),
       ...Object.entries(input.analysis?.semantic?.fileFingerprints || {}),
-    ].map(([path, fingerprint]) => [String(path).replaceAll('\\', '/'), fingerprint]))
+    ].filter(([path]) => !isFidelityIgnoredPath(path))
+      .map(([path, fingerprint]) => [String(path).replaceAll('\\', '/'), fingerprint]))
     : {};
   const generatedCanonical = new Set(generated.map(normalizeFidelityPath));
   const sourceExistingGeneratedPaths = source
@@ -730,7 +732,21 @@ changing a design contract to \`approved\` or activating a proposed project chec
 `;
 }
 
-const HARNESS_OUTPUT_PATHS = new Set(['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md']);
+// A legacy acknowledgement authorizes replacement only of the Harness mechanism
+// and its canonical, wizard-owned project context.  Product documentation and
+// arbitrary user files remain collision-safe and are never clobbered.
+const HARNESS_OUTPUT_PATHS = new Set([
+  'AGENTS.md',
+  'CLAUDE.md',
+  'GEMINI.md',
+  '.github/copilot-instructions.md',
+  'context/project.md',
+  PROJECT_DEFINITION_PATH,
+  'context/tech-stack.md',
+  'context/constitution.md',
+  'context/project-validation.json',
+  'specs/features-spec.md',
+]);
 const isHarnessPath = (p) => HARNESS_OUTPUT_PATHS.has(p) || p.startsWith('.agents/');
 
 export function generateScaffold(baseFiles, input, today = new Date().toISOString().slice(0, 10)) {

@@ -306,6 +306,35 @@ test('scaffold manifest lists generated files and selected context', () => {
   assert.equal(manifest.fidelity.source, null);
 });
 
+test('Brownfield receipts exclude self-regenerating validation reports from content fidelity', () => {
+  const reportPaths = [
+    'context/harness-validation-report.md',
+    'context/harness-validation-report.json',
+  ];
+  const { files } = generateScaffold(baseWithGithub, {
+    ...brownInput,
+    existingPaths: ['src/index.js', ...reportPaths],
+    analysis: {
+      ...brownInput.analysis,
+      manifestFingerprints: {
+        'src/index.js': '11111111',
+        [reportPaths[0]]: '22222222',
+      },
+      semantic: {
+        ...brownInput.analysis.semantic,
+        fileFingerprints: {
+          'src/index.js': '11111111',
+          [reportPaths[1]]: '33333333',
+        },
+      },
+    },
+  }, '2026-09-06');
+  const manifest = JSON.parse(files[SCAFFOLD_MANIFEST_PATH]);
+  const fingerprints = manifest.fidelity.source.contentFingerprints;
+  assert.equal(fingerprints['src/index.js'], '11111111');
+  for (const path of reportPaths) assert.equal(fingerprints[path], undefined);
+});
+
 test('generated scaffold persists a valid canonical Project Definition as mutable project source', () => {
   const out = generateFiles(baseWithGithub, harnessInput, '2026-09-03');
   const definition = JSON.parse(out[PROJECT_DEFINITION_PATH]);
@@ -471,6 +500,31 @@ test('acknowledged legacy harness: harness collisions replaced, others skipped',
   assert.match(report, /## Legacy harness detected/);
   assert.match(report, /SYSTEM_PROMPT\.md/);             // inventory listed
   assert.match(report, /harness-migration\.tasks\.md/);  // kickoff points to migration first
+});
+
+test('acknowledged legacy regeneration replaces canonical context but preserves unrelated files', () => {
+  const canonical = [
+    'context/project.md',
+    PROJECT_DEFINITION_PATH,
+    'context/tech-stack.md',
+    'context/constitution.md',
+    'context/project-validation.json',
+    'specs/features-spec.md',
+  ];
+  const { files, skipped, replaced } = generateScaffold(baseWithHarnessCollisions, {
+    ...legacyInput,
+    existingPaths: [...canonical, 'AGENTS.md', 'README.md'],
+  }, '2026-09-06');
+  const manifest = JSON.parse(files[SCAFFOLD_MANIFEST_PATH]);
+
+  assert.deepEqual(replaced, [...canonical, 'AGENTS.md'].sort());
+  assert.deepEqual(skipped, ['README.md']);
+  for (const path of canonical) {
+    assert.ok(path in files, `${path} must ship in an acknowledged legacy regeneration`);
+    assert.ok(manifest.generatedFiles.includes(path), `${path} must be listed as generated`);
+    assert.ok(manifest.replacedPaths.includes(path), `${path} must be recorded as replaced`);
+  }
+  assert.ok(!('README.md' in files));
 });
 
 test('clean brownfield (no legacy) unchanged: no migration tasks, replaced empty', () => {

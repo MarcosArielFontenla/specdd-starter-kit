@@ -19,19 +19,23 @@ function invoke(root, mode, { paths = [], subject = '' } = {}) {
   return spawnSync('pwsh', ['-NoProfile', '-Command', command], { encoding: 'utf8' });
 }
 
-function fixture(t, contents = { a: 'alpha\n', b: 'bravo\n' }) {
+function fixture(t, contents = { a: 'alpha\n', b: 'bravo\n' }, { existingGenerated = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'specdd-rebaseline-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, 'src'), { recursive: true });
   mkdirSync(join(root, 'context'), { recursive: true });
   writeFileSync(join(root, 'src', 'a.txt'), contents.a);
   writeFileSync(join(root, 'src', 'b.txt'), contents.b);
-  const paths = ['src/a.txt', 'src/b.txt'];
+  const generatedPath = 'context/brownfield-analysis.md';
+  if (existingGenerated) writeFileSync(join(root, 'context', 'brownfield-analysis.md'), 'ingested generated report\n');
+  const paths = existingGenerated ? ['src/a.txt', 'src/b.txt', generatedPath] : ['src/a.txt', 'src/b.txt'];
   const pathReceipt = fingerprintPaths(paths);
   const manifest = {
     schemaVersion: 2,
     scenario: 'brownfield',
-    generatedFiles: ['context/scaffold-manifest.json'],
+    generatedFiles: existingGenerated
+      ? ['context/scaffold-manifest.json', generatedPath]
+      : ['context/scaffold-manifest.json'],
     fidelity: {
       fingerprintAlgorithm: 'fnv1a32-utf8',
       source: {
@@ -40,7 +44,11 @@ function fixture(t, contents = { a: 'alpha\n', b: 'bravo\n' }) {
         contentFingerprints: {
           'src/a.txt': fingerprintBytes(readFileSync(join(root, 'src', 'a.txt'))),
           'src/b.txt': fingerprintBytes(readFileSync(join(root, 'src', 'b.txt'))),
+          ...(existingGenerated
+            ? { [generatedPath]: fingerprintBytes(readFileSync(join(root, 'context', 'brownfield-analysis.md'))) }
+            : {}),
         },
+        ...(existingGenerated ? { existingGeneratedPaths: [generatedPath] } : {}),
       },
     },
   };
@@ -77,6 +85,26 @@ test('rebaseline proposes an exact subject, applies it once and writes an audit 
   const replay = invoke(root, 'apply', { subject: proposal.subjectSha256 });
   assert.notEqual(replay.status, 0);
   assert.match(replay.stderr, /REBASELINE_REPLAY/);
+});
+
+test('rebaseline ignores content drift in regenerated Harness files that existed at ingestion', (t) => {
+  const root = fixture(t, undefined, { existingGenerated: true });
+  writeFileSync(join(root, 'src', 'a.txt'), 'alpha approved\n');
+  writeFileSync(join(root, 'context', 'brownfield-analysis.md'), 'regenerated Harness report\n');
+
+  const proposed = invoke(root, 'propose', { paths: ['src/a.txt'] });
+  assert.equal(proposed.status, 0, proposed.stderr || proposed.stdout);
+  const proposal = JSON.parse(readFileSync(join(root, '.agents', 'evidence', 'source-baseline', 'proposal.json')));
+  assert.deepEqual(proposal.subject.changes.map(({ path }) => path), ['src/a.txt']);
+
+  const applied = invoke(root, 'apply', { subject: proposal.subjectSha256 });
+  assert.equal(applied.status, 0, applied.stderr || applied.stdout);
+  const manifest = JSON.parse(readFileSync(join(root, 'context', 'scaffold-manifest.json')));
+  assert.equal(manifest.fidelity.source.contentFingerprints['src/a.txt'], fingerprintText('alpha approved\n'));
+  assert.equal(
+    manifest.fidelity.source.contentFingerprints['context/brownfield-analysis.md'],
+    fingerprintText('ingested generated report\n'),
+  );
 });
 
 test('rebaseline proposal rejects drift outside the explicit allowlist', (t) => {
