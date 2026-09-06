@@ -52,6 +52,11 @@ the structural gate, generated-file fingerprints, Brownfield source-path baselin
 YAML-backed spec/budget checks and any commands declared in
 `context/project-validation.json`. `VERIFIED` means every configured check passed;
 `PARTIAL` is expected while contracts or project commands are still placeholders.
+When an approved implementation later changes a fingerprinted source file, use
+`rebaseline-source.ps1 -Mode propose` with the exact modified paths and stop for human
+approval of its SHA-256 subject before `-Mode apply`. The content-only command rejects
+added, removed, unlisted or post-proposal drift; path-shape changes require a fresh
+ingestion.
 
 1. **Review and approve the detected context before generating the Harness.** Keep,
    edit, exclude and classify technologies, architecture signals, domains, entities,

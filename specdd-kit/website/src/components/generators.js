@@ -713,6 +713,7 @@ ${rows(features, 'F', 'Reconcile the feature or capability')}
 ${checks.length ? checks.map((check, index) => `- [ ] C${String(index + 1).padStart(3, '0')} Confirm and execute \`${check.command}\` (${check.source})`).join('\n') : '- [ ] C001 Add at least one representative project build/test check with human approval'}
 - [ ] C900 Replace every selected entity's placeholder contract with approved requirements plus real acceptance checks or a documented waiver
 - [ ] C901 Keep \`context/project-definition.json\` aligned with the approved classifications
+- [ ] C902 After approved source edits, run \`.agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact-paths>\`, approve its exact subject hash separately, then apply it; never edit fingerprints manually
 
 ## Phase 4 — Done gate
 - [ ] G001 Run \`pwsh .agents/scripts/validate-project.ps1\`

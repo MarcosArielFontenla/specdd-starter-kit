@@ -28,7 +28,7 @@ The harness validation scripts require:
 | `.agents/cold-start/` | Budget manifest + compressed skill snapshots (generated once skills have real content). |
 | `.agents/workflows/` | spec-first-feature.md, skill-review.md. |
 | `.agents/telemetry/` | EVENTS.md contract; events/ is gitignored. |
-| `.agents/scripts/` | validate-project.ps1 (orchestrator), validate-harness.ps1, generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
+| `.agents/scripts/` | validate-project.ps1 (orchestrator), rebaseline-source.ps1 (governed Brownfield content reapproval), validate-harness.ps1, generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
 
 ## Lifecycle after scaffolding
 1. Fill each skill skeleton with the domain's real Must/Never rules as they emerge.
@@ -70,6 +70,26 @@ detect accidental copy/extraction drift. Project context, selected skills/specs,
 feature drafts and `context/project-validation.json` are marked mutable so normal
 project authoring does not look like a broken extraction. It does not prove semantic
 equivalence or approve business rules.
+
+Approved implementation may intentionally change a source file that Level 2
+fingerprinted. Do not edit `contentFingerprints` manually. Prepare an exact,
+content-only reapproval proposal instead:
+
+```powershell
+pwsh .agents/scripts/rebaseline-source.ps1 -Mode propose -Paths @(
+  'src/exact-file-a.ext',
+  'tests/exact-file-b.ext'
+)
+```
+
+The command writes an ignored evidence proposal under `.agents/evidence/` and prints
+its exact SHA-256 subject. After a human approves that hash, apply it separately with
+`-Mode apply -SubjectSha256 <exact-hash>`. Apply recomputes the proposal and every
+fingerprinted file, rejects manifest or source changes after proposal creation,
+rejects added/removed/unlisted paths, prevents replay, atomically updates only the
+approved fingerprints, and writes an immutable receipt. The local hash binds the
+decision but does not authenticate the approver. Path additions or removals require a
+fresh ingestion rather than this content-only flow.
 
 When the project has real commands, edit `context/project-validation.json` and keep
 them explicit and reproducible, for example:

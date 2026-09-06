@@ -76,6 +76,13 @@ is `PARTIAL` evidence, and exit `1` is a failed structural, integrity or declare
 project check. A new scaffold commonly starts as `PARTIAL` until real specs and
 project commands replace the explicit placeholders.
 
+**How do I accept intentional Brownfield source drift after approved implementation?**
+Do not edit the scaffold manifest. Run
+`pwsh .agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact paths>`, review
+the proposal and obtain human approval for its printed SHA-256 subject, then run the
+separate `-Mode apply -SubjectSha256 <exact hash>` phase. It is content-only and fails
+closed on added, removed, unlisted or post-proposal drift.
+
 **Can I use the generated scaffold without ever running an AI agent?**
 Yes. `context/`, `specs/`, and `templates/` are plain Markdown meant to be read and
 written by humans too — the `/specdd-*` prompts are a convenience for agent-driven

@@ -435,6 +435,16 @@ es una firma criptográfica ni prueba equivalencia semántica. Un scaffold nuevo
 quedar correctamente en `PARTIAL` hasta que se reemplacen los contratos placeholder y
 se declaren los checks reales del proyecto.
 
+### `rebaseline-source.ps1`
+
+Acepta únicamente drift de contenido Brownfield previamente fingerprintado mediante
+dos fases separadas: `propose` genera un subject SHA-256 exacto bajo
+`.agents/evidence/source-baseline/` y `apply` exige ese hash después de una aprobación
+humana externa. Recalcula manifiesto, inventario y todos los fingerprints para evitar
+TOCTOU; rechaza paths agregados, eliminados, no listados, cambios adicionales y replay.
+Actualiza atómicamente sólo los fingerprints aprobados y conserva un receipt auditable.
+El hash liga la decisión al subject, pero no autentica la identidad del aprobador.
+
 ### `validate-budget.ps1`
 
 Lee el manifest de cold-start y calcula, para cada clase de tarea, el peor caso de

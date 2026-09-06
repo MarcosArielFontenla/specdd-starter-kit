@@ -72,6 +72,7 @@ test('brownfield convergence queue is evidence-first and ends at both verificati
   }, '2026-09-06');
   assert.match(tasks, /Reconcile the entity contract for `Appointment`/);
   assert.match(tasks, /Reconcile the feature or capability `booking`/);
+  assert.match(tasks, /rebaseline-source\.ps1 -Mode propose/);
   assert.match(tasks, /extractionStatus: VERIFIED/);
   assert.match(tasks, /projectReadinessStatus: VERIFIED/);
 });

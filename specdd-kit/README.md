@@ -83,6 +83,9 @@ generated `AGENTS.md` primer, included only when GitHub Copilot is selected).
    `pwsh .agents/scripts/validate-project.ps1`. Read the generated
    `context/harness-validation-report.md`; exit `0` is `VERIFIED`, `2` is `PARTIAL`
    and `1` is `FAILED`.
+   In Brownfield projects, approved edits to fingerprinted source are accepted only
+   through `pwsh .agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact paths>`
+   followed by a separate `-Mode apply -SubjectSha256 <approved exact hash>` call.
 3. Open the project in VS Code. GitHub Copilot automatically picks up
    `.github/copilot-instructions.md` and everything under `.github/instructions/`
    and `.github/prompts/`.
