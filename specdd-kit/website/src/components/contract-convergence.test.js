@@ -259,7 +259,7 @@ test('approved output satisfies the contract inputs required for project readine
   }
 });
 
-test('a generated Brownfield scaffold converges through the real validator to VERIFIED', (t) => {
+test('a generated Brownfield scaffold converges through the real validator with prerequisite-aware readiness', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'specdd-contracts-roundtrip-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const sourceText = 'public sealed class Customer {}\n';
@@ -332,9 +332,18 @@ test('a generated Brownfield scaffold converges through the real validator to VE
   assert.equal(proposal.status, 0, proposal.stderr);
   const apply = invoke(root, 'apply', { subject: subjectFrom(proposal), reviewedBy: 'Round-trip Reviewer' });
   assert.equal(apply.status, 0, apply.stderr);
+  const yamlProbe = spawnSync('pwsh', ['-NoProfile', '-Command', "if (Get-Module -ListAvailable -Name powershell-yaml) { exit 0 } else { exit 3 }"], { encoding: 'utf8' });
+  const hasYamlModule = yamlProbe.status === 0;
   const validation = spawnSync('pwsh', ['-NoProfile', '-File', join(root, '.agents', 'scripts', 'validate-project.ps1'), '-Root', root], { encoding: 'utf8' });
-  assert.equal(validation.status, 0, `${validation.stdout}\n${validation.stderr}`);
   const report = JSON.parse(readFileSync(join(root, 'context', 'harness-validation-report.json'), 'utf8'));
+  assert.equal(validation.status, hasYamlModule ? 0 : 2, `${validation.stdout}\n${validation.stderr}\n${JSON.stringify(report, null, 2)}`);
   assert.equal(report.extractionStatus, 'VERIFIED');
-  assert.equal(report.projectReadinessStatus, 'VERIFIED');
+  if (hasYamlModule) {
+    assert.equal(report.projectReadinessStatus, 'VERIFIED');
+  } else {
+    assert.equal(report.projectReadinessStatus, 'PARTIAL');
+    assert.deepEqual(report.results.filter(({ status }) => status === 'PARTIAL').map(({ id }) => id).sort(), ['budget', 'spec']);
+    assert.ok(report.results.filter(({ status }) => status === 'PARTIAL').every(({ details }) => /powershell-yaml is not installed/.test(details)));
+    assert.equal(report.results.some(({ status }) => status === 'FAIL'), false);
+  }
 });
