@@ -65,21 +65,24 @@ structural, integrity or declared check failed. A newly generated scaffold norma
 starts as `PARTIAL` until placeholder specs are replaced and project checks are
 declared.
 
-The manifest uses schema 2 and a deterministic non-cryptographic fingerprint only to
-detect accidental copy/extraction drift. Project context, selected skills/specs,
+The manifest uses schema 2 and a deterministic non-cryptographic fingerprint over
+exact file bytes only to detect accidental copy/extraction drift. JavaScript ingestion
+and PowerShell validation preserve LF, CRLF and BOM differences rather than normalizing
+text. Project context, selected skills/specs,
 feature drafts and `context/project-validation.json` are marked mutable so normal
 project authoring does not look like a broken extraction. It does not prove semantic
-equivalence or approve business rules.
+equivalence, authenticate evidence or approve business rules.
 
 Approved implementation may intentionally change a source file that Level 2
 fingerprinted. Do not edit `contentFingerprints` manually. Prepare an exact,
 content-only reapproval proposal instead:
 
 ```powershell
-pwsh .agents/scripts/rebaseline-source.ps1 -Mode propose -Paths @(
+$paths = @(
   'src/exact-file-a.ext',
   'tests/exact-file-b.ext'
 )
+& '.\.agents\scripts\rebaseline-source.ps1' -Mode propose -Paths $paths
 ```
 
 The command writes an ignored evidence proposal under `.agents/evidence/` and prints
@@ -140,9 +143,10 @@ approval identity and date. Copy `templates/brownfield/entity-contract-candidate
 as a starting point and replace every marker. Then propose the exact set:
 
 ```powershell
-pwsh .agents/scripts/converge-contracts.ps1 -Mode propose -CandidatePaths @(
+$candidates = @(
   '.agents/evidence/entity-contracts/candidates/customer.json'
 )
+& '.\.agents\scripts\converge-contracts.ps1' -Mode propose -CandidatePaths $candidates
 ```
 
 After a human approves the printed hash, apply it with

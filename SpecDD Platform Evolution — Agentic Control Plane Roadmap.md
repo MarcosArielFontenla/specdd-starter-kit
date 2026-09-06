@@ -51,6 +51,19 @@ Phase 6's Warp scorer is an optional target, not a prerequisite to canonical eva
 This clarification supersedes mandatory-Warp wording elsewhere in this roadmap.
 See `docs/control-plane/adrs/0008-runtime-optional-real-execution-required.md`.
 
+### Accepted Brownfield operational evidence — 2026-09-06
+
+The compatibility requirement now has a real bounded Level 2 acceptance run. A fresh
+scaffold generated from `main` for an Angular/.NET/PostgreSQL repository preserved
+exact LF, CRLF and BOM bytes across browser JavaScript and PowerShell, promoted nine
+entity contracts only through exact human-approved subjects, rebaselined two explicit
+source files through a separate approval, and finished with both
+`extractionStatus: VERIFIED` and `projectReadinessStatus: VERIFIED`.
+
+This does not turn detection into approval or claim semantic completeness for every
+repository. Fingerprints prove local drift detection, not authenticity. See
+`docs/control-plane/audits/2026-09-06-brownfield-c4-acceptance.md`.
+
 The target architecture must remain:
 
 - vendor-neutral

@@ -86,6 +86,8 @@ generated `AGENTS.md` primer, included only when GitHub Copilot is selected).
    In Brownfield projects, approved edits to fingerprinted source are accepted only
    through `pwsh .agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact paths>`
    followed by a separate `-Mode apply -SubjectSha256 <approved exact hash>` call.
+   Source and immutable generated-file fingerprints preserve exact bytes, including
+   LF, CRLF and BOM; the validator does not normalize line endings.
    Placeholder entity contracts use the analogous governed
    `converge-contracts.ps1 -Mode propose -CandidatePaths <exact candidates>` flow;
    its separately approved apply atomically promotes only those contracts and their

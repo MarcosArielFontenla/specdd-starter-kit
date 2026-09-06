@@ -1,6 +1,6 @@
 # Agentic Control Plane — Delivery Tracker
 
-Status date: 2026-09-05
+Status date: 2026-09-06
 
 Audit follow-up: [F01–F07 remediation](audits/2026-09-04-remediation.md).
 
@@ -33,6 +33,14 @@ passed every job. Merge of the separate Bloom pilot and deployment remain outsid
 this acceptance.
 Project/company-specific SpecDeploy execution remains future work, not a condition
 for this local architectural closure. Existing contracts/fixtures remain preserved.
+
+The post-closure [Brownfield C4 acceptance](audits/2026-09-06-brownfield-c4-acceptance.md)
+also exercised a fresh Level 2 scaffold from published `main` on a real
+Angular/.NET/PostgreSQL repository. Exact-byte fingerprint parity removed false
+CRLF/BOM drift; nine contract approvals and a separately approved two-file source
+rebaseline then produced `extractionStatus: VERIFIED` and
+`projectReadinessStatus: VERIFIED`. This is bounded Windows-hosted evidence, not a
+universal semantic-analysis or arbitrary-stack certification.
 
 The post-roadmap local-operation track has O0–O5 complete with an external pilot.
 [O4-C1](phases/local-operation-o4-github-adapter.md) validates the GitHub draft-PR

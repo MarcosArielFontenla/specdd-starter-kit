@@ -104,8 +104,9 @@ Abrí `context/harness-validation-report.md` y su equivalente `.json`.
 | `2 / PARTIAL` | Hay evidencia/checks incompletos | Leer el reporte, definir lo que falta y volver a validar; no presentarlo como verificación total |
 | `1 / FAILED` | Falló estructura, integridad o un check declarado | Corregir la causa antes de dar por válida la instalación |
 
-`context/project-validation.json` se genera inicialmente con checks vacíos. Definí
-allí los comandos reales y aprobados de test/build/lint cuando existan. El validador
+`context/project-validation.json` empieza vacío en Greenfield. En Brownfield puede
+incluir únicamente los checks detectados que seleccionaste explícitamente durante
+Review Context. Definí allí comandos reales y aprobados de test/build/lint. El validador
 puede **ejecutar esos comandos**: revisarlos es parte del permiso, no un detalle opcional.
 No inventes comandos ni cambies el baseline para esconder un fallo.
 
@@ -127,6 +128,31 @@ subject SHA-256 impreso. Sólo después autorizá una ejecución separada de `-M
 con ese hash y `-ReviewedBy`; esa operación alinea atómicamente las specs autorizadas
 con `context/project-definition.json` y conserva un receipt auditable. Si cambia un
 candidato, una spec o la definición entre ambas fases, hay que generar otra propuesta.
+
+Si una implementación aprobada cambia archivos que Level 2 fingerprinted, no edites
+`context/scaffold-manifest.json` a mano ni regeneres para esconder el cambio. Proponé
+un rebaseline limitado a las rutas exactas:
+
+```powershell
+$rutasRebaseline = @(
+  'src/ruta-exacta.ext',
+  'tests/ruta-exacta.ext'
+)
+& '.\.agents\scripts\rebaseline-source.ps1' -Mode propose -Paths $rutasRebaseline
+```
+
+Revisá el diff y el subject impreso. Sólo después ejecutá por separado
+`-Mode apply -SubjectSha256 <hash-aprobado>`. El apply vuelve a verificar manifest,
+paths y contenido para cerrar TOCTOU, rechaza replay y escribe un receipt. Sólo acepta
+archivos modificados ya presentes: altas, bajas o drift adicional requieren una nueva
+ingesta. Los fingerprints usan los bytes exactos, por lo que LF, CRLF y BOM no se
+normalizan. Esto prueba fidelidad local, no autenticidad ni corrección del negocio.
+
+En el JSON final revisá ambos estados: `extractionStatus: VERIFIED` confirma
+estructura, archivos generados y baseline; `projectReadinessStatus: VERIFIED` exige
+además contexto clasificado, contratos reales y todos los checks aprobados en verde.
+El recorrido Level 2 completo fue validado en un proyecto real de alcance acotado;
+consultá la [auditoría Brownfield C4](control-plane/audits/2026-09-06-brownfield-c4-acceptance.md).
 
 ## 5. Agregá roles con SpecForge cuando los necesites
 

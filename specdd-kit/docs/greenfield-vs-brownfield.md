@@ -52,6 +52,9 @@ the structural gate, generated-file fingerprints, Brownfield source-path baselin
 YAML-backed spec/budget checks and any commands declared in
 `context/project-validation.json`. `VERIFIED` means every configured check passed;
 `PARTIAL` is expected while contracts or project commands are still placeholders.
+The schema-2 file fingerprints operate on exact bytes across browser JavaScript and
+PowerShell validation, so LF, CRLF and BOM differences are visible rather than
+silently normalized. This is a local fidelity check, not an authenticity proof.
 Replace entity placeholders through `converge-contracts.ps1 -Mode propose` with an
 explicit candidate file per entity, approve its exact SHA-256 subject, then execute a
 separate `-Mode apply` with `ReviewedBy`. The operation binds and rechecks candidates,
@@ -62,6 +65,11 @@ When an approved implementation later changes a fingerprinted source file, use
 approval of its SHA-256 subject before `-Mode apply`. The content-only command rejects
 added, removed, unlisted or post-proposal drift; path-shape changes require a fresh
 ingestion.
+
+The accepted Windows Level 2 pilot reached both `extractionStatus: VERIFIED` and
+`projectReadinessStatus: VERIFIED` after nine separately approved contracts and a
+two-file governed rebaseline. Its evidence and bounded claim are recorded in the
+[Brownfield C4 acceptance audit](../../docs/control-plane/audits/2026-09-06-brownfield-c4-acceptance.md).
 
 1. **Review and approve the detected context before generating the Harness.** Keep,
    edit, exclude and classify technologies, architecture signals, domains, entities,

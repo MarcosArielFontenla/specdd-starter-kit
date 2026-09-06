@@ -41,8 +41,10 @@ cada una merece su propio ciclo spec → plan → implementación.
 ## Enterprise-readiness
 
 7. **Versionado de scaffolds** — SpecDD ahora incluye en cada ZIP un manifest de
-   esquema 2 con versión, baseline Brownfield y fingerprints deterministas para
-   validar fidelidad post-extracción; `specdeploy.json` ya cubre SpecDeploy. Queda
+   esquema 2 con versión, baseline Brownfield y fingerprints deterministas sobre
+   bytes exactos —incluyendo LF, CRLF y BOM— para validar fidelidad post-extracción.
+   El recorrido Level 2 con contratos y rebaseline gobernados alcanzó ambos estados
+   `VERIFIED` en una aceptación real acotada; `specdeploy.json` ya cubre SpecDeploy. Queda
    extender un contrato equivalente a los Role Packs de `specforge-kit` para poder
    diffear y actualizar cualquier scaffold de forma uniforme.
 8. **Threat model del propio kit** — documento corto para el área de seguridad del cliente:

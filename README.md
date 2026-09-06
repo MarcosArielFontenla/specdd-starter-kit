@@ -145,6 +145,13 @@ install tasks with a human gate.
    its printed subject hash separately, and then use `-Mode apply`. Added, removed,
    unlisted or post-proposal drift is rejected; never edit manifest hashes manually.
 
+The Windows Level 2 path has also been exercised end to end on a real Angular/.NET/
+PostgreSQL repository: fresh generation, collision-safe extraction, nine governed
+contract promotions, a separately approved two-file source rebaseline and a final
+`extractionStatus: VERIFIED` plus `projectReadinessStatus: VERIFIED`. See the
+[Brownfield C4 acceptance audit](docs/control-plane/audits/2026-09-06-brownfield-c4-acceptance.md)
+for hashes, recovery evidence and the limits of that claim.
+
 #### Brownfield analysis depth
 
 The scenario and the analysis depth are separate decisions:
@@ -181,9 +188,10 @@ budget and the project checks declared in `context/project-validation.json`. It 
 Exit codes are explicit: `0` means `VERIFIED`, `2` means `PARTIAL` evidence remains,
 and `1` means a structural, integrity or declared project check failed. The manifest
 keeps context, draft skills/specs/features and the project-validation profile mutable
-so normal project authoring does not look like an extraction error. These fingerprints
-prove path/content fidelity for the generated files; they do not prove semantic
-equivalence or business-rule correctness.
+so normal project authoring does not look like an extraction error. File fingerprints
+operate on exact bytes: LF, CRLF and BOM differences are preserved and count as drift.
+They prove local path/content fidelity for the generated files; they are not an
+authenticity mechanism and do not prove semantic equivalence or business-rule correctness.
 
 The report separates `extractionStatus` from `projectReadinessStatus`. Extraction
 integrity can be `VERIFIED` immediately when structure, fingerprints and the source
