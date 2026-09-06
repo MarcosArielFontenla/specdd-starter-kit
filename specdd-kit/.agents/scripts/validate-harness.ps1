@@ -123,6 +123,12 @@ if ($manifest) {
     if (-not ($convergeListed -or $convergeSkipped)) {
       Fail 'Brownfield scaffold does not list spec-converge as generated or skipped'
     }
+    Require-File '.agents/scripts/converge-contracts.ps1'
+    $contractConvergeListed = $generatedPaths -contains '.agents/scripts/converge-contracts.ps1'
+    $contractConvergeSkipped = $skippedPaths -contains '.agents/scripts/converge-contracts.ps1'
+    if (-not ($contractConvergeListed -or $contractConvergeSkipped)) {
+      Fail 'Brownfield scaffold does not list converge-contracts as generated or skipped'
+    }
   }
 
   $routing = Read-Relative '.agents/orchestration/ROUTING.md'

@@ -76,6 +76,14 @@ is `PARTIAL` evidence, and exit `1` is a failed structural, integrity or declare
 project check. A new scaffold commonly starts as `PARTIAL` until real specs and
 project commands replace the explicit placeholders.
 
+**How do I approve Brownfield entity contracts without editing statuses by hand?**
+Prepare one evidence-backed JSON candidate per entity under
+`.agents/evidence/entity-contracts/candidates/`, then run
+`pwsh .agents/scripts/converge-contracts.ps1 -Mode propose -CandidatePaths <exact paths>`.
+After reviewing the proposal, approve its exact subject and run a separate
+`-Mode apply -SubjectSha256 <hash> -ReviewedBy <identity>`. Any candidate, target or
+canonical-definition drift is rejected, and a successful apply writes a receipt.
+
 **How do I accept intentional Brownfield source drift after approved implementation?**
 Do not edit the scaffold manifest. Run
 `pwsh .agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact paths>`, review

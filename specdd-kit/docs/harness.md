@@ -28,7 +28,7 @@ The harness validation scripts require:
 | `.agents/cold-start/` | Budget manifest + compressed skill snapshots (generated once skills have real content). |
 | `.agents/workflows/` | spec-first-feature.md, skill-review.md. |
 | `.agents/telemetry/` | EVENTS.md contract; events/ is gitignored. |
-| `.agents/scripts/` | validate-project.ps1 (orchestrator), rebaseline-source.ps1 (governed Brownfield content reapproval), validate-harness.ps1, generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
+| `.agents/scripts/` | validate-project.ps1 (orchestrator), converge-contracts.ps1 (governed Brownfield contract approval), rebaseline-source.ps1 (governed Brownfield content reapproval), validate-harness.ps1, generate-snapshots.ps1, validate-spec.ps1, validate-budget.ps1. |
 
 ## Lifecycle after scaffolding
 1. Fill each skill skeleton with the domain's real Must/Never rules as they emerge.
@@ -130,3 +130,25 @@ is not spec approval. Existing destination files are still skipped and reported;
 reconciliation belongs to `spec-converge`. Run the consolidated validator before the
 first agent session; it will call out source drift, skipped collisions, unknown context
 classifications and placeholder contracts in one report.
+
+Entity contracts converge through a two-phase, human-gated operation. First create one
+JSON candidate per entity under `.agents/evidence/entity-contracts/candidates/` with
+`schemaVersion: 1`, kind `specdd.entity-contract-candidate`, `entity`, exact
+`targetPath`, `description`, repository `evidence`, `requirements`, and either real
+`acceptanceChecks` or a reasoned `checksWaiver`; the apply reviewer supplies waiver
+approval identity and date. Copy `templates/brownfield/entity-contract-candidate.json`
+as a starting point and replace every marker. Then propose the exact set:
+
+```powershell
+pwsh .agents/scripts/converge-contracts.ps1 -Mode propose -CandidatePaths @(
+  '.agents/evidence/entity-contracts/candidates/customer.json'
+)
+```
+
+After a human approves the printed hash, apply it with
+`-Mode apply -SubjectSha256 <exact-hash> -ReviewedBy '<human identity>'`. The subject
+binds candidate files, existing placeholder specs and the canonical project definition.
+Apply rejects TOCTOU drift and replay, changes only those entity specs plus their
+matching canonical statuses, records approval metadata, and writes a receipt under
+`.agents/evidence/entity-contracts/receipts/`. The recorded identity is auditable but
+is not cryptographically authenticated by this local script.

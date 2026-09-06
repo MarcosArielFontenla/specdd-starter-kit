@@ -190,6 +190,9 @@ Brownfield inserta `Review Context` antes de los pasos de personalización.
   contexto seleccionado.
 - Colisiones siguen siendo skip/report, sin overwrite; `spec-converge` conserva la
   reconciliación para el agente.
+- `converge-contracts.ps1` implementa la promoción gobernada `propose/apply` de
+  contratos Brownfield: subject exacto, candidatos por entidad, protección TOCTOU,
+  allowlist de targets, alineación canónica, reviewer y receipt auditable.
 
 ### Fase 6 — Validación post-extracción
 
@@ -246,7 +249,8 @@ La implementación actual fue validada con:
   verificaron luego por separado y terminaron normalmente con exit 0.
 - Builds reejecutados y aprobados de los nueve paquetes de arquitectura, el portal y los tres wizards.
   Persisten avisos no bloqueantes de React/Vite y tamaño de chunk ya documentados.
-- 71 tests unitarios del wizard SpecDD.
+- 99 tests unitarios del wizard SpecDD, incluidos 10 del flujo gobernado de
+  convergencia de contratos y su round-trip real hasta `VERIFIED`.
 - 3 pruebas E2E del wizard: Greenfield, Brownfield y Brownfield con Harness legacy.
 - Build de `sdd-kit-wizard`.
 - `git diff --check` sin errores de whitespace.
@@ -254,6 +258,9 @@ La implementación actual fue validada con:
 - Round-trip temporal Brownfield validado con el run único `validate-project.ps1`:
   estructura, fingerprints, baseline de paths fuente y reporte Markdown/JSON; también
   se verificó que una modificación posterior de un archivo generado produce `FAILED`.
+- Round-trip de convergencia Brownfield validado desde un scaffold generado: propuesta,
+  aprobación exacta, aplicación y ejecución del validador real con
+  `extractionStatus: VERIFIED` y `projectReadinessStatus: VERIFIED`.
 - Round-trip real Brownfield generación → ZIP → extracción: 116 archivos, 194.320
   bytes y `validate-harness.ps1` aceptó el resultado.
 - Validación local de solo lectura contra `D:/product-projects/tactical-arg-store-app`:
@@ -270,9 +277,9 @@ universal ni una comprensión 100% automática del proyecto.
 
 - Extender parsers para rutas y contratos API, relaciones de modelos, cobertura de
   tests, CI/CD, Docker e infraestructura.
-- Conectar el reporte con un análisis de convergencia más detallado por path y
-  acceptance check. `spec-converge` ya existe, pero su ejecución corresponde al
-  agente en el proyecto destino.
+- Extender la extracción automática de candidatos con parsers específicos por stack;
+  la promoción genérica y auditable ya existe, pero el contenido de cada regla continúa
+  requiriendo evidencia y revisión humana en el proyecto destino.
 - Ampliar la validación round-trip Brownfield con fixtures de más stacks, monorepos y
   proyectos con múltiples aplicaciones, conservando el baseline de paths y el reporte
   de fidelidad.

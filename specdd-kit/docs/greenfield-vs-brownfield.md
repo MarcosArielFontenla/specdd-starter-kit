@@ -52,6 +52,11 @@ the structural gate, generated-file fingerprints, Brownfield source-path baselin
 YAML-backed spec/budget checks and any commands declared in
 `context/project-validation.json`. `VERIFIED` means every configured check passed;
 `PARTIAL` is expected while contracts or project commands are still placeholders.
+Replace entity placeholders through `converge-contracts.ps1 -Mode propose` with an
+explicit candidate file per entity, approve its exact SHA-256 subject, then execute a
+separate `-Mode apply` with `ReviewedBy`. The operation binds and rechecks candidates,
+current specs and `context/project-definition.json`, promotes only authorized targets,
+and writes an auditable receipt.
 When an approved implementation later changes a fingerprinted source file, use
 `rebaseline-source.ps1 -Mode propose` with the exact modified paths and stop for human
 approval of its SHA-256 subject before `-Mode apply`. The content-only command rejects

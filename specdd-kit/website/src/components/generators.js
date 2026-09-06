@@ -99,6 +99,11 @@ export function renderProjectValidation(input = {}) {
 
 export const SCAFFOLD_MANIFEST_PATH = 'context/scaffold-manifest.json';
 export const PROJECT_DEFINITION_PATH = 'context/project-definition.json';
+const BROWNFIELD_ONLY_PATHS = new Set([
+  '.agents/workflows/spec-converge.md',
+  '.agents/scripts/converge-contracts.ps1',
+  'templates/brownfield/entity-contract-candidate.json',
+]);
 
 const isMutableFidelityPath = (path) => (
   path === 'context/project.md'
@@ -191,7 +196,7 @@ export function generateFiles(baseFiles, input, today = new Date().toISOString()
   const out = {};
   for (const [path, contents] of Object.entries(baseFiles)) {
     if (!hasCopilot && path.startsWith('.github/')) continue; // Copilot projection is opt-in
-    if (effectiveInput.scenario !== 'brownfield' && path === '.agents/workflows/spec-converge.md') continue; // converge is brownfield-only
+    if (effectiveInput.scenario !== 'brownfield' && BROWNFIELD_ONLY_PATHS.has(path)) continue;
     out[path] = contents;
   }
 
@@ -712,8 +717,9 @@ ${rows(features, 'F', 'Reconcile the feature or capability')}
 ## Phase 3 — Approve executable evidence
 ${checks.length ? checks.map((check, index) => `- [ ] C${String(index + 1).padStart(3, '0')} Confirm and execute \`${check.command}\` (${check.source})`).join('\n') : '- [ ] C001 Add at least one representative project build/test check with human approval'}
 - [ ] C900 Replace every selected entity's placeholder contract with approved requirements plus real acceptance checks or a documented waiver
-- [ ] C901 Keep \`context/project-definition.json\` aligned with the approved classifications
-- [ ] C902 After approved source edits, run \`.agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact-paths>\`, approve its exact subject hash separately, then apply it; never edit fingerprints manually
+- [ ] C901 Write one evidence-backed candidate JSON per entity under \`.agents/evidence/entity-contracts/candidates/\`, then run \`.agents/scripts/converge-contracts.ps1 -Mode propose -CandidatePaths <exact-paths>\`
+- [ ] C902 Obtain human approval for the exact printed subject, then apply it once with \`-Mode apply -SubjectSha256 <exact-hash> -ReviewedBy <identity>\`; this atomically aligns the contracts and \`context/project-definition.json\`
+- [ ] C903 After approved source edits, run \`.agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact-paths>\`, approve its exact subject hash separately, then apply it; never edit fingerprints manually
 
 ## Phase 4 — Done gate
 - [ ] G001 Run \`pwsh .agents/scripts/validate-project.ps1\`

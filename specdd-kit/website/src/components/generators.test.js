@@ -72,6 +72,8 @@ test('brownfield convergence queue is evidence-first and ends at both verificati
   }, '2026-09-06');
   assert.match(tasks, /Reconcile the entity contract for `Appointment`/);
   assert.match(tasks, /Reconcile the feature or capability `booking`/);
+  assert.match(tasks, /converge-contracts\.ps1 -Mode propose/);
+  assert.match(tasks, /SubjectSha256/);
   assert.match(tasks, /rebaseline-source\.ps1 -Mode propose/);
   assert.match(tasks, /extractionStatus: VERIFIED/);
   assert.match(tasks, /projectReadinessStatus: VERIFIED/);
@@ -404,16 +406,25 @@ test('brownfield registry lists the converge workflow', () => {
   assert.ok(!/spec-converge/.test(renderRegistry(harnessInput, '2026-07-18')));
 });
 
-const baseWithConverge = { ...base, '.agents/workflows/spec-converge.md': 'converge workflow' };
+const baseWithConverge = {
+  ...base,
+  '.agents/workflows/spec-converge.md': 'converge workflow',
+  '.agents/scripts/converge-contracts.ps1': 'contract convergence script',
+  'templates/brownfield/entity-contract-candidate.json': 'candidate template',
+};
 
 test('spec-converge is filtered out of greenfield output even when bundled', () => {
   const out = generateFiles(baseWithConverge, harnessInput, '2026-07-18');
   assert.ok(!('.agents/workflows/spec-converge.md' in out));
+  assert.ok(!('.agents/scripts/converge-contracts.ps1' in out));
+  assert.ok(!('templates/brownfield/entity-contract-candidate.json' in out));
 });
 
 test('spec-converge survives in brownfield output', () => {
   const out = generateFiles(baseWithConverge, brownInput, '2026-07-18');
   assert.equal(out['.agents/workflows/spec-converge.md'], 'converge workflow');
+  assert.equal(out['.agents/scripts/converge-contracts.ps1'], 'contract convergence script');
+  assert.equal(out['templates/brownfield/entity-contract-candidate.json'], 'candidate template');
 });
 
 test('migration tasks file: draft status, real paths, phases, defaults, questions', () => {

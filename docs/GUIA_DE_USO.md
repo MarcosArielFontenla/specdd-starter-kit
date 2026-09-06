@@ -120,6 +120,14 @@ Si es Brownfield, agregá:
 > Leé context/brownfield-analysis.md. Revisá su Kickoff y las tareas de migración,
 > si existen. Proponé los cambios de convergencia sin aplicar reemplazos todavía.
 
+Para cerrar contratos placeholder, el agente debe crear candidatos JSON bajo
+`.agents/evidence/entity-contracts/candidates/` y ejecutar
+`converge-contracts.ps1 -Mode propose` con la lista exacta. Revisá el contenido y el
+subject SHA-256 impreso. Sólo después autorizá una ejecución separada de `-Mode apply`
+con ese hash y `-ReviewedBy`; esa operación alinea atómicamente las specs autorizadas
+con `context/project-definition.json` y conserva un receipt auditable. Si cambia un
+candidato, una spec o la definición entre ambas fases, hay que generar otra propuesta.
+
 ## 5. Agregá roles con SpecForge cuando los necesites
 
 1. Volvé al portal y abrí **SpecForge**.

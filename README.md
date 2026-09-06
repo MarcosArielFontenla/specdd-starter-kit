@@ -137,7 +137,10 @@ install tasks with a human gate.
    The agent will work from `.agents/specs/tasks/brownfield-convergence.tasks.md`,
    ask for approval before promoting contracts or checks, handle migration tasks if
    a legacy harness existed, and then run `spec-converge` against your specs.
-8. If approved implementation changes a fingerprinted source file, run
+8. For placeholder entity contracts, the agent prepares explicit candidate JSON files
+   and runs `converge-contracts.ps1 -Mode propose`; review its exact subject before a
+   separate `-Mode apply -SubjectSha256 <hash> -ReviewedBy <identity>` operation.
+9. If approved implementation changes a fingerprinted source file, run
    `rebaseline-source.ps1 -Mode propose` with only the exact changed paths, approve
    its printed subject hash separately, and then use `-Mode apply`. Added, removed,
    unlisted or post-proposal drift is rejected; never edit manifest hashes manually.

@@ -445,6 +445,18 @@ TOCTOU; rechaza paths agregados, eliminados, no listados, cambios adicionales y 
 Actualiza atómicamente sólo los fingerprints aprobados y conserva un receipt auditable.
 El hash liga la decisión al subject, pero no autentica la identidad del aprobador.
 
+### `converge-contracts.ps1`
+
+Gobierna la promoción de contratos de entidades Brownfield mediante dos fases.
+`propose` acepta sólo candidatos JSON explícitos bajo
+`.agents/evidence/entity-contracts/candidates/`, valida evidencia, requisitos, checks
+y el mapeo exacto hacia specs canónicas todavía placeholder, y produce un subject
+SHA-256. `apply` exige ese hash y `ReviewedBy`, vuelve a verificar candidatos, specs y
+`context/project-definition.json` contra TOCTOU, evita replay y modifica únicamente los
+targets autorizados. Las specs y sus estados canónicos se promueven juntas y la
+operación genera un receipt auditable con hashes antes/después. La identidad declarada
+queda registrada, no autenticada criptográficamente.
+
 ### `validate-budget.ps1`
 
 Lee el manifest de cold-start y calcula, para cada clase de tarea, el peor caso de
@@ -741,14 +753,16 @@ seleccionados, las colisiones, el baseline Brownfield y los checks configurados.
 
 `spec-converge.md`:
 
-1. aborta si no existen checks ejecutables;
-2. ejecuta la spec para medir el delta;
-3. audita gaps sin cobertura y propone nuevos checks para aprobación humana;
-4. agrega trabajo pendiente al tasks file sin reescribir ni desmarcar historia;
-5. exige revisión humana antes de retomar implementación.
+1. obtiene contratos candidatos desde evidencia del repositorio;
+2. sella candidatos, specs placeholder y definición canónica con
+   `converge-contracts.ps1 -Mode propose`;
+3. exige aprobación humana del subject antes de promover en una llamada `apply` separada;
+4. ejecuta cada spec aprobada para medir el delta;
+5. audita gaps sin cobertura y agrega trabajo pendiente sin reescribir historia.
 
-Converge nunca aprueba retroactivamente un design contract y su salida son tareas,
-no cambios directos de código.
+Ningún agente edita estados directamente ni aprueba reglas inferidas. Sólo el apply
+exactamente autorizado promueve juntos el contrato y su estado canónico; no modifica
+código de producto.
 
 ### Migración de un harness previo
 

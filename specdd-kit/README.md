@@ -86,6 +86,10 @@ generated `AGENTS.md` primer, included only when GitHub Copilot is selected).
    In Brownfield projects, approved edits to fingerprinted source are accepted only
    through `pwsh .agents/scripts/rebaseline-source.ps1 -Mode propose -Paths <exact paths>`
    followed by a separate `-Mode apply -SubjectSha256 <approved exact hash>` call.
+   Placeholder entity contracts use the analogous governed
+   `converge-contracts.ps1 -Mode propose -CandidatePaths <exact candidates>` flow;
+   its separately approved apply atomically promotes only those contracts and their
+   canonical statuses and writes an auditable receipt.
 3. Open the project in VS Code. GitHub Copilot automatically picks up
    `.github/copilot-instructions.md` and everything under `.github/instructions/`
    and `.github/prompts/`.

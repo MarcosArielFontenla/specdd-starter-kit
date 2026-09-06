@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "specdd.entity-contract-candidate",
+  "entity": "REPLACE_WITH_ENTITY_NAME",
+  "targetPath": ".agents/specs/REPLACE_WITH_ENTITY_SLUG.spec.yaml",
+  "description": "REPLACE_WITH_EVIDENCE_BACKED_DESCRIPTION",
+  "evidence": [
+    "REPLACE_WITH_REPOSITORY_PATH"
+  ],
+  "requirements": [
+    {
+      "id": "REPLACE_WITH_REQUIREMENT_ID",
+      "text": "REPLACE_WITH_EVIDENCE_BACKED_REQUIREMENT"
+    }
+  ],
+  "acceptanceChecks": [
+    {
+      "id": "REPLACE_WITH_CHECK_ID",
+      "description": "REPLACE_WITH_CHECK_DESCRIPTION",
+      "command": "REPLACE_WITH_REVIEWED_NON_INTERACTIVE_COMMAND",
+      "expectedExitCode": 0
+    }
+  ],
+  "checksWaiver": null
+}
