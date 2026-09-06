@@ -84,13 +84,17 @@ function Get-SourceFiles([string]$Directory, [string]$Relative = "") {
   }
 }
 
-function Fingerprint-Text([string]$Text) {
+function Fingerprint-Bytes([byte[]]$Bytes) {
   [uint32]$hash = 2166136261
-  foreach ($byte in [System.Text.Encoding]::UTF8.GetBytes([string]($Text ?? ""))) {
+  foreach ($byte in $Bytes) {
     $mixed = ([int64]$hash -bxor [int64]$byte) * 16777619
     $hash = [uint32]($mixed -band 0xFFFFFFFFL)
   }
   return $hash.ToString("x8")
+}
+
+function Fingerprint-Text([string]$Text) {
+  return Fingerprint-Bytes ([System.Text.Encoding]::UTF8.GetBytes([string]($Text ?? "")))
 }
 
 function Fingerprint-File([string]$RelativePath) {
@@ -98,7 +102,7 @@ function Fingerprint-File([string]$RelativePath) {
   if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
     Stop-Rebaseline "REBASELINE_FILE_MISSING" "Fingerprint target is missing: $RelativePath"
   }
-  return Fingerprint-Text (Get-Content -LiteralPath $fullPath -Raw)
+  return Fingerprint-Bytes ([System.IO.File]::ReadAllBytes($fullPath))
 }
 
 function Get-Sha256Text([string]$Text) {

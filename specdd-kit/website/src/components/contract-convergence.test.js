@@ -262,7 +262,7 @@ test('approved output satisfies the contract inputs required for project readine
 test('a generated Brownfield scaffold converges through the real validator with prerequisite-aware readiness', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'specdd-contracts-roundtrip-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const sourceText = 'public sealed class Customer {}\n';
+  const sourceText = '\ufeffpublic sealed class Customer {}\r\n';
   const sourcePath = 'src/customer.cs';
   const input = {
     scenario: 'brownfield',

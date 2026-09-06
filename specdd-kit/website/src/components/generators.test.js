@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProjectDefinition } from '@specdd/project-model';
 import { generateFiles, generateScaffold, PROJECT_DEFINITION_PATH, SCAFFOLD_MANIFEST_PATH, renderMcpJson, slugify, renderPrimer, renderAdapter, renderRegistry, renderRouting, renderSkillSkeleton, renderRubric, renderSpecYaml, renderBudgetManifest, renderFeaturesSpec, renderBrownfieldAnalysis, renderBrownfieldConvergenceTasks, renderMigrationTasks, renderProjectValidation } from './generators.js';
-import { fingerprintPaths, fingerprintText } from './fingerprints.js';
+import { fingerprintBytes, fingerprintPaths, fingerprintText } from './fingerprints.js';
 
 const base = { 'README.md': 'base', 'context/keep.md': 'keep' };
 const input = {
@@ -87,6 +87,16 @@ test('fingerprints are deterministic for content and source paths', () => {
     fingerprint: fingerprintPaths(['src/a.ts', 'src/b.ts']).fingerprint,
     paths: ['src/a.ts', 'src/b.ts'],
   });
+});
+
+test('byte fingerprints preserve LF, CRLF and UTF-8 BOM distinctions', () => {
+  const encoder = new TextEncoder();
+  const lf = encoder.encode('alpha\n');
+  const crlf = encoder.encode('alpha\r\n');
+  const bomCrlf = Uint8Array.from([0xef, 0xbb, 0xbf, ...crlf]);
+  assert.equal(fingerprintBytes(lf), fingerprintText('alpha\n'));
+  assert.notEqual(fingerprintBytes(lf), fingerprintBytes(crlf));
+  assert.notEqual(fingerprintBytes(crlf), fingerprintBytes(bomCrlf));
 });
 
 test('mcp.json contains only placeholders, no secrets', () => {

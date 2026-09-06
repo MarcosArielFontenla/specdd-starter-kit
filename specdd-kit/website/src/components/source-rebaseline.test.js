@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { fingerprintPaths, fingerprintText } from './fingerprints.js';
+import { fingerprintBytes, fingerprintPaths, fingerprintText } from './fingerprints.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const script = join(here, '..', '..', '..', '.agents', 'scripts', 'rebaseline-source.ps1');
@@ -19,13 +19,13 @@ function invoke(root, mode, { paths = [], subject = '' } = {}) {
   return spawnSync('pwsh', ['-NoProfile', '-Command', command], { encoding: 'utf8' });
 }
 
-function fixture(t) {
+function fixture(t, contents = { a: 'alpha\n', b: 'bravo\n' }) {
   const root = mkdtempSync(join(tmpdir(), 'specdd-rebaseline-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, 'src'), { recursive: true });
   mkdirSync(join(root, 'context'), { recursive: true });
-  writeFileSync(join(root, 'src', 'a.txt'), 'alpha\n');
-  writeFileSync(join(root, 'src', 'b.txt'), 'bravo\n');
+  writeFileSync(join(root, 'src', 'a.txt'), contents.a);
+  writeFileSync(join(root, 'src', 'b.txt'), contents.b);
   const paths = ['src/a.txt', 'src/b.txt'];
   const pathReceipt = fingerprintPaths(paths);
   const manifest = {
@@ -38,8 +38,8 @@ function fixture(t) {
         pathCount: pathReceipt.count,
         pathFingerprint: pathReceipt.fingerprint,
         contentFingerprints: {
-          'src/a.txt': fingerprintText('alpha\n'),
-          'src/b.txt': fingerprintText('bravo\n'),
+          'src/a.txt': fingerprintBytes(readFileSync(join(root, 'src', 'a.txt'))),
+          'src/b.txt': fingerprintBytes(readFileSync(join(root, 'src', 'b.txt'))),
         },
       },
     },
@@ -47,6 +47,13 @@ function fixture(t) {
   writeFileSync(join(root, 'context', 'scaffold-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   return root;
 }
+
+test('rebaseline sees unchanged LF, CRLF and UTF-8 BOM bytes as unchanged', (t) => {
+  const root = fixture(t, { a: '\ufeffalpha\r\n', b: 'bravo\n' });
+  const result = invoke(root, 'propose', { paths: ['src/a.txt'] });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /REBASELINE_PATH_UNCHANGED/);
+});
 
 test('rebaseline proposes an exact subject, applies it once and writes an audit receipt', (t) => {
   const root = fixture(t);

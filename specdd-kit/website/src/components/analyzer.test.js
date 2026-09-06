@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { analyzeProject, MAX_PATHS, suggestDomains, suggestEntities, suggestFeatures, detectLegacyHarness, isSemanticSafePath, selectSemanticPaths } from './analyzer.js';
+import { fingerprintBytes, fingerprintText } from './fingerprints.js';
 
 function reader(files) {
   return (p) => (p in files ? Promise.resolve(files[p]) : Promise.reject(new Error(`no ${p}`)));
@@ -108,6 +109,21 @@ test('semantic mode reads safe context and returns evidence without reading secr
   assert.ok(!a.semantic.filesRead.includes('backend/src/API/appsettings.json'));
   assert.ok(a.semantic.evidence.some((item) => item.value === 'Modular monolith'));
   assert.ok(a.semantic.evidence.every((item) => item.source && item.confidence));
+});
+
+test('source fingerprints use exact file bytes even when decoded text omits a BOM', async () => {
+  const text = '{"name":"bom-app"}\r\n';
+  const raw = Uint8Array.from([0xef, 0xbb, 0xbf, ...new TextEncoder().encode(text)]);
+  const analysis = await analyzeProject({
+    folderName: 'bom-app',
+    analysisDepth: 'semantic',
+    paths: ['package.json'],
+    readFile: () => Promise.resolve(text),
+    readBytes: () => Promise.resolve(raw.buffer),
+  });
+  assert.equal(analysis.manifestFingerprints['package.json'], fingerprintBytes(raw));
+  assert.equal(analysis.semantic.fileFingerprints['package.json'], fingerprintBytes(raw));
+  assert.notEqual(analysis.manifestFingerprints['package.json'], fingerprintText(text));
 });
 
 test('semantic allowlist excludes sensitive and binary paths', () => {

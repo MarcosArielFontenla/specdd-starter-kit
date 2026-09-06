@@ -30,6 +30,7 @@ export default function IngestStep({ data, skippedCount, replacedCount, collisio
         folderName,
         paths: [...byPath.keys()],
         readFile: (p) => byPath.get(p).text(),
+        readBytes: (p) => byPath.get(p).arrayBuffer(),
         analysisDepth,
       });
       onAnalyzed(analysis, [...byPath.keys()]);

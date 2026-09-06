@@ -1,7 +1,7 @@
 // Pure in-browser project analyzer for the Brownfield scenario. No React, no DOM.
 // Structural mode reads manifests only; semantic mode reads a bounded safe text allowlist.
 import { ANALYSIS_DEPTHS, DEFAULT_ANALYSIS_DEPTH, getAnalysisLevel } from './analysis.js';
-import { FIDELITY_IGNORED_DIRS, fingerprintText } from './fingerprints.js';
+import { FIDELITY_IGNORED_DIRS, fingerprintBytes, fingerprintText } from './fingerprints.js';
 
 export const MAX_PATHS = 20000;
 
@@ -176,13 +176,14 @@ function topCandidates(counts, limit) {
     .map(([name]) => name);
 }
 
-async function readSemanticSnapshot(paths, readSafe) {
+async function readSemanticSnapshot(paths, readSafe, fingerprintFor) {
   const candidates = paths
     .map(normalizePath)
     .filter((path) => !isIgnored(path) && isSemanticSafePath(path))
     .sort((a, b) => semanticPathPriority(a) - semanticPathPriority(b) || a.localeCompare(b));
   const selected = candidates.slice(0, SEMANTIC_MAX_FILES);
   const files = new Map();
+  const fileFingerprints = {};
   const skipped = candidates.slice(SEMANTIC_MAX_FILES)
     .map((path) => ({ path, reason: 'file-count-cap' }));
   let totalChars = 0;
@@ -201,13 +202,13 @@ async function readSemanticSnapshot(paths, readSafe) {
       continue;
     }
     files.set(path, text);
+    fileFingerprints[path] = await fingerprintFor(path, text);
     totalChars += text.length;
   }
   return {
     files,
     filesRead: [...files.keys()],
-    fileFingerprints: Object.fromEntries([...files.entries()]
-      .map(([path, text]) => [path, fingerprintText(text)])),
+    fileFingerprints,
     filesSkipped: skipped,
     totalChars,
   };
@@ -364,7 +365,7 @@ function analyzeSemanticSnapshot(snapshot, baseStack, baseDescription) {
   };
 }
 
-export async function analyzeProject({ folderName, paths, readFile, analysisDepth = DEFAULT_ANALYSIS_DEPTH }) {
+export async function analyzeProject({ folderName, paths, readFile, readBytes, analysisDepth = DEFAULT_ANALYSIS_DEPTH }) {
   const level = getAnalysisLevel(analysisDepth);
   const effectiveDepth = level.available ? level.id : DEFAULT_ANALYSIS_DEPTH;
   const normalizedPaths = (paths || []).map(normalizePath);
@@ -380,6 +381,15 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
   let description = '';
 
   const readSafe = async (p) => { try { return await readFile(p); } catch { return null; } };
+  const fingerprintFor = async (p, text) => {
+    if (!readBytes) return fingerprintText(text);
+    try {
+      const bytes = await readBytes(p);
+      return fingerprintBytes(bytes);
+    } catch {
+      return fingerprintText(text);
+    }
+  };
 
   const packagePaths = visible
     .filter((path) => path === 'package.json' || path.endsWith('/package.json'))
@@ -388,7 +398,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
     const text = await readSafe(pkgPath);
     if (text !== null) {
       manifestsFound.push(pkgPath);
-      manifestFingerprints[pkgPath] = fingerprintText(text);
+      manifestFingerprints[pkgPath] = await fingerprintFor(pkgPath, text);
       try {
         const pkg = JSON.parse(text);
         if (pkgPath === packagePaths[0] && pkg.name) projectName = pkg.name;
@@ -418,7 +428,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
     const text = await readSafe(p);
     if (text === null) continue;
     manifestsFound.push(p);
-    manifestFingerprints[p] = fingerprintText(text);
+    manifestFingerprints[p] = await fingerprintFor(p, text);
     if (!stack.languages.includes(m.language)) stack.languages.push(m.language);
     const lower = text.toLowerCase();
     for (const rule of TEXT_RULES) if (lower.includes(rule.needle)) setIf(stack, rule.field, rule.value);
@@ -436,7 +446,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
     const text = await readSafe(csprojPath);
     if (text === null) continue;
     manifestsFound.push(csprojPath);
-    manifestFingerprints[csprojPath] = fingerprintText(text);
+    manifestFingerprints[csprojPath] = await fingerprintFor(csprojPath, text);
     const lower = text.toLowerCase();
     if (lower.includes('microsoft.aspnetcore') || lower.includes('microsoft.net.sdk.web') || /\/api\/[^/]+\.csproj$/i.test(csprojPath)) {
       setIf(stack, 'backend', 'ASP.NET Core');
@@ -463,7 +473,7 @@ export async function analyzeProject({ folderName, paths, readFile, analysisDept
 
   let semantic = null;
   if (effectiveDepth === ANALYSIS_DEPTHS.SEMANTIC) {
-    const snapshot = await readSemanticSnapshot(visible, readSafe);
+    const snapshot = await readSemanticSnapshot(visible, readSafe, fingerprintFor);
     semantic = analyzeSemanticSnapshot(snapshot, stack, description);
     const structuralArchitecture = inferStructuralArchitecture(visible);
     if (structuralArchitecture && !semantic.architecture.some((item) => item.value === structuralArchitecture.value)) {

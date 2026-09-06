@@ -75,14 +75,23 @@ function Limit-Output([string]$Output, [int]$MaxLength = 12000) {
   return $value.Substring(0, $MaxLength) + "`n... output truncated by validate-project.ps1 ..."
 }
 
-function Fingerprint-Text([string]$Text) {
-  # FNV-1a over UTF-8 bytes. The generator uses the same 32-bit algorithm.
+function Fingerprint-Bytes([byte[]]$Bytes) {
+  # FNV-1a over the exact bytes supplied. File fingerprints must not pass
+  # through Get-Content because it normalizes line endings on some platforms.
   [uint32]$hash = 2166136261
-  foreach ($byte in [System.Text.Encoding]::UTF8.GetBytes([string]($Text ?? ""))) {
+  foreach ($byte in $Bytes) {
     $mixed = ([int64]$hash -bxor [int64]$byte) * 16777619
     $hash = [uint32]($mixed -band 0xFFFFFFFFL)
   }
   return $hash.ToString("x8")
+}
+
+function Fingerprint-Text([string]$Text) {
+  return Fingerprint-Bytes ([System.Text.Encoding]::UTF8.GetBytes([string]($Text ?? "")))
+}
+
+function Fingerprint-File([string]$Path) {
+  return Fingerprint-Bytes ([System.IO.File]::ReadAllBytes($Path))
 }
 
 function Is-SourcePath([string]$Path) {
@@ -228,7 +237,7 @@ function Test-GeneratedIntegrity($Manifest) {
       $failures.Add("missing generated file: $path")
       continue
     }
-    $actual = Fingerprint-Text (Get-Content -LiteralPath (Full-Path $path) -Raw)
+    $actual = Fingerprint-File (Full-Path $path)
     if ($actual -ne $hashByPath[$path]) {
       $failures.Add("content fingerprint mismatch: $path (expected $($hashByPath[$path]), got $actual)")
     }
@@ -280,7 +289,7 @@ function Test-SourceFidelity($Manifest) {
       $contentFailures.Add("source file used for analysis is missing: $path")
       continue
     }
-    $actual = Fingerprint-Text (Get-Content -LiteralPath (Full-Path $path) -Raw)
+    $actual = Fingerprint-File (Full-Path $path)
     if ($actual -ne [string]$property.Value) {
       $contentFailures.Add("source content fingerprint mismatch: $path (expected $($property.Value), got $actual)")
     }

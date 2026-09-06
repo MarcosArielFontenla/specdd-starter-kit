@@ -23,10 +23,21 @@ const utf8Bytes = (value) => {
   return Uint8Array.from(encoded, (character) => character.charCodeAt(0));
 };
 
-export function fingerprintText(value) {
+export function fingerprintBytes(value) {
+  const bytes = value instanceof Uint8Array
+    ? value
+    : value instanceof ArrayBuffer
+      ? new Uint8Array(value)
+      : ArrayBuffer.isView(value)
+        ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength)
+        : Uint8Array.from(value || []);
   let hash = 0x811c9dc5;
-  for (const byte of utf8Bytes(value)) hash = Math.imul(hash ^ byte, 0x01000193) >>> 0;
+  for (const byte of bytes) hash = Math.imul(hash ^ byte, 0x01000193) >>> 0;
   return hash.toString(16).padStart(8, '0');
+}
+
+export function fingerprintText(value) {
+  return fingerprintBytes(utf8Bytes(value));
 }
 
 export function normalizeFidelityPath(path) {
