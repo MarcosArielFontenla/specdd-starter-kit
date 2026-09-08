@@ -230,6 +230,8 @@ npm workspaces monorepo (Node ≥ 22.12):
 | [`specdeploy-kit`](specdeploy-kit/) | Deploy wizard: CI/CD pipelines, IaC and runbooks for 6 providers (Azure SWA, Cloudflare, AWS, Vercel, Netlify, on-prem Docker). Providers are data — see [`provider-authoring.md`](specdeploy-kit/docs/provider-authoring.md). |
 | [`packages/ui`](packages/ui/) | `@specdd/ui` — Boreal Design System (shared Stepper + styles for all wizards). |
 | [`packages/project-model`](packages/project-model/) | `@specdd/project-model` — canonical runtime-neutral Project Definition, JSON Schema, TypeScript types, validation, migration, and Harness v1 compatibility boundary. |
+| [`packages/artifact-model`](packages/artifact-model/) | `@specdd/artifact-model` — versioned role artifacts, traceability graph and [BA domain](packages/artifact-model/BA.md): capability-bound proposals, business rules, impact and exact human review. |
+| [`packages/specforge-workspace`](packages/specforge-workspace/) | Accepted local BA Workspace MVP: browser editing/review, SQLite history, explicit real-agent proposals and exact human approval. Runtime remains opt-in and locally declared identity is not SSO. |
 | [`packages/capability-model`](packages/capability-model/) | `@specdd/capability-model` — portable Capability Pack 1.0.0 schema, strict types, semantic validation, role mapping, and explicit legacy migration. |
 | [`packages/control-plane-model`](packages/control-plane-model/) | `@specdd/control-plane-model` — portable SpecControl 1.0.0 workflow, graph, policy, approval, failure, retry, eval-gate, artifact, and runtime-hint contracts. It is declarative and does not execute graphs. |
 | [`packages/warp-adapter`](packages/warp-adapter/) | `@specdd/warp-adapter` — deterministic, side-effect-free compiler from SpecControl 1.0.0 to Warp Factory `v1alpha1` files, with disabled GitHub issue automation and explicit fidelity/unsupported reporting. |
@@ -314,6 +316,11 @@ regressions. Run-history usage and local evidence inspection are documented in
 [`packages/run-history/README.md`](packages/run-history/README.md).
 
 ## Repo layout & docs
+
+- `docs/specforge-workspace/` — discovery and implementation of the role-oriented
+  SpecForge Workspace; [baseline and phase tracker](docs/specforge-workspace/roadmap.md).
+  The existing Capability Builder remains available. The [BA Workspace guide](docs/specforge-workspace/usage.md)
+  covers the accepted local Phase 4 MVP, including the bounded real-agent pilot and observed BA approval flow.
 
 - `docs/superpowers/specs/` — approved design specs per iteration (Greenfield harness,
   Brownfield ingestion, legacy-harness deprecation, and SpecForge Capability Packs).

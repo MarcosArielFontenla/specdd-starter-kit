@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/ba-action-output/1.0.0",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "requestSha256", "wording", "ambiguities", "questions", "rules", "criteria"],
+  "properties": {
+    "schemaVersion": {"type": "string", "const": "1.0.0"}, "requestSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "wording": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/description"}]},
+    "ambiguities": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/description"}},
+    "questions": {"type": "array", "maxItems": 100, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "supportArtifactIds", "question", "blocking"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "supportArtifactIds": {"$ref": "#/$defs/support"}, "question": {"$ref": "#/$defs/text"}, "blocking": {"type": "boolean"}}
+    }},
+    "rules": {"type": "array", "maxItems": 100, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "supportArtifactIds", "statement", "rationale"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "supportArtifactIds": {"$ref": "#/$defs/support"}, "statement": {"$ref": "#/$defs/text"}, "rationale": {"$ref": "#/$defs/text"}}
+    }},
+    "criteria": {"type": "array", "maxItems": 100, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "supportArtifactIds", "given", "when", "then"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "supportArtifactIds": {"$ref": "#/$defs/support"}, "given": {"$ref": "#/$defs/text"}, "when": {"$ref": "#/$defs/text"}, "then": {"$ref": "#/$defs/text"}}
+    }}
+  },
+  "$defs": {
+    "id": {"type": "string", "maxLength": 128, "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 20000, "pattern": "\\S"},
+    "support": {"type": "array", "minItems": 1, "maxItems": 200, "items": {"$ref": "#/$defs/id"}},
+    "description": {
+      "type": "object", "additionalProperties": false, "required": ["id", "supportArtifactIds", "description"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "supportArtifactIds": {"$ref": "#/$defs/support"}, "description": {"$ref": "#/$defs/text"}}
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Guía única de uso — SpecDD Platform
 
-Fecha: 2026-09-05. Alcance: generación del Harness y Capability Packs, trabajo
+Fecha: 2026-09-08. Alcance: generación del Harness y Capability Packs, trabajo
 spec-first con revisión humana y herramientas locales de contratos/evidencia.
 SpecDeploy específico de infraestructura, proyecto o empresa queda como trabajo
 futuro. No necesitás Warp, créditos de Warp ni servicios de deploy para este recorrido.
@@ -22,6 +22,15 @@ Planner real pausa spec/plan para aprobación; Developer trabaja en una copia ai
 Reviewer usa otra sesión; luego corren checks registrados y una segunda aprobación
 puede habilitar una draft PR. Publicación está desactivada por defecto y deploy no
 forma parte del flujo. No es un botón universal «ejecutar fábrica».
+
+Para **trabajo diario de BA**, Phase 4 de SpecForge agrega otro servicio local:
+selección de proyecto preparado, requisitos, preguntas, reglas, criterios y revisión
+humana desde el navegador. No necesita Git/IDE para el BA; el operador prepara y
+levanta el servicio. Seguí la [guía del Workspace BA](specforge-workspace/usage.md).
+La implementación, el E2E simulado y un piloto sintético con agente real y aprobación
+humana observada fueron aceptados en Phase 4. No confundirlo con instalar un
+Capability Pack ni con SpecControl. Proyección a SpecDD y otros roles todavía son
+fases siguientes.
 
 ## 2. Levantá el portal
 

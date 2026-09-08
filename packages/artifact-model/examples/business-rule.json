@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.1.0",
+  "kind": "SpecForgeArtifact",
+  "id": "rule-1",
+  "title": "Synthetic rule candidate",
+  "type": "business-rule",
+  "content": {"statement": "Rule candidate requiring human review, not a Bloom business decision.", "rationale": "Demonstrate the typed BA artifact contract."},
+  "projectRef": {"id": "sample-project", "definitionSha256": "940f362fc13dbedd3db3b10f6b14ec9bb96ce20ab037a5807afbb4689af1cc6f"},
+  "ownerRole": "ba",
+  "revision": 1,
+  "previousRevisionSha256": null,
+  "createdAt": "2026-09-07T12:00:00.000Z",
+  "updatedAt": "2026-09-07T12:00:00.000Z",
+  "provenance": [{"actor": {"id": "synthetic-agent", "kind": "agent"}, "origin": "agent-proposed", "at": "2026-09-07T12:00:00.000Z", "sourceRefs": ["synthetic-example-only"]}],
+  "relationships": [],
+  "status": "draft",
+  "review": []
+}

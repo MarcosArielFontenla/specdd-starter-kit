@@ -51,6 +51,7 @@ PROMPT_SPECDDSTARTERKIT.md
 
 # Local SpecControl transactional state and session locks.
 /.specdd-control/
+/.specforge-workspace/
 
 # Per-machine assistant permissions; not project configuration.
 /.claude/settings.local.json

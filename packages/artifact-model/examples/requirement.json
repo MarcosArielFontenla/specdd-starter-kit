@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecForgeArtifact",
+  "id": "requirement-cancel",
+  "title": "Synthetic cancellation request",
+  "type": "requirement",
+  "content": {
+    "description": "Synthetic example for the artifact model, not an approved Bloom requirement.",
+    "acceptanceCriteria": [{"id": "ac-1", "given": "A future appointment", "when": "Its owner requests cancellation", "then": "The agreed cancellation outcome is shown"}]
+  },
+  "projectRef": {"id": "sample-project", "definitionSha256": "940f362fc13dbedd3db3b10f6b14ec9bb96ce20ab037a5807afbb4689af1cc6f"},
+  "ownerRole": "ba",
+  "revision": 1,
+  "previousRevisionSha256": null,
+  "createdAt": "2026-09-07T12:00:00.000Z",
+  "updatedAt": "2026-09-07T12:00:00.000Z",
+  "provenance": [{"actor": {"id": "synthetic-ba", "kind": "human"}, "origin": "human-authored", "at": "2026-09-07T12:00:00.000Z", "sourceRefs": []}],
+  "relationships": [],
+  "status": "draft",
+  "review": []
+}

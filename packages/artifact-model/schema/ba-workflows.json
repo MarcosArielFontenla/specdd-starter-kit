@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "ba-requirement-review",
+  "role": "ba",
+  "capabilityId": "role-ba",
+  "workflowRef": "specforge-requirements",
+  "playbookRefs": ["specforge-ba", "context-analysis", "story-writing", "acceptance-criteria", "story-splitting", "requirements-traceability", "miro-collaboration"],
+  "excludedPlaybooks": {"documentation": "Dev module/API documentation; cross-role implementation references are outside BA actions."},
+  "steps": [
+    {"id": "draft", "actor": "human", "effect": "create-requirement-draft"},
+    {"id": "analysis", "actor": "agent", "effect": "proposal-only"},
+    {"id": "questions", "actor": "human", "effect": "resolve-or-preserve-unknowns"},
+    {"id": "review", "actor": "human", "effect": "review-rules-and-criteria"},
+    {"id": "impact", "actor": "system", "effect": "derive-graph-impact"},
+    {"id": "approval", "actor": "human", "effect": "exact-artifact-and-graph-gate"}
+  ],
+  "actions": [
+    {"id": "analyze-requirement", "executor": "agent", "outputs": ["ambiguities", "questions", "rules", "criteria"]},
+    {"id": "refine-wording", "executor": "agent", "outputs": ["wording", "ambiguities", "questions"]},
+    {"id": "suggest-acceptance-criteria", "executor": "agent", "outputs": ["criteria", "questions"]},
+    {"id": "impact-analysis", "executor": "deterministic", "outputs": ["impact-analysis"]}
+  ],
+  "boundary": "Proposal only: no question answers, business decisions, approval, repository writes, tools or SpecDD projection. Legacy paths and Miro instructions are knowledge, not execution permissions. Unknowns stay explicit. Human review must assess truth and scope."
+}

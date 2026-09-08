@@ -1,0 +1,132 @@
+import {randomUUID} from 'node:crypto';
+import {createArtifact,reviseArtifact,reviewArtifact,artifactSubject,canonicalJson,fingerprint} from '@specdd/artifact-model';
+import {prepareBAAction,acceptBAActionOutput,prepareBAApproval,approveBA,assertBAApproval} from '@specdd/artifact-model/ba';
+import {createArtifactGraph} from '@specdd/artifact-model/graph';
+import {copy,exact,fail,id,text,put,currentArtifacts,graphInput} from './state.mjs';
+
+const uid = prefix=>`${prefix}-${randomUUID()}`;
+const now = ()=>new Date().toISOString();
+const origin = a=>a.provenance.some(p=>p.actor.kind==='agent')?'human-edited-agent-proposal':'human-authored';
+const editOf = a=>({type:a.type,title:a.title,content:a.content,ownerRole:a.ownerRole,projectRef:a.projectRef,relationships:a.relationships});
+
+export class BAWorkspace {
+  #pending=new Map(); #work=new Set(); #closed=false;
+  constructor({store,operator,runtime=null,timeoutMs=120000}) {
+    this.store=store;this.actor={id:text(operator),kind:'human'};this.runtime=runtime;
+    if(!Number.isInteger(timeoutMs)||timeoutMs<20||timeoutMs>300000)fail('INVALID_TIMEOUT');this.timeoutMs=timeoutMs;
+  }
+  async view(projectId) {
+    const row=await this.store.load(projectId),state=row.state,artifacts=currentArtifacts(state);
+    const approvals=[];
+    for(const r of state.receipts){let valid=true;try{await assertBAApproval(await graphInput(state,r.targetId),r);}catch{valid=false;}approvals.push({...r,valid});}
+    let graph=null;
+    if(artifacts.length){const g=await graphInput(state,artifacts[0].id),view=await createArtifactGraph(g.graph,g.context);graph={edges:view.snapshot().edges,
+      blockers:Object.fromEntries(artifacts.map(a=>[a.id,view.blockers(a.id)])),impact:Object.fromEntries(artifacts.map(a=>[a.id,view.impact(a.id)]))};}
+    const runs=(await this.store.runs(projectId)).map(({record:r})=>({id:r.id,targetId:r.input.targetId,action:r.input.action,status:r.status,error:r.error,
+      startedAt:r.startedAt,finishedAt:r.finishedAt,proposal:r.proposal,runtime:r.runtimeReceipt,requestSha256:r.requestSha256}));
+    return {project:state.project,version:row.version,artifacts,histories:state.histories,approvals,graph,runs,
+      history:this.store.history(projectId),operator:this.actor.id,runtime:this.runtime?.label??'No configurado',runtimeAvailable:Boolean(this.runtime)};
+  }
+  async #load(projectId,version){const row=await this.store.load(projectId);if(row.version!==version)fail('STALE_STATE');return row;}
+  #target(state,targetId){return currentArtifacts(state).find(a=>a.id===id(targetId))??fail('ARTIFACT_NOT_FOUND');}
+  #contribution(at,artifact=null){return {actor:this.actor,origin:artifact?origin(artifact):'human-authored',at,sourceRefs:[]};}
+  #reattest(state,artifact,at){for(const e of state.assertions)if((e.from===artifact.id||e.to===artifact.id)&&e.provenance.at<artifact.updatedAt)e.provenance={actor:this.actor,at,sourceRefs:[...new Set([...e.provenance.sourceRefs,'explicit-workspace-revision'])]};}
+  async command(projectId,version,value) {
+    const command=copy(value),row=await this.#load(projectId,version),state=row.state,at=now();let runChange=null;
+    const event={action:command.op,actor:this.actor,at};
+    if(command.op==='create') {
+      exact(command,['op','title','description','source']);
+      const artifact=await createArtifact({id:uid('requirement'),title:command.title,type:'requirement',content:{description:command.description,acceptanceCriteria:[]},ownerRole:'ba',
+        projectRef:{id:projectId,definitionSha256:await fingerprint(state.project)},relationships:[]},
+        {...this.#contribution(at),sourceRefs:command.source?[text(command.source)]:[]});put(state,artifact);event.targetId=artifact.id;
+    } else if(command.op==='edit') {
+      exact(command,['op','targetId','title','content']);const old=this.#target(state,command.targetId);
+      if(!['requirement','business-rule','decision'].includes(old.type))fail('EDIT_TYPE');
+      const next=await reviseArtifact(old,{...editOf(old),title:command.title,content:command.content},this.#contribution(at,old));
+      put(state,next);this.#reattest(state,next,at);event.targetId=old.id;
+    } else if(command.op==='resolve-question') {
+      exact(command,['op','targetId','answer']);const old=this.#target(state,command.targetId);if(old.type!=='open-question')fail('QUESTION_REQUIRED');
+      const next=await reviseArtifact(old,{...editOf(old),content:{...old.content,resolution:{answer:text(command.answer),actor:this.actor,at}}},this.#contribution(at,old));
+      put(state,next);this.#reattest(state,next,at);event.targetId=old.id;
+    } else if(command.op==='request-review') {
+      exact(command,['op','targetId']);const old=this.#target(state,command.targetId),g=await graphInput(state,old.id);
+      put(state,await reviewArtifact(old,{id:uid('review'),action:'request-review',actor:this.actor,at,subjectSha256:await artifactSubject(old)},g.context));event.targetId=old.id;
+    } else if(command.op==='approve') {
+      exact(command,['op','targetId','subjectSha256']);
+      const result=await approveBA(await graphInput(state,command.targetId),{subjectSha256:command.subjectSha256,eventId:uid('approve'),actor:this.actor,at});
+      put(state,result.artifact);state.receipts.push(result.receipt);event.targetId=result.artifact.id;event.subjectSha256=command.subjectSha256;
+    } else if(command.op==='adopt'||command.op==='discard') {
+      exact(command,command.op==='adopt'?['op','runId','selectedIds']:['op','runId']);
+      const stored=await this.store.run(projectId,command.runId),run=stored.record;
+      if(run.status!=='ready')fail('PROPOSAL_NOT_READY');
+      const selected=command.op==='adopt'?command.selectedIds:[];
+      if(!Array.isArray(selected)||new Set(selected).size!==selected.length||selected.length>400||selected.some(s=>typeof s!=='string'))fail('INVALID_SELECTION');
+      if(command.op==='adopt') {
+        if(!selected.length)fail('EMPTY_SELECTION');
+        const current={...run.input,...await graphInput(state,run.input.targetId),capability:state.capability};
+        if((await prepareBAAction(current)).requestSha256!==run.requestSha256)fail('BA_STALE_REQUEST');
+        await acceptBAActionOutput(run.proposal.output,current,{actor:run.proposal.provenance.actor,at:run.proposal.provenance.at});
+        const out=run.proposal.output;
+        const candidates=[...(out.wording?[{kind:'wording',...out.wording}]:[]),...out.questions.map(s=>({kind:'question',...s})),...out.rules.map(s=>({kind:'rule',...s})),...out.criteria.map(s=>({kind:'criterion',...s}))];
+        if(selected.some(s=>!candidates.some(c=>c.id===s)))fail('INVALID_SELECTION');
+        const target=this.#target(state,run.input.targetId),accepted=candidates.filter(c=>selected.includes(c.id));
+        const agentContribution={actor:run.proposal.provenance.actor,origin:'agent-proposed',at:run.proposal.provenance.at,sourceRefs:[run.id,run.requestSha256]};
+        const draftInput=(artifactId,title,type,content)=>({id:artifactId,title,type,content,ownerRole:'ba',projectRef:target.projectRef,relationships:[]});
+        for(const c of accepted.filter(c=>c.kind==='question'||c.kind==='rule')) {
+          const question=c.kind==='question',artifactId=uid(question?'question':'rule');
+          const a=await createArtifact(draftInput(artifactId,question?c.question:c.statement,question?'open-question':'business-rule',question?{question:c.question,blocking:c.blocking,resolution:null}:{statement:c.statement,rationale:c.rationale}),agentContribution);put(state,a);
+          put(state,await reviseArtifact(a,editOf(a),{actor:this.actor,origin:'human-edited-agent-proposal',at,sourceRefs:[run.id,c.id]}));
+          state.assertions.push({id:uid('link'),kind:question?(c.blocking?'blocks':'relates-to'):'depends-on',from:question?artifactId:target.id,to:question?target.id:artifactId,provenance:{actor:this.actor,at,sourceRefs:[run.id,c.id]}});
+        }
+        const wording=accepted.find(c=>c.kind==='wording'),criteria=accepted.filter(c=>c.kind==='criterion');
+        if(wording||criteria.length) {
+          const content={description:wording?.description??target.content.description,acceptanceCriteria:[...target.content.acceptanceCriteria,...criteria.map(c=>({id:uid('ac'),given:c.given,when:c.when,then:c.then}))]};
+          const proposalRevision=await reviseArtifact(target,{...editOf(target),content},agentContribution);put(state,proposalRevision);
+          const adopted=await reviseArtifact(proposalRevision,editOf(proposalRevision),{actor:this.actor,origin:'human-edited-agent-proposal',at,sourceRefs:[run.id]});put(state,adopted);this.#reattest(state,adopted,at);
+        }
+      }
+      state.adoptions.push({runId:run.id,requestSha256:run.requestSha256,selectedIds:selected,actor:this.actor,at,decision:command.op});
+      runChange={expectedStatus:'ready',expectedHash:stored.hash,record:{...run,status:command.op==='adopt'?'adopted':'discarded',decision:{actor:this.actor,at,selectedIds:selected}}};event.runId=run.id;
+    } else fail('UNKNOWN_COMMAND');
+    await this.store.commit(projectId,version,state,event,runChange);return this.view(projectId);
+  }
+  async approval(projectId,targetId){const row=await this.store.load(projectId);return {version:row.version,...await prepareBAApproval(await graphInput(row.state,targetId))};}
+  async start(projectId,version,value) {
+    exact(value,['targetId','action','consent']);if(value.consent!==true)fail('RUNTIME_CONSENT_REQUIRED');if(!this.runtime)fail('RUNTIME_UNAVAILABLE');
+    const row=await this.#load(projectId,version),runId=uid('run');
+    const input={...await graphInput(row.state,value.targetId),action:value.action,runId,capability:row.state.capability};
+    const prepared=await prepareBAAction(input);if(!prepared.request.projectCapabilityBinding)fail('PROJECT_CAPABILITY_NOT_REGISTERED');
+    // Recheck CAS after asynchronous preparation, before consuming runtime quota.
+    await this.#load(projectId,version);
+    const record={id:runId,projectId,status:'running',input,requestSha256:prepared.requestSha256,projectVersion:version,startedAt:now(),finishedAt:null,proposal:null,runtimeReceipt:null,error:null};
+    await this.store.insertRun(record);
+    const controller=new AbortController();this.#pending.set(runId,controller);
+    const timer=setTimeout(()=>{void this.cancel(projectId,runId,'TIMEOUT').catch(()=>{});},this.timeoutMs);
+    const work=Promise.resolve().then(()=>this.runtime.execute({...prepared,signal:controller.signal})).then(async result=>{
+      const stored=await this.store.run(projectId,runId);if(stored.record.status!=='running')return;
+      const fresh=await this.store.load(projectId);
+      if(fresh.version!==version)fail('STALE_STATE');
+      const proposal=await acceptBAActionOutput(result.output,{...input,...await graphInput(fresh.state,value.targetId),capability:fresh.state.capability},
+        {actor:{id:this.runtime.label,kind:'agent'},at:now()});
+      canonicalJson(result.receipt);
+      await this.#load(projectId,version);
+      await this.store.updateRun({...stored.record,status:'ready',proposal,runtimeReceipt:result.receipt,finishedAt:now()},stored.hash);
+    }).catch(async error=>{
+      const stored=await this.store.run(projectId,runId);if(stored.record.status!=='running')return;
+      const code=error.message==='TEXT_ONLY_PERMISSIONS_UNVERIFIED'?'RUNTIME_PERMISSIONS_UNVERIFIED':/STALE/.test(error.message)?'STALE_CONTEXT':/BA_OUTPUT|BA_DUPLICATE|BA_TIME/.test(error.message)?'INVALID_AGENT_OUTPUT':'RUNTIME_FAILED';
+      await this.store.updateRun({...stored.record,status:'needs-attention',error:code,finishedAt:now()},stored.hash);
+    }).finally(()=>{clearTimeout(timer);this.#pending.delete(runId);this.#work.delete(work);});
+    this.#work.add(work);void work.catch(()=>{});return record.id;
+  }
+  async cancel(projectId,runId,reason='CANCELLED') {
+    const stored=await this.store.run(projectId,runId);if(stored.record.status!=='running')fail('RUN_NOT_RUNNING');
+    await this.store.updateRun({...stored.record,status:reason==='CANCELLED'?'cancelled':'needs-attention',error:reason,finishedAt:now()},stored.hash);
+    this.#pending.get(runId)?.abort();
+  }
+  async close() {
+    if(this.#closed)return;this.#closed=true;
+    for(const projectId of this.store.ids())for(const {record} of await this.store.runs(projectId))if(record.status==='running')await this.cancel(projectId,record.id,'INTERRUPTED');
+    // Do not wait forever for a broken injected adapter. Terminal state ignores late output.
+    await Promise.race([Promise.allSettled([...this.#work]),new Promise(resolve=>setTimeout(resolve,1000))]);
+  }
+}

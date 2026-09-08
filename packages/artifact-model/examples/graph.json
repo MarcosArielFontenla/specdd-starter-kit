@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "SpecForgeArtifactGraph",
+  "projectRef": {"id": "sample-project", "definitionSha256": "940f362fc13dbedd3db3b10f6b14ec9bb96ce20ab037a5807afbb4689af1cc6f"},
+  "nodes": [
+    {"projectId": "sample-project", "artifactId": "decision-scope", "revision": 1, "sha256": "9dbc48bb4b136f053b0df13f25101f028a02ffbeab2f41a8f6990146076deda2"},
+    {"projectId": "sample-project", "artifactId": "question-deadline", "revision": 1, "sha256": "5ce86835236f676c13a6404e340c0df66791c9ef4e51753779aa6087d514e3ee"},
+    {"projectId": "sample-project", "artifactId": "requirement-cancel", "revision": 1, "sha256": "1cf9525e28f5e1da381aad6ead8286a8f7dc8cd2a604d42fecdc65b1ab6797fe"}
+  ],
+  "assertions": [
+    {
+      "id": "question-blocks-requirement", "kind": "blocks", "from": "question-deadline", "to": "requirement-cancel",
+      "provenance": {"actor": {"id": "synthetic-ba", "kind": "human"}, "at": "2026-09-07T12:00:10.000Z", "sourceRefs": ["synthetic-example-only"]}
+    },
+    {
+      "id": "requirement-depends-on-decision", "kind": "depends-on", "from": "requirement-cancel", "to": "decision-scope",
+      "provenance": {"actor": {"id": "synthetic-agent", "kind": "agent"}, "at": "2026-09-07T12:00:10.000Z", "sourceRefs": ["synthetic-example-only"]}
+    }
+  ]
+}

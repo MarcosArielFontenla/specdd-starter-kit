@@ -1,0 +1,24 @@
+{
+  "name": "@specdd/artifact-model",
+  "version": "1.0.0",
+  "description": "Portable reviewed role artifacts for SpecForge",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./schema": "./schema/artifact.schema.json",
+    "./graph": { "types": "./dist/graph.d.ts", "import": "./dist/graph.js" },
+    "./schema/graph": "./schema/artifact-graph.schema.json",
+    "./ba": { "types": "./dist/ba.d.ts", "import": "./dist/ba.js" },
+    "./schema/v1.1": { "types": "./dist/schema-v11.d.ts", "import": "./dist/schema-v11.js" }
+  },
+  "files": ["dist", "schema", "examples"],
+  "scripts": {
+    "prebuild": "npm run build -w @specdd/capability-model",
+    "build": "tsc -p tsconfig.json",
+    "test:unit": "npm run build && node --test",
+    "test": "npm run test:unit"
+  },
+  "engines": { "node": ">=22.12.0" },
+  "dependencies": { "@specdd/project-model": "*", "@specdd/capability-model": "*" },
+  "devDependencies": { "typescript": "^5.9.3" }
+}

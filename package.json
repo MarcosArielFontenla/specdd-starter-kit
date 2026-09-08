@@ -2,6 +2,10 @@
   "name": "specddstarterkit",
   "private": true,
   "scripts": {
+    "specforge:build": "npm run build -w @specdd/specforge-workspace",
+    "specforge:test": "npm run test:unit -w @specdd/specforge-workspace",
+    "specforge:test:ui": "node --experimental-sqlite packages/specforge-workspace/scripts/verify-ui.mjs",
+    "specforge:start": "npm run start -w @specdd/specforge-workspace --",
     "test:phase5": "node --test scripts/phase5/*.test.mjs",
     "speccontrol:build": "npm run build --workspace @specdd/local-control-service",
     "speccontrol:test": "npm run test:unit --workspace @specdd/local-control-service",
@@ -11,6 +15,8 @@
   "workspaces": [
     "packages/ui",
     "packages/project-model",
+    "packages/artifact-model",
+    "packages/specforge-workspace",
     "packages/capability-model",
     "packages/control-plane-model",
     "packages/warp-adapter",

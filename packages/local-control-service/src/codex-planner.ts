@@ -2,6 +2,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import type { PlanArtifact, Planner, PlannerResult, PlanningTask, WindowsSandboxMode } from './types.js';
 import { planArtifact } from './validation.js';
+import { textPolicy, textPolicyArgs, startTextThread, textTurnParameters } from './codex-text-policy.js';
 
 type Pending = { method: string; resolve(value: unknown): void; reject(error: Error): void };
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
@@ -31,23 +32,31 @@ export class CodexReadOnlyPlanner implements Planner {
 
 export async function runCodexStructured(options: { executable: string; cwd: string; model: string;
   sandbox: 'read-only' | 'workspace-write'; timeoutMs: number; signal: AbortSignal | undefined; serviceName: string;
-  prompt: string; outputSchema: unknown; errorPrefix: string; windowsSandboxMode?: WindowsSandboxMode }): Promise<{ text: string; receipt: PlannerResult['receipt'] }> {
+  prompt: string; outputSchema: unknown; errorPrefix: string; windowsSandboxMode?: WindowsSandboxMode; textOnly?: boolean; textOnlyIsolation?: unknown }): Promise<{ text: string; receipt: PlannerResult['receipt'] }> {
   if (options.signal?.aborted) throw new Error(`${options.errorPrefix}_ABORTED`);
+  if (options.textOnly && options.sandbox !== 'read-only') throw new Error('TEXT_ONLY_READ_ONLY_REQUIRED');
+  const policy = options.textOnly ? textPolicy(options.cwd, options.textOnlyIsolation) : null;
   const allowed = ['SystemRoot', 'WINDIR', 'ComSpec', 'PATH', 'PATHEXT', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'TEMP', 'TMP', 'HOME'];
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => allowed.some(x => x.toLowerCase() === key.toLowerCase())));
-  const child = spawn(options.executable, appServerArgs(options.windowsSandboxMode),
+  const child = spawn(options.executable, [...appServerArgs(options.windowsSandboxMode, options.textOnly), ...(policy ? textPolicyArgs(policy) : [])],
     { cwd: options.cwd, env, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
-  const client = new AppServerClient(child);
+  const client = new AppServerClient(child, options.textOnly);
   const timer = setTimeout(() => client.stop(new Error(`${options.errorPrefix}_TIMEOUT`)), options.timeoutMs);
-  const onAbort = () => client.interrupt().catch(() => client.stop(new Error(`${options.errorPrefix}_ABORT_FAILED`)));
+  const onAbort = () => {
+    if (options.textOnly) { client.stop(new Error(`${options.errorPrefix}_ABORTED`)); return; }
+    void client.interrupt().catch(() => client.stop(new Error(`${options.errorPrefix}_ABORT_FAILED`)));
+  };
   options.signal?.addEventListener('abort', onAbort, { once: true });
+  if (options.textOnly && options.signal?.aborted) onAbort();
   try {
     await client.ready;
     await client.request('initialize', { clientInfo: { name: options.serviceName, title: 'SpecControl Local', version: '0.3.0' }, capabilities: { experimentalApi: true } });
     client.notify('initialized', {});
-    const started = await client.request('thread/start', appServerThreadParameters(options)) as { thread: { id: string } };
+    const started = policy ? await startTextThread(client, policy, options.model, options.serviceName)
+      : await client.request('thread/start', appServerThreadParameters(options)) as { thread: { id: string } };
     client.threadId = started.thread.id;
-    const turn = await client.request('turn/start', { threadId: client.threadId, cwd: options.cwd,
+    if (options.textOnly && options.signal?.aborted) throw new Error(`${options.errorPrefix}_ABORTED`);
+    const turn = await client.request('turn/start', policy ? textTurnParameters(policy, client.threadId, options.prompt, options.outputSchema) : { threadId: client.threadId, cwd: options.cwd,
       approvalPolicy: 'never', input: [{ type: 'text', text: options.prompt }], summary: 'concise',
       outputSchema: options.outputSchema }) as { turn: { id: string } };
     client.turnId = turn.turn.id;
@@ -63,9 +72,12 @@ export async function runCodexStructured(options: { executable: string; cwd: str
   }
 }
 
-export function appServerArgs(mode?: WindowsSandboxMode): string[] {
+export function appServerArgs(mode?: WindowsSandboxMode, textOnly = false): string[] {
   const args = ['app-server', '--stdio', '-c', 'mcp_servers={}', '-c', 'analytics.enabled=false'];
   if (mode) args.push('-c', `windows.sandbox="${mode}"`);
+  if (textOnly) for (const setting of ['features.shell_tool=false', 'features.unified_exec=false', 'features.apps=false',
+    'features.multi_agent=false', 'features.browser_use=false', 'features.browser_use_external=false',
+    'features.js_repl=false', 'features.skill_mcp_dependency_install=false', 'features.hooks=false', 'web_search="disabled"', 'project_doc_max_bytes=0']) args.push('-c', setting);
   return args;
 }
 
@@ -88,7 +100,9 @@ class AppServerClient {
   #text = '';
   #complete!: (value: { status: string; text: string }) => void;
   #fail!: (error: Error) => void;
-  constructor(child: ChildProcessWithoutNullStreams) {
+  #textOnly: boolean;
+  constructor(child: ChildProcessWithoutNullStreams, textOnly = false) {
+    this.#textOnly = textOnly;
     this.#child = child;
     this.ready = new Promise((resolve, reject) => { child.once('spawn', resolve); child.once('error', () => reject(new Error('PLANNER_SPAWN_FAILED'))); });
     this.closed = new Promise(resolve => child.once('close', resolve));
@@ -124,6 +138,10 @@ class AppServerClient {
       const line = this.#buffer.slice(0, end); this.#buffer = this.#buffer.slice(end + 1);
       let message: any;
       try { message = JSON.parse(line); } catch { this.stop(new Error('PLANNER_PROTOCOL_JSON')); continue; }
+      if (this.#textOnly && ['item/started','item/completed'].includes(message.method) &&
+          !['userMessage','agentMessage','reasoning','plan'].includes(message.params?.item?.type)) {
+        this.stop(new Error('TEXT_ONLY_TOOL_REJECTED')); continue;
+      }
       if (message.method && message.id !== undefined) {
         this.#send({ id: message.id, error: { code: -32601, message: 'Denied by SpecControl Planner' } }); continue;
       }

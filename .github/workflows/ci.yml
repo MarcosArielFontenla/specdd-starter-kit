@@ -10,6 +10,29 @@ on:
     paths: ['specdd-kit/**', 'specforge-kit/**', 'specdeploy-kit/**', 'platform/**', 'packages/**', 'scripts/**', 'package.json', 'package-lock.json', '.github/workflows/ci.yml']
 
 jobs:
+  specforge-workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run specforge:test
+      - run: npx playwright install --with-deps chromium
+      # Offline simulated runtime; does not prove a real BA agent run.
+      - run: npm run specforge:test:ui
+
+  artifact-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run test:unit -w @specdd/artifact-model
+
   delivery-model:
     runs-on: ubuntu-latest
     steps:

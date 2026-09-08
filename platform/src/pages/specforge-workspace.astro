@@ -1,0 +1,21 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="SpecForge Workspace — SpecDD Platform">
+  <main style="max-width:850px;margin:60px auto;padding:24px">
+    <p>ROLE WORKSPACE · BA</p>
+    <h1>Requisitos, preguntas y decisiones. En un espacio de trabajo.</h1>
+    <p>El Workspace BA es un servicio local separado. Conserva borradores e historial,
+      permite revisar propuestas del agente y aprobar una revisión exacta, sin operar Git o un IDE.</p>
+    <h2>Entrar al Workspace</h2>
+    <p>Abrí la URL privada de sesión que muestra el operador al iniciar el servicio.
+      Se usa una sola vez; no la compartas. Si ya iniciaste sesión en este navegador:</p>
+    <p><a href="http://127.0.0.1:4312/">Continuar en el Workspace local →</a></p>
+    <p>Si no responde, el operador debe iniciar <code>npm run specforge:start</code>
+      con la carpeta de estado, su identidad local y un proyecto preparado.
+      El agente es opcional y requiere configuración y consentimiento de envío de contexto.</p>
+    <p>La interfaz ya permite trabajo local. La aceptación del piloto con un usuario y agente real
+      es un paso separado; no equivale a una plataforma multiusuario ni publica specs.</p>
+    <p><a href="/specforge">Volver al Capability Builder</a></p>
+  </main>
+</Layout>

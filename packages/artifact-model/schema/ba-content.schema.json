@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/ba-content/1.0.0",
+  "$defs": {
+    "businessRule": {
+      "type": "object", "additionalProperties": false, "required": ["statement", "rationale"],
+      "properties": {"statement": {"$ref": "#/$defs/text"}, "rationale": {"$ref": "#/$defs/text"}}
+    },
+    "impactAnalysis": {
+      "type": "object", "additionalProperties": false,
+      "required": ["basisSnapshotSha256", "root", "affected", "scope"],
+      "properties": {
+        "basisSnapshotSha256": {"$ref": "#/$defs/hash"},
+        "root": {"$ref": "#/$defs/reference"},
+        "affected": {"type": "array", "maxItems": 199, "items": {"$ref": "#/$defs/reference"}},
+        "scope": {"const": "provided-context-only"}
+      }
+    },
+    "text": {"type": "string", "minLength": 1, "maxLength": 20000, "pattern": "\\S"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "id": {"type": "string", "maxLength": 128, "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "reference": {
+      "type": "object", "additionalProperties": false, "required": ["projectId", "artifactId", "revision", "sha256"],
+      "properties": {"projectId": {"$ref": "#/$defs/id"}, "artifactId": {"$ref": "#/$defs/id"}, "revision": {"type": "integer", "minimum": 1, "maximum": 2147483647}, "sha256": {"$ref": "#/$defs/hash"}}
+    }
+  }
+}

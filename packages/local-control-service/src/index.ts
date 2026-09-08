@@ -2,6 +2,7 @@ export * from './types.js';
 export * from './validation.js';
 export * from './store.js';
 export * from './codex-planner.js';
+export { textIsolation } from './codex-text-policy.js';
 export * from './server.js';
 export * from './workspace.js';
 export * from './checks.js';
