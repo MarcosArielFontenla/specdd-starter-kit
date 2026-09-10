@@ -15,14 +15,42 @@ export interface BusinessRuleContent { statement: string; rationale: string }
 export interface ImpactAnalysisContent {
   basisSnapshotSha256: string; root: ArtifactReference; affected: ArtifactReference[]; scope: 'provided-context-only';
 }
+export interface TestScenarioContent {
+  objective: string; acceptanceCriterionIds: string[];
+  technique: 'functional' | 'boundary' | 'negative' | 'regression' | 'exploratory';
+}
+export interface TestCaseContent {
+  acceptanceCriterionIds: string[]; preconditions: string[];
+  steps: Array<{action: string; expected: string}>;
+  level: 'manual' | 'unit' | 'integration' | 'e2e';
+  automationStatus: 'manual' | 'candidate' | 'automated';
+}
+export interface CoverageAssessmentContent {
+  basisSnapshotSha256: string; target: ArtifactReference;
+  entries: Array<{acceptanceCriterionId: string; testCaseRefs: ArtifactReference[]}>;
+  scope: 'declared-design-only';
+}
+export interface QualityRiskContent {
+  statement: string; likelihood: 'low' | 'medium' | 'high'; impact: 'low' | 'medium' | 'high'; mitigation: string;
+}
+export interface DefectContent {
+  severity: 'low' | 'medium' | 'high' | 'critical'; observed: string; expected: string;
+  reproductionSteps: string[];
+  evidence: Array<{kind: 'log' | 'screenshot' | 'report' | 'run'; locator: string; sha256: string}>;
+}
 export type Payload =
   | { type: 'requirement'; content: RequirementContent }
   | { type: 'open-question'; content: QuestionContent }
   | { type: 'decision'; content: DecisionContent }
   | { type: 'business-rule'; content: BusinessRuleContent }
-  | { type: 'impact-analysis'; content: ImpactAnalysisContent };
+  | { type: 'impact-analysis'; content: ImpactAnalysisContent }
+  | { type: 'test-scenario'; content: TestScenarioContent }
+  | { type: 'test-case'; content: TestCaseContent }
+  | { type: 'coverage-assessment'; content: CoverageAssessmentContent }
+  | { type: 'quality-risk'; content: QualityRiskContent }
+  | { type: 'defect'; content: DefectContent };
 export interface ArtifactReference { projectId: string; artifactId: string; revision: number; sha256: string }
-export interface Relationship { kind: 'depends-on' | 'derives-from' | 'relates-to'; target: ArtifactReference }
+export interface Relationship { kind: 'depends-on' | 'derives-from' | 'validates' | 'relates-to'; target: ArtifactReference }
 export type ArtifactStatus = 'draft' | 'under-review' | 'approved' | 'active' | 'superseded';
 export type ReviewAction = 'request-review' | 'return-to-draft' | 'approve' | 'activate' | 'supersede';
 export interface ReviewEvent {
@@ -30,7 +58,7 @@ export interface ReviewEvent {
   subjectSha256: string; previousEventSha256: string | null;
 }
 export interface Envelope {
-  schemaVersion: '1.0.0' | '1.1.0'; kind: 'SpecForgeArtifact'; id: string; title: string;
+  schemaVersion: '1.0.0' | '1.1.0' | '1.2.0'; kind: 'SpecForgeArtifact'; id: string; title: string;
   projectRef: { id: string; definitionSha256: string };
   ownerRole: string; revision: number; previousRevisionSha256: string | null;
   createdAt: string; updatedAt: string; provenance: Contribution[];

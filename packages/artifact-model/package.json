@@ -9,9 +9,14 @@
     "./graph": { "types": "./dist/graph.d.ts", "import": "./dist/graph.js" },
     "./schema/graph": "./schema/artifact-graph.schema.json",
     "./ba": { "types": "./dist/ba.d.ts", "import": "./dist/ba.js" },
+    "./qa": { "types": "./dist/qa.d.ts", "import": "./dist/qa.js" },
+    "./schema/qa-content": "./schema/qa-content.schema.json",
+    "./schema/qa-action-output": "./schema/qa-action-output.schema.json",
+    "./schema/qa-workflows": "./schema/qa-workflows.json",
     "./projection": { "types": "./dist/projection.d.ts", "import": "./dist/projection.js" },
     "./schema/projection": "./schema/specdd-projection.schema.json",
-    "./schema/v1.1": { "types": "./dist/schema-v11.d.ts", "import": "./dist/schema-v11.js" }
+    "./schema/v1.1": { "types": "./dist/schema-v11.d.ts", "import": "./dist/schema-v11.js" },
+    "./schema/v1.2": { "types": "./dist/schema-v12.d.ts", "import": "./dist/schema-v12.js" }
   },
   "files": ["dist", "schema", "examples"],
   "scripts": {

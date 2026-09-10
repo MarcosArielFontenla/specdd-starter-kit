@@ -144,8 +144,9 @@ test('declared supersession is queryable but cannot retire or approve either art
   assert.deepEqual(f, before);
 });
 
-test('validates/implements are explicitly unsupported with current payloads, never fake QA or implementation evidence', async () => {
-  for (const kind of ['validates', 'implements']) await hasCode(await fixture([template, decision], [edge(kind, decision.id, template.id)]), 'GRAPH_UNSUPPORTED_RELATION_TYPES');
+test('validates requires QA design payloads targeting requirements; implements remains unsupported', async () => {
+  await hasCode(await fixture([template, decision], [edge('validates', decision.id, template.id)]), 'GRAPH_RELATION_TYPES');
+  await hasCode(await fixture([template, decision], [edge('implements', decision.id, template.id)]), 'GRAPH_UNSUPPORTED_RELATION_TYPES');
 });
 
 test('transitive impact follows reverse dependencies and forward blocks but excludes unrelated artifacts', async () => {

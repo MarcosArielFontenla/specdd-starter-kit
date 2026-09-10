@@ -1,0 +1,21 @@
+{
+  "schemaVersion":"1.0.0","id":"qa-spec-review","role":"qa","capabilityId":"role-qa","workflowRef":"specforge-testcases",
+  "playbookRefs":["specforge-qa","ac-validation","test-case-generation","gherkin-automation","regression-testing","bug-reporting","qa-evals","qa-guardrails","testing"],
+  "conditionalPlaybookRefs":{"playwright-testing":"Knowledge is consumed only when present; it never authorizes browser or test execution."},
+  "steps":[
+    {"id":"approved-spec","actor":"human","effect":"select-approved-requirement"},
+    {"id":"analysis","actor":"agent","effect":"proposal-only"},
+    {"id":"scenario-design","actor":"human","effect":"adopt-edit-or-reject"},
+    {"id":"coverage","actor":"system","effect":"derive-declared-design-coverage"},
+    {"id":"review","actor":"human","effect":"review-qa-artifacts"},
+    {"id":"approval","actor":"human","effect":"exact-artifact-and-graph-gate"}
+  ],
+  "actions":[
+    {"id":"analyze-approved-spec","executor":"agent","outputs":["gaps","scenarios","testCases","risks"]},
+    {"id":"suggest-test-scenarios","executor":"agent","outputs":["gaps","scenarios"]},
+    {"id":"suggest-test-cases","executor":"agent","outputs":["gaps","testCases"]},
+    {"id":"assess-quality-risks","executor":"agent","outputs":["gaps","risks"]},
+    {"id":"assess-declared-coverage","executor":"deterministic","outputs":["coverage-assessment"]}
+  ],
+  "boundary":"Proposal and declared design coverage only. No test execution, pass/fail result, defect observation, approval, repository write, browser, command or external tool is authorized. Agent output never constitutes evidence."
+}

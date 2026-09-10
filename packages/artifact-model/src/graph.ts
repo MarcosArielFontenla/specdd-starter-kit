@@ -78,7 +78,8 @@ async function prepare(value: unknown, context: ArtifactContext): Promise<{diagn
     const key = canonicalJson([e.kind, ...pair]);
     if (tuples.has(key)) error('GRAPH_DUPLICATE_RELATION', `/edges/${e.id}`);
     tuples.add(key);
-    if (e.kind === 'validates' || e.kind === 'implements') error('GRAPH_UNSUPPORTED_RELATION_TYPES', `/edges/${e.id}`, `${e.kind} requires payloads/evidence not implemented in this phase.`);
+    if (e.kind === 'implements') error('GRAPH_UNSUPPORTED_RELATION_TYPES', `/edges/${e.id}`, `${e.kind} requires implementation payloads/evidence not implemented in this phase.`);
+    if (e.kind === 'validates' && (!['test-scenario', 'test-case', 'coverage-assessment'].includes(from.type) || to.type !== 'requirement')) error('GRAPH_RELATION_TYPES', `/edges/${e.id}`);
     if (e.kind === 'refines' && (from.type !== 'requirement' || to.type !== 'requirement')) error('GRAPH_RELATION_TYPES', `/edges/${e.id}`);
     if (e.kind === 'blocks' && from.type === 'open-question' && !from.content.blocking) error('GRAPH_NONBLOCKING_QUESTION', `/edges/${e.id}`);
     if (e.kind === 'supersedes') {

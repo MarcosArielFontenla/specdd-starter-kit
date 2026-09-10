@@ -2,11 +2,14 @@ import { structuralValidator, validateProjectDefinition, type Diagnostic, type V
 import schema from '../schema/artifact.schema.json' with { type: 'json' };
 import { artifactSchemaV11 } from './schema-v11.js';
 export { artifactSchemaV11 } from './schema-v11.js';
+import { artifactSchemaV12 } from './schema-v12.js';
+export { artifactSchemaV12 } from './schema-v12.js';
 import type { Actor, Artifact, ArtifactContext, ArtifactInput, ArtifactStatus, Contribution, Payload, ReviewAction, ReviewEvent } from './types.js';
 export * from './types.js';
 export const artifactSchema = schema;
 const structure = structuralValidator(schema);
 const structureV11 = structuralValidator(artifactSchemaV11);
+const structureV12 = structuralValidator(artifactSchemaV12);
 const fail = (code: string): never => { throw new Error(code); };
 const clone = <T>(value: T): T => { canonicalJson(value); return structuredClone(value); };
 const time = (value: string) => Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
@@ -53,7 +56,8 @@ export function validateArtifact(value: unknown): ValidationResult {
   const diagnostics: Diagnostic[] = [];
   const error = (code: string, path: string) => diagnostics.push({code, path, severity: 'error', message: code});
   try { canonicalJson(value); } catch (e) { error((e as Error).message, '/'); return {valid: false, diagnostics}; }
-  diagnostics.push(...((value as {schemaVersion?: string} | null)?.schemaVersion === '1.1.0' ? structureV11 : structure)(value));
+  const version = (value as {schemaVersion?: string} | null)?.schemaVersion;
+  diagnostics.push(...(version === '1.2.0' ? structureV12 : version === '1.1.0' ? structureV11 : structure)(value));
   if (diagnostics.length) return {valid: false, diagnostics};
   const a = value as Artifact;
   if (!time(a.createdAt) || !time(a.updatedAt) || a.updatedAt < a.createdAt) error('ARTIFACT_TIME', '/updatedAt');
@@ -77,6 +81,12 @@ export function validateArtifact(value: unknown): ValidationResult {
     const refs = [a.content.root, ...a.content.affected];
     if (refs.some(r => r.projectId !== a.projectRef.id || r.artifactId === a.id) ||
         new Set(refs.map(r => r.artifactId)).size !== refs.length) error('ARTIFACT_IMPACT_SCOPE', '/content');
+  }
+  if (a.type === 'coverage-assessment') {
+    const ids = a.content.entries.map(e => e.acceptanceCriterionId);
+    if (new Set(ids).size !== ids.length) error('ARTIFACT_DUPLICATE_COVERAGE', '/content/entries');
+    const refs = [a.content.target, ...a.content.entries.flatMap(e => e.testCaseRefs)];
+    if (refs.some(r => r.projectId !== a.projectRef.id || r.artifactId === a.id)) error('ARTIFACT_COVERAGE_SCOPE', '/content');
   }
   if (a.type === 'open-question' && a.content.resolution) {
     const r = a.content.resolution;
@@ -159,11 +169,13 @@ export async function assertArtifactContext(value: Artifact, context: ArtifactCo
 
 export async function createArtifact(input: ArtifactInput, contribution: Contribution): Promise<Artifact> {
   assertInputKeys(input, ['id', 'title', 'type', 'content', 'projectRef', 'ownerRole', 'relationships']);
-  const a = clone({...input, schemaVersion: ['business-rule', 'impact-analysis'].includes(input.type) ? '1.1.0' : '1.0.0', kind: 'SpecForgeArtifact', revision: 1,
+  const qaTypes = ['test-scenario', 'test-case', 'coverage-assessment', 'quality-risk', 'defect'];
+  const a = clone({...input, schemaVersion: qaTypes.includes(input.type) ? '1.2.0' : ['business-rule', 'impact-analysis'].includes(input.type) ? '1.1.0' : '1.0.0', kind: 'SpecForgeArtifact', revision: 1,
     previousRevisionSha256: null, createdAt: contribution.at, updatedAt: contribution.at,
     provenance: [contribution], relationships: input.relationships, status: 'draft', review: []}) as Artifact;
   await assertArtifactIntegrity(a);
   if (a.type === 'open-question' && a.content.resolution && contribution.actor.kind !== 'human') fail('ARTIFACT_HUMAN_REQUIRED');
+  if (a.type === 'defect' && contribution.actor.kind === 'agent') fail('ARTIFACT_DEFECT_EVIDENCE_REQUIRED');
   return a;
 }
 

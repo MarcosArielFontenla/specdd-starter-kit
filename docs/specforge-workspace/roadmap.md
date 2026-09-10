@@ -1,6 +1,6 @@
 # SpecForge Workspace — seguimiento independiente
 
-Actualizado: 2026-09-08. Este tracker corresponde al
+Actualizado: 2026-09-10. Este tracker corresponde al
 [roadmap de SpecForge](../../SpecForge%20Workspace%20Evolution%20%E2%80%94%20Agentic%20Role%20%26%20Artifact%20Platform%20Roadmap.md),
 no a las fases ya aceptadas del control plane. No reinicia ni cambia su aceptación.
 
@@ -16,7 +16,7 @@ todas las fases posteriores.
 | 3 — Dominio BA | Accepted | [Spec](specs/phase-3.md) y [ADR](adrs/0003-ba-domain-and-capability-bound-actions.md) | Implementación local terminada | [Evidencia](phases/phase-3.md) | Aceptación del usuario al indicar continuar Phase 4, 2026-09-07 |
 | 4 — MVP BA | Accepted | [Spec](specs/phase-4.md) y [ADR](adrs/0004-local-ba-workspace.md) | UI local, SQLite y adaptador opt-in implementados | [Evidencia](phases/phase-4.md), piloto real y E2E simulado | Piloto real más aprobación humana observada, 2026-09-08 |
 | 5 — Proyección SpecDD | Accepted | [Spec](specs/phase-5.md) y [ADR](adrs/0005-governed-specdd-projection.md) | Contrato, mapping, diff, gate y canonical local implementados | [Evidencia](phases/phase-5.md) | Aceptación humana observada y persistencia tras F5 verificadas; pausar antes de Phase 6 |
-| 6 — Dominio QA | Planned | Escenarios/casos/cobertura/riesgos/defectos | No iniciada | Pendientes | Inicia después del piloto BA validado |
+| 6 — Dominio QA | Partial | [Spec](specs/phase-6.md) y [ADR](adrs/0006-qa-domain-and-evidence-boundaries.md) | Contratos, capability, coverage y gate implementados localmente | [Evidencia](phases/phase-6.md) | Pendiente revisión/aceptación humana; Phase 7 no iniciada |
 | 7 — MVP QA | Planned | Flujo QA operativo | No iniciada | Pendientes | Validación con usuario QA |
 | 8 — Lectura PM | Planned | Readiness derivada de evidencia | No iniciada | Pendientes | Desconocido/parcial/bloqueado explícitos |
 | 9 — Dominio UX | Planned | Brief/flow/interacción/accesibilidad/decisión | No iniciada | Pendientes | Contratos y capacidad, sin Figma obligatorio |

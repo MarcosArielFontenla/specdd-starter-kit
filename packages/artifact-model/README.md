@@ -11,6 +11,10 @@ queries. The Phase 1 approval APIs below retain their direct-target scope.
 Phase 3 adds the [BA domain](BA.md): versioned BusinessRule/ImpactAnalysis payloads,
 capability-bound action proposals and an explicit transitive BA approval gate.
 
+Phase 6 adds the [QA domain](QA.md): strict scenarios, cases, declared coverage,
+quality risks and evidenced defects with capability-bound proposals and an exact
+human gate. It does not claim test execution.
+
 Phase 5 adds the separate [governed SpecDD projection](PROJECTION.md): deterministic
 Markdown, explicit gaps/unsupported mappings, exact diff/base binding and a human
 receipt. It remains pure and performs no repository I/O.

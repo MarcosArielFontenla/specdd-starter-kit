@@ -171,5 +171,7 @@ si faltan; eso requiere una preparación aparte.
 Los dos gates de Phase 4 se cumplieron: preflight más ejecución real acotada, y
 recorrido observado en la UI sin repo/IDE para el BA. Phase 5 también quedó aceptada
 al revisar propuesta, diff, mapping, subject exacto y canonical local, incluido un
-reload que confirmó su persistencia. Phase 6 requiere autorización separada.
+reload que confirmó su persistencia. Phase 6 fue autorizada después y agregó el
+dominio QA portable, todavía sin
+workspace QA ni ejecución de tests; su uso diario corresponde a Phase 7.
 Ninguna de estas fases escribió specs en repositorios, creó PRs ni desplegó.

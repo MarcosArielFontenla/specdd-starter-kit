@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.dev/schemas/qa-content/1.0.0",
+  "$defs": {
+    "testScenario": {"type":"object","additionalProperties":false,"required":["objective","acceptanceCriterionIds","technique"],"properties":{"objective":{"$ref":"#/$defs/text"},"acceptanceCriterionIds":{"$ref":"#/$defs/criterionIds"},"technique":{"enum":["functional","boundary","negative","regression","exploratory"]}}},
+    "testCase": {"type":"object","additionalProperties":false,"required":["acceptanceCriterionIds","preconditions","steps","level","automationStatus"],"properties":{"acceptanceCriterionIds":{"$ref":"#/$defs/criterionIds"},"preconditions":{"type":"array","maxItems":100,"items":{"$ref":"#/$defs/text"}},"steps":{"type":"array","minItems":1,"maxItems":200,"items":{"type":"object","additionalProperties":false,"required":["action","expected"],"properties":{"action":{"$ref":"#/$defs/text"},"expected":{"$ref":"#/$defs/text"}}}},"level":{"enum":["manual","unit","integration","e2e"]},"automationStatus":{"enum":["manual","candidate","automated"]}}},
+    "coverageAssessment": {"type":"object","additionalProperties":false,"required":["basisSnapshotSha256","target","entries","scope"],"properties":{"basisSnapshotSha256":{"$ref":"#/$defs/hash"},"target":{"$ref":"#/$defs/reference"},"entries":{"type":"array","maxItems":100,"items":{"type":"object","additionalProperties":false,"required":["acceptanceCriterionId","testCaseRefs"],"properties":{"acceptanceCriterionId":{"$ref":"#/$defs/id"},"testCaseRefs":{"type":"array","maxItems":200,"items":{"$ref":"#/$defs/reference"}}}}},"scope":{"const":"declared-design-only"}}},
+    "qualityRisk": {"type":"object","additionalProperties":false,"required":["statement","likelihood","impact","mitigation"],"properties":{"statement":{"$ref":"#/$defs/text"},"likelihood":{"enum":["low","medium","high"]},"impact":{"enum":["low","medium","high"]},"mitigation":{"$ref":"#/$defs/text"}}},
+    "defect": {"type":"object","additionalProperties":false,"required":["severity","observed","expected","reproductionSteps","evidence"],"properties":{"severity":{"enum":["low","medium","high","critical"]},"observed":{"$ref":"#/$defs/text"},"expected":{"$ref":"#/$defs/text"},"reproductionSteps":{"type":"array","minItems":1,"maxItems":100,"items":{"$ref":"#/$defs/text"}},"evidence":{"type":"array","minItems":1,"maxItems":100,"items":{"type":"object","additionalProperties":false,"required":["kind","locator","sha256"],"properties":{"kind":{"enum":["log","screenshot","report","run"]},"locator":{"$ref":"#/$defs/text"},"sha256":{"$ref":"#/$defs/hash"}}}}}},
+    "criterionIds":{"type":"array","minItems":1,"maxItems":100,"uniqueItems":true,"items":{"$ref":"#/$defs/id"}},
+    "text":{"type":"string","minLength":1,"maxLength":20000,"pattern":"\\S"},
+    "hash":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "id":{"type":"string","maxLength":128,"pattern":"^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "reference":{"type":"object","additionalProperties":false,"required":["projectId","artifactId","revision","sha256"],"properties":{"projectId":{"$ref":"#/$defs/id"},"artifactId":{"$ref":"#/$defs/id"},"revision":{"type":"integer","minimum":1,"maximum":2147483647},"sha256":{"$ref":"#/$defs/hash"}}}
+  }
+}

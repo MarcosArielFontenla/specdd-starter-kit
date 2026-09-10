@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://specdd.dev/schemas/qa-action-output/1.0.0",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","requestSha256","gaps","scenarios","testCases","risks"],
+  "properties":{
+    "schemaVersion":{"const":"1.0.0"},"requestSha256":{"$ref":"#/$defs/hash"},
+    "gaps":{"type":"array","maxItems":100,"items":{"$ref":"#/$defs/description"}},
+    "scenarios":{"type":"array","maxItems":100,"items":{"type":"object","additionalProperties":false,"required":["id","supportArtifactIds","objective","acceptanceCriterionIds","technique"],"properties":{"id":{"$ref":"#/$defs/id"},"supportArtifactIds":{"$ref":"#/$defs/support"},"objective":{"$ref":"#/$defs/text"},"acceptanceCriterionIds":{"$ref":"#/$defs/criterionIds"},"technique":{"enum":["functional","boundary","negative","regression","exploratory"]}}}},
+    "testCases":{"type":"array","maxItems":100,"items":{"type":"object","additionalProperties":false,"required":["id","supportArtifactIds","acceptanceCriterionIds","preconditions","steps","level","automationStatus"],"properties":{"id":{"$ref":"#/$defs/id"},"supportArtifactIds":{"$ref":"#/$defs/support"},"acceptanceCriterionIds":{"$ref":"#/$defs/criterionIds"},"preconditions":{"type":"array","maxItems":100,"items":{"$ref":"#/$defs/text"}},"steps":{"type":"array","minItems":1,"maxItems":200,"items":{"type":"object","additionalProperties":false,"required":["action","expected"],"properties":{"action":{"$ref":"#/$defs/text"},"expected":{"$ref":"#/$defs/text"}}}},"level":{"enum":["manual","unit","integration","e2e"]},"automationStatus":{"enum":["manual","candidate"]}}}},
+    "risks":{"type":"array","maxItems":100,"items":{"type":"object","additionalProperties":false,"required":["id","supportArtifactIds","statement","likelihood","impact","mitigation"],"properties":{"id":{"$ref":"#/$defs/id"},"supportArtifactIds":{"$ref":"#/$defs/support"},"statement":{"$ref":"#/$defs/text"},"likelihood":{"enum":["low","medium","high"]},"impact":{"enum":["low","medium","high"]},"mitigation":{"$ref":"#/$defs/text"}}}}
+  },
+  "$defs":{
+    "id":{"type":"string","maxLength":128,"pattern":"^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "text":{"type":"string","minLength":1,"maxLength":20000,"pattern":"\\S"},
+    "hash":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "support":{"type":"array","minItems":1,"maxItems":200,"uniqueItems":true,"items":{"$ref":"#/$defs/id"}},
+    "criterionIds":{"type":"array","minItems":1,"maxItems":100,"uniqueItems":true,"items":{"$ref":"#/$defs/id"}},
+    "description":{"type":"object","additionalProperties":false,"required":["id","supportArtifactIds","description"],"properties":{"id":{"$ref":"#/$defs/id"},"supportArtifactIds":{"$ref":"#/$defs/support"},"description":{"$ref":"#/$defs/text"}}}
+  }
+}
