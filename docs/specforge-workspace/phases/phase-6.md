@@ -1,7 +1,7 @@
 # Evidencia — Phase 6 QA Workspace Domain
 
-Fecha: 2026-09-10. Estado: **Partial — implementación local lista para revisión
-humana; no aceptada ni publicada**.
+Fecha: 2026-09-10. Estado: **Accepted — implementación publicada en `main` y CI
+completo verde**.
 
 ## Entregado
 
@@ -34,3 +34,11 @@ ni se produjo evidencia runtime. No se inició Phase 7.
 
 El build conserva warnings deprecatorios preexistentes de Vite (`esbuildOptions`);
 no son fallos de Phase 6 y no se corrigieron fuera de alcance.
+
+## Cierre humano y CI
+
+El usuario autorizó revisar, commitear y pushear exclusivamente Phase 6. El commit
+funcional `bfb2914563df8331e37317e810c0fc657773b29c` quedó publicado en `main` y el
+run GitHub Actions `34486562001` terminó `success`: 18/18 jobs, incluido
+`artifact-model`, dependency audit, SpecForge Workspace UI y browser regression.
+Phase 7 y deploy permanecen fuera de alcance y no fueron iniciados.
