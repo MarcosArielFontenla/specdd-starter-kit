@@ -11,6 +11,10 @@ queries. The Phase 1 approval APIs below retain their direct-target scope.
 Phase 3 adds the [BA domain](BA.md): versioned BusinessRule/ImpactAnalysis payloads,
 capability-bound action proposals and an explicit transitive BA approval gate.
 
+Phase 5 adds the separate [governed SpecDD projection](PROJECTION.md): deterministic
+Markdown, explicit gaps/unsupported mappings, exact diff/base binding and a human
+receipt. It remains pure and performs no repository I/O.
+
 ## Verify locally
 
 From the monorepo root with its dependencies already available:

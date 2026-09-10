@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specdd.local/schemas/specdd-projection.schema.json",
+  "title": "SpecForge to SpecDD projection proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "id", "createdAt", "projectId", "source", "destination", "content", "contentSha256", "diff", "mapping"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "kind": {"const": "SpecDDProjectionProposal"},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$", "maxLength": 128},
+    "createdAt": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"},
+    "projectId": {"type": "string", "minLength": 1, "maxLength": 128},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact", "baApprovalReceiptSha256", "graphSnapshotSha256"],
+      "properties": {
+        "artifact": {"$ref": "#/$defs/reference"},
+        "baApprovalReceiptSha256": {"$ref": "#/$defs/hash"},
+        "graphSnapshotSha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "destination": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "baseContentSha256"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^specs/[a-z0-9]+(?:-[a-z0-9]+)*/spec\\.md$", "maxLength": 200},
+        "baseContentSha256": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]}
+      }
+    },
+    "content": {"type": "string", "minLength": 1, "maxLength": 200000},
+    "contentSha256": {"$ref": "#/$defs/hash"},
+    "diff": {"type": "string", "minLength": 1, "maxLength": 400000},
+    "mapping": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "mapped", "incomplete", "unsupported"],
+      "properties": {
+        "status": {"enum": ["complete", "partial"]},
+        "mapped": {"type": "array", "maxItems": 1000, "items": {"type": "object", "additionalProperties": false, "required": ["sourceArtifactId", "sourceRevision", "targetSections"], "properties": {"sourceArtifactId": {"type": "string"}, "sourceRevision": {"type": "integer", "minimum": 1}, "targetSections": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}}}},
+        "incomplete": {"type": "array", "maxItems": 100, "items": {"type": "object", "additionalProperties": false, "required": ["code", "targetSection", "reason"], "properties": {"code": {"type": "string"}, "targetSection": {"type": "string"}, "reason": {"type": "string"}}}},
+        "unsupported": {"type": "array", "maxItems": 1000, "items": {"type": "object", "additionalProperties": false, "required": ["artifactId", "artifactType", "reason"], "properties": {"artifactId": {"type": "string"}, "artifactType": {"type": "string"}, "reason": {"type": "string"}}}}
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "reference": {"type": "object", "additionalProperties": false, "required": ["projectId", "artifactId", "revision", "sha256"], "properties": {"projectId": {"type": "string"}, "artifactId": {"type": "string"}, "revision": {"type": "integer", "minimum": 1}, "sha256": {"$ref": "#/$defs/hash"}}}
+  }
+}

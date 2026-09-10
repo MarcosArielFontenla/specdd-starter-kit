@@ -54,8 +54,14 @@ try{
   await page.getByRole('button',{name:'Revisar aprobación',exact:true}).click();
   await page.getByRole('dialog').waitFor();await page.getByRole('button',{name:/^Confirmar aprobación como/}).click();
   await page.getByText('Aprobación vigente para este contexto.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Preparar propuesta SpecDD',exact:true}).click();
+  await page.getByRole('heading',{name:/specs\/cancelar-turno-piloto-sintetico\/spec\.md · Propuesta pendiente/}).waitFor();
+  await page.getByText(/Mapping parcial/).waitFor();await page.getByRole('button',{name:'Revisar y crear artefacto SpecDD'}).click();
+  await page.getByRole('dialog').waitFor();await page.getByRole('button',{name:/^Crear artefacto SpecDD como/}).click();
+  await page.getByRole('heading',{name:/Artefacto SpecDD canónico/}).waitFor();
   await page.reload();await page.getByRole('button',{name:/Cancelar turno — piloto sintético · Aprobado/}).click();
   await page.getByText('Aprobación vigente para este contexto.',{exact:true}).waitFor();
+  await page.getByRole('heading',{name:/Artefacto SpecDD canónico/}).waitFor();
   const screenshots=resolve('.specforge-workspace/evidence');mkdirSync(screenshots,{recursive:true});await page.screenshot({path:join(screenshots,'ba-workspace-desktop.png')});
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:join(screenshots,'ba-workspace-mobile.png')});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'mobile horizontal overflow');
@@ -68,5 +74,5 @@ try{
   await page.getByRole('heading',{name:'<img src=x onerror=alert(1)>',exact:true}).waitFor();assert.equal(await page.locator('img').count(),0);
   await page.getByText(/La aprobación anterior ya no cubre/).waitFor();
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({ui:'PASS',runtime:'SIMULATED',flow:'create/edit/analyze/adopt/resolve/approve/reload/fail/cancel/stale/XSS',desktop:true,mobile:true,pageErrors:0,evidence:screenshots}));
+  console.log(JSON.stringify({ui:'PASS',runtime:'SIMULATED',flow:'create/edit/analyze/adopt/resolve/approve/project/review/canonicalize/reload/fail/cancel/stale/XSS',desktop:true,mobile:true,pageErrors:0,evidence:screenshots}));
 }finally{await browser?.close();await service.close();store.close();}

@@ -1,7 +1,10 @@
 # SpecForge Workspace — arquitectura y límites
 
-Fecha: 2026-09-07. Baseline inspeccionado: `bd7b8007b7e917317433a2c923e322561355e191`.
-Estado: análisis Phase 0; el Workspace descrito como futuro no está implementado.
+Fecha del baseline: 2026-09-07. Baseline inspeccionado:
+`bd7b8007b7e917317433a2c923e322561355e191`. Este documento conserva el análisis
+de partida de Phase 0. Estado actual al 2026-09-08: el Workspace BA local de
+Phase 4 y la proyección gobernada local de Phase 5 están aceptados. Véanse el
+[roadmap vivo](roadmap.md) y la [evidencia Phase 5](phases/phase-5.md).
 
 ## Arquitectura actual
 

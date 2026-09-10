@@ -9,6 +9,8 @@
     "./graph": { "types": "./dist/graph.d.ts", "import": "./dist/graph.js" },
     "./schema/graph": "./schema/artifact-graph.schema.json",
     "./ba": { "types": "./dist/ba.d.ts", "import": "./dist/ba.js" },
+    "./projection": { "types": "./dist/projection.d.ts", "import": "./dist/projection.js" },
+    "./schema/projection": "./schema/specdd-projection.schema.json",
     "./schema/v1.1": { "types": "./dist/schema-v11.d.ts", "import": "./dist/schema-v11.js" }
   },
   "files": ["dist", "schema", "examples"],

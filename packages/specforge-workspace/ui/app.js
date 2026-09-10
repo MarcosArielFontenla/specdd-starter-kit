@@ -4,6 +4,7 @@ const dirtyTargets=new Set();
 function markDirty(target){if([...dirtyTargets].some(id=>id!==target))throw new Error('UNSAVED_CHANGES');dirty=true;dirtyTargets.add(target);for(const field of $('detail').querySelectorAll('input,textarea'))if(field.closest('[data-artifact]').dataset.artifact!==target)field.disabled=true;}
 const labels={draft:'Borrador','under-review':'En revisión',approved:'Aprobado',active:'Activo',superseded:'Retirado',running:'Analizando',ready:'Propuesta para revisar',adopted:'Incorporada',discarded:'Descartada',cancelled:'Cancelada','needs-attention':'Necesita atención'};
 const errors={STALE_STATE:'El proyecto cambió. Actualizá y revisá el contenido antes de repetir la acción.',BA_STALE_APPROVAL:'Cambió el contexto de la aprobación. Preparala nuevamente.',BA_STALE_REQUEST:'La propuesta pertenece a un contexto anterior. No se aplicó; descartala y solicitá un nuevo análisis.',BA_BLOCKED:'Hay preguntas o bloqueos pendientes. Revisalos antes de aprobar.',BA_DEPENDENCY_UNAPPROVED:'Primero revisá y aprobá las reglas o decisiones relacionadas.',BA_CRITERIA_REQUIRED:'Agregá al menos un criterio de aceptación antes de aprobar.',BA_QUESTION_OPEN:'La pregunta todavía no tiene respuesta humana.',RUNTIME_UNAVAILABLE:'El operador todavía no configuró un agente.',STALE_CONTEXT:'El contexto cambió durante el análisis. El borrador se conservó; solicitá otro análisis si corresponde.',RUNTIME_FAILED:'El agente no pudo completar la acción. No se cambió el requisito. Revisá la configuración con el operador.',INVALID_AGENT_OUTPUT:'La respuesta no cumplió el contrato. No se incorporó contenido.',TIMEOUT:'El análisis superó el tiempo permitido.',INTERRUPTED:'El servicio se interrumpió. No hubo reintento automático.',CANCELLED:'Análisis cancelado por el usuario.'};
+errors.PROJECTION_APPROVED_REQUIREMENT_REQUIRED='Sólo un requisito con aprobación vigente puede proyectarse.';errors.PROJECTION_PENDING='Ya existe una propuesta SpecDD pendiente para este requisito.';errors.PROJECTION_STALE='Cambió el requisito, el grafo o el destino canónico. Prepará una nueva proyección.';errors.PROJECTION_STALE_APPROVAL='La aprobación no corresponde al subject exacto de esta proyección.';
 function el(tag,content,className){const n=document.createElement(tag);if(content!==undefined)n.textContent=content;if(className)n.className=className;return n;}
 function button(label,fn,secondary=false){const b=el('button',label,secondary?'secondary':'');b.type='button';b.addEventListener('click',()=>task(fn));return b;}
 function field(parent,label,value='',tag='input'){const l=el('label',label),n=document.createElement(tag);n.value=value;l.append(n);parent.append(l);return n;}
@@ -41,6 +42,8 @@ function renderRequirement(a){const root=$('detail');root.append(el('h2',a.title
   const title=field(root,'Título',a.title),description=field(root,'Descripción del requisito',a.content.description,'textarea');const criteria=criteriaEditor(root,a.content.acceptanceCriteria);
   const actions=el('div',undefined,'actions');root.append(actions);
   actions.append(button('Guardar nueva revisión',async()=>command({op:'edit',targetId:a.id,title:title.value,content:{description:description.value,acceptanceCriteria:criteria()}})),button('Revisar aprobación',()=>openApproval(a.id),true));
+  if(a.status==='approved'||a.status==='active')actions.append(button('Preparar propuesta SpecDD',async()=>command({op:'prepare-projection',targetId:a.id}),true));
+  renderProjections(root,a);
   root.append(el('h3','Trabajar con el agente'),el('p','El agente analiza la última revisión guardada. Guardá tus cambios antes de continuar. Enviar contexto puede consumir cuota del proveedor configurado.','muted'));
   const consentLabel=el('label',undefined,'check'),consent=document.createElement('input');consent.type='checkbox';consentLabel.append(consent,el('span','Autorizo enviar este contexto al agente configurado para esta acción.'));root.append(consentLabel);
   const agentActions=el('div',undefined,'actions');root.append(agentActions);
@@ -61,6 +64,14 @@ function renderRequirement(a){const root=$('detail');root.append(el('h2',a.title
   const impact=view.graph.impact[a.id].nodes.filter(n=>n.artifactId!==a.id);root.append(el('p',`Impacto conocido: ${impact.length} artefacto(s) dependiente(s). Sólo relaciones del contexto registrado. No es una evaluación completa del negocio.`,'muted'));
   root.append(detail('Historial de este requisito y procedencia',view.histories[a.id].map(r=>`Revisión ${r.revision} · ${labels[r.status]}\n${r.content.description}\nOrigen: ${r.provenance.map(p=>`${p.actor.id} (${p.origin})`).join(' → ')}`).join('\n\n')));
 }
+function renderProjections(root,a){
+  const projections=view.projections.filter(p=>p.proposal.source.artifact.artifactId===a.id),canonicals=view.canonicalSpecs.filter(c=>c.source.artifact.artifactId===a.id);
+  if(!projections.length&&!canonicals.length)return;
+  root.append(el('h3','Proyección gobernada a SpecDD'));
+  for(const entry of projections){const p=entry.proposal,status=entry.status==='proposed'?'Propuesta pendiente':entry.status==='applied'?'Aplicada':'Descartada',box=el('div',undefined,'card projection');box.append(el('h3',`${p.destination.path} · ${status}`),el('p',`Mapping ${p.mapping.status==='partial'?'parcial':'completo'} · ${p.mapping.incomplete.length} faltante(s) · ${p.mapping.unsupported.length} no soportado(s)`,'muted'),detail('Contenido propuesto',p.content),detail('Diff exacto',p.diff),detail('Reporte de mapping',JSON.stringify(p.mapping,null,2)),detail('Trazabilidad de propuesta',JSON.stringify({...p.source,destination:p.destination,contentSha256:p.contentSha256},null,2)));
+    if(entry.status==='proposed')box.append(button('Revisar y crear artefacto SpecDD',()=>openProjectionApproval(p.id)),button('Descartar propuesta SpecDD',async()=>command({op:'discard-projection',projectionId:p.id}),true));root.append(box);}
+  for(const c of canonicals){const box=el('div',undefined,'card canonical');box.append(el('h3',`Artefacto SpecDD canónico · ${c.path}`),el('p',`Revisión ${c.revision} · hash ${c.contentSha256}`,'muted'),detail('Contenido canónico',c.content),detail('Trazabilidad canónica',JSON.stringify(c.source,null,2)));root.append(box);}
+}
 function renderRun(root,run){const box=el('div',undefined,'card proposal');box.append(el('h3',labels[run.status]),el('p',`${run.action} · ${new Date(run.startedAt).toLocaleString()}`,'muted'));
   if(run.error)box.append(el('p',errors[run.error]??run.error));
   if(run.status==='running')box.append(button('Cancelar análisis',async()=>{await api(`${base()}/cancel`,{runId:run.id});await refresh();},true));
@@ -76,10 +87,18 @@ async function openApproval(targetId){let artifact=view.artifacts.find(a=>a.id==
   if(dirty)throw new Error('UNSAVED_CHANGES');
   if(artifact.status==='draft'){await command({op:'request-review',targetId});artifact=view.artifacts.find(a=>a.id===targetId);}
   const prepared=await api(`${base()}/approval?target=${encodeURIComponent(targetId)}`);
+  $('approval-title').textContent='Revisar aprobación exacta';$('approval-note').textContent='No modifica ni publica una spec. Si cambia el contexto, la aprobación deberá revisarse.';
   $('approval-content').replaceChildren(el('h3',artifact.title),el('p',`Revisión ${artifact.revision} · revisor: ${view.operator}`),el('pre',JSON.stringify(artifact.content,null,2)),detail('Subject exacto y grafo',JSON.stringify(prepared,null,2)));
   $('approve-confirm').textContent=`Confirmar aprobación como ${view.operator}`;
   $('approve-confirm').onclick=()=>task(async()=>{await command({op:'approve',targetId,subjectSha256:prepared.subjectSha256},prepared.version);$('approval').close();});$('approval').showModal();
 }
+async function openProjectionApproval(projectionId){if(dirty)throw new Error('UNSAVED_CHANGES');const entry=view.projections.find(p=>p.proposal.id===projectionId),p=entry?.proposal;if(!p||entry.status!=='proposed')throw new Error('PROJECTION_NOT_FOUND');
+  const subjectSha256=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonical(p))).then(b=>[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join(''));
+  $('approval-title').textContent='Revisar proyección SpecDD exacta';$('approval-note').textContent='La confirmación crea el artefacto canónico sólo en el store local. No escribe archivos, Git ni publica.';
+  $('approval-content').replaceChildren(el('h3',p.destination.path),el('p',`Mapping ${p.mapping.status} · revisor: ${view.operator}`),detail('Diff exacto',p.diff),detail('Faltantes y no soportados',JSON.stringify({incomplete:p.mapping.incomplete,unsupported:p.mapping.unsupported},null,2)),detail('Contenido completo',p.content),detail('Subject exacto',JSON.stringify({subjectSha256,proposal:p},null,2)));
+  $('approve-confirm').textContent=`Crear artefacto SpecDD como ${view.operator}`;$('approve-confirm').onclick=()=>task(async()=>{await command({op:'apply-projection',projectionId,subjectSha256});$('approval').close();});$('approval').showModal();
+}
+function canonical(value){if(value===null||typeof value==='boolean'||typeof value==='string'||typeof value==='number')return JSON.stringify(value);if(Array.isArray(value))return `[${value.map(canonical).join(',')}]`;return `{${Object.keys(value).sort().map(k=>`${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;}
 $('detail').addEventListener('input',event=>{if(event.target.type!=='checkbox')markDirty(event.target.closest('[data-artifact]').dataset.artifact);});
 errors.UNSAVED_CHANGES='Tenés cambios sin guardar. Guardá la revisión antes de analizar, actualizar o aprobar.';
 errors.RUNTIME_CONSENT_REQUIRED='Marcá el consentimiento de envío de contexto para ejecutar esta acción.';

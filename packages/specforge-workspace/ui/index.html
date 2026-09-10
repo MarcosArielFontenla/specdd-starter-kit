@@ -5,7 +5,7 @@
 <header><div><span class="eyebrow">SPECFORGE / ROLE WORKSPACE</span><h1>De la idea al requisito revisado.</h1></div><span class="badge">BA · local</span></header>
 <main>
   <section class="context"><label>Proyecto preparado<select id="projects" aria-label="Proyecto preparado"></select></label><div><p id="operator"></p><p id="runtime"></p></div><button id="refresh" class="secondary">Actualizar</button></section>
-  <p class="notice">Las propuestas de IA son borradores. Vos decidís qué incorporar y qué aprobar. Nada se publica en SpecDD ni en un repositorio.</p>
+  <p class="notice">Las propuestas de IA son borradores. Vos decidís qué incorporar y qué aprobar. Las proyecciones SpecDD se guardan localmente; nada se escribe en un repositorio ni se publica.</p>
   <p id="message" role="status" aria-live="polite"></p>
   <details><summary>Contexto del proyecto</summary><div id="context"></div></details>
   <div class="workspace">
@@ -14,5 +14,5 @@
   </div>
   <section><h2>Actividad e historial</h2><div id="history"></div></section>
 </main>
-<dialog id="approval"><h2>Revisar aprobación exacta</h2><p>No modifica ni publica una spec. Si cambia el contexto, la aprobación deberá revisarse.</p><div id="approval-content"></div><button id="approve-confirm">Confirmar aprobación</button><button id="approve-cancel" class="secondary">Volver sin aprobar</button></dialog>
+<dialog id="approval"><h2 id="approval-title">Revisar aprobación exacta</h2><p id="approval-note">No modifica ni publica una spec. Si cambia el contexto, la aprobación deberá revisarse.</p><div id="approval-content"></div><button id="approve-confirm">Confirmar aprobación</button><button id="approve-cancel" class="secondary">Volver sin aprobar</button></dialog>
 </body></html>

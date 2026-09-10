@@ -1,8 +1,10 @@
 # BA domain — Phase 3
 
-Portable domain API: `@specdd/artifact-model/ba`. No UI, store, agent runtime,
-external integration, pack installation or SpecDD projection. The existing
-Capability Builder remains unchanged. [Phase spec](../../docs/specforge-workspace/specs/phase-3.md)
+Portable domain API: `@specdd/artifact-model/ba`. This module itself has no UI,
+store, agent runtime, external integration, pack installation or SpecDD projection.
+The existing Capability Builder remains unchanged. The separate Phase 5 API
+[`@specdd/artifact-model/projection`](PROJECTION.md) consumes an exact approved BA
+snapshot and remains behind its own human gate. [Phase spec](../../docs/specforge-workspace/specs/phase-3.md)
 and [ADR](../../docs/specforge-workspace/adrs/0003-ba-domain-and-capability-bound-actions.md).
 
 ## Artifact taxonomy and versions
@@ -111,10 +113,10 @@ do not prove that suggested business rules are true. A human must review each
 suggestion and decide what to adopt. The method name `acceptBAActionOutput` means
 accepting a structurally valid runtime response as a proposal, not human approval.
 
-The future host stores request/proposal and real execution evidence, offers edits
-and rejection, creates draft revisions with retained agent provenance, and updates
-graph pins/assertions explicitly. It must not relabel accepted agent text as solely
-human-authored. No helper in this phase claims an LLM actually ran.
+The Phase 4 Workspace host stores request/proposal and real execution evidence,
+offers edits and rejection, creates draft revisions with retained agent provenance,
+and updates graph pins/assertions explicitly. It must not relabel accepted agent
+text as solely human-authored. No helper in this module claims an LLM actually ran.
 
 ## BA approval and impact
 

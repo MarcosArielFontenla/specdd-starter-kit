@@ -2,10 +2,12 @@ import {randomUUID} from 'node:crypto';
 import {createArtifact,reviseArtifact,reviewArtifact,artifactSubject,canonicalJson,fingerprint} from '@specdd/artifact-model';
 import {prepareBAAction,acceptBAActionOutput,prepareBAApproval,approveBA,assertBAApproval} from '@specdd/artifact-model/ba';
 import {createArtifactGraph} from '@specdd/artifact-model/graph';
-import {copy,exact,fail,id,text,put,currentArtifacts,graphInput} from './state.mjs';
+import {prepareSpecDDProjection,applySpecDDProjection,assertSpecDDProjectionReceipt,specDDPath} from '@specdd/artifact-model/projection';
+import {copy,exact,fail,id,text,put,currentArtifacts,graphInput,phase5State} from './state.mjs';
 
 const uid = prefix=>`${prefix}-${randomUUID()}`;
 const now = ()=>new Date().toISOString();
+const latestCanonical=(state,path)=>state.canonicalSpecs.filter(c=>c.path===path).sort((a,b)=>b.revision-a.revision)[0]??null;
 const origin = a=>a.provenance.some(p=>p.actor.kind==='agent')?'human-edited-agent-proposal':'human-authored';
 const editOf = a=>({type:a.type,title:a.title,content:a.content,ownerRole:a.ownerRole,projectRef:a.projectRef,relationships:a.relationships});
 
@@ -24,7 +26,8 @@ export class BAWorkspace {
       blockers:Object.fromEntries(artifacts.map(a=>[a.id,view.blockers(a.id)])),impact:Object.fromEntries(artifacts.map(a=>[a.id,view.impact(a.id)]))};}
     const runs=(await this.store.runs(projectId)).map(({record:r})=>({id:r.id,targetId:r.input.targetId,action:r.input.action,status:r.status,error:r.error,
       startedAt:r.startedAt,finishedAt:r.finishedAt,proposal:r.proposal,runtime:r.runtimeReceipt,requestSha256:r.requestSha256}));
-    return {project:state.project,version:row.version,artifacts,histories:state.histories,approvals,graph,runs,
+    const p5=phase5State(state);
+    return {project:state.project,version:row.version,artifacts,histories:state.histories,approvals,graph,runs,projections:p5.projections,canonicalSpecs:p5.canonicalSpecs,projectionReceipts:p5.projectionReceipts,
       history:this.store.history(projectId),operator:this.actor.id,runtime:this.runtime?.label??'No configurado',runtimeAvailable:Boolean(this.runtime)};
   }
   async #load(projectId,version){const row=await this.store.load(projectId);if(row.version!==version)fail('STALE_STATE');return row;}
@@ -32,7 +35,7 @@ export class BAWorkspace {
   #contribution(at,artifact=null){return {actor:this.actor,origin:artifact?origin(artifact):'human-authored',at,sourceRefs:[]};}
   #reattest(state,artifact,at){for(const e of state.assertions)if((e.from===artifact.id||e.to===artifact.id)&&e.provenance.at<artifact.updatedAt)e.provenance={actor:this.actor,at,sourceRefs:[...new Set([...e.provenance.sourceRefs,'explicit-workspace-revision'])]};}
   async command(projectId,version,value) {
-    const command=copy(value),row=await this.#load(projectId,version),state=row.state,at=now();let runChange=null;
+    const command=copy(value),row=await this.#load(projectId,version),state=phase5State(row.state),at=now();let runChange=null;
     const event={action:command.op,actor:this.actor,at};
     if(command.op==='create') {
       exact(command,['op','title','description','source']);
@@ -87,6 +90,22 @@ export class BAWorkspace {
       }
       state.adoptions.push({runId:run.id,requestSha256:run.requestSha256,selectedIds:selected,actor:this.actor,at,decision:command.op});
       runChange={expectedStatus:'ready',expectedHash:stored.hash,record:{...run,status:command.op==='adopt'?'adopted':'discarded',decision:{actor:this.actor,at,selectedIds:selected}}};event.runId=run.id;
+    } else if(command.op==='prepare-projection') {
+      exact(command,['op','targetId']);const target=this.#target(state,command.targetId);if(target.type!=='requirement'||target.status!=='approved')fail('PROJECTION_APPROVED_REQUIREMENT_REQUIRED');
+      const approval=[...state.receipts].reverse().find(r=>r.targetId===target.id)??fail('PROJECTION_APPROVAL_REQUIRED');
+      const current=latestCanonical(state,specDDPath(target.title));
+      if(state.projections.some(p=>p.status==='proposed'&&p.proposal.source.artifact.artifactId===target.id))fail('PROJECTION_PENDING');
+      const prepared=await prepareSpecDDProjection({...await graphInput(state,target.id),approval,current},{id:uid('projection'),createdAt:at});
+      state.projections.push({proposal:prepared.proposal,status:'proposed'});event.targetId=target.id;event.projectionId=prepared.proposal.id;event.subjectSha256=prepared.subjectSha256;
+    } else if(command.op==='apply-projection') {
+      exact(command,['op','projectionId','subjectSha256']);const entry=state.projections.find(p=>p.proposal.id===id(command.projectionId))??fail('PROJECTION_NOT_FOUND');if(entry.status!=='proposed')fail('PROJECTION_ALREADY_APPLIED');
+      const target=this.#target(state,entry.proposal.source.artifact.artifactId),approval=[...state.receipts].reverse().find(r=>r.targetId===target.id)??fail('PROJECTION_APPROVAL_REQUIRED');
+      const current=latestCanonical(state,entry.proposal.destination.path);
+      const result=await applySpecDDProjection(entry.proposal,{...await graphInput(state,target.id),approval,current},{subjectSha256:command.subjectSha256,actor:this.actor,at});
+      await assertSpecDDProjectionReceipt(entry.proposal,result.canonical,result.receipt);entry.status='applied';state.canonicalSpecs.push(result.canonical);state.projectionReceipts.push(result.receipt);
+      event.targetId=target.id;event.projectionId=entry.proposal.id;event.subjectSha256=command.subjectSha256;
+    } else if(command.op==='discard-projection') {
+      exact(command,['op','projectionId']);const entry=state.projections.find(p=>p.proposal.id===id(command.projectionId))??fail('PROJECTION_NOT_FOUND');if(entry.status!=='proposed')fail('PROJECTION_NOT_PENDING');entry.status='discarded';event.targetId=entry.proposal.source.artifact.artifactId;event.projectionId=entry.proposal.id;
     } else fail('UNKNOWN_COMMAND');
     await this.store.commit(projectId,version,state,event,runChange);return this.view(projectId);
   }

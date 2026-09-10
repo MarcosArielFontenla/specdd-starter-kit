@@ -9,6 +9,8 @@ import {request as httpRequest} from 'node:http';
 import {WorkspaceStore,BAWorkspace,createWorkspaceServer} from '../src/index.mjs';
 import {demoBundle} from '../scripts/demo.mjs';
 import {appServerArgs} from '@specdd/local-control-service';
+import {validateState,phase5State} from '../src/state.mjs';
+import {fingerprint} from '@specdd/artifact-model';
 
 const projectId='ba-synthetic-pilot';
 const mock={label:'synthetic-test-runtime',async execute({request,requestSha256}){return {output:{schemaVersion:'1.0.0',requestSha256,wording:null,ambiguities:[],
@@ -88,6 +90,31 @@ test('full synthetic domain flow enforces blockers, human answers, rule approval
   await assert.rejects(app.command(projectId,p.version,{op:'approve',targetId:target,subjectSha256:p.subjectSha256}),/STALE_STATE/);
   const a=v.artifacts.find(a=>a.id===target);v=await command(app,{op:'edit',targetId:target,title:a.title,content:{...a.content,description:'Nueva revisión humana'}});
   assert.equal(v.artifacts.find(a=>a.id===target).status,'draft');assert.equal(v.approvals.find(a=>a.targetId===target).valid,false);
+});
+test('approved requirement projects with visible gaps and requires an exact human subject before canonicalization',async t=>{
+  const {app}=await setup(t),target=await create(app),a=(await app.view(projectId)).artifacts[0];
+  await command(app,{op:'edit',targetId:target,title:'Cancelar turno',content:{description:a.content.description,acceptanceCriteria:[{id:'ac-1',given:'Turno futuro',when:'Cliente cancela',then:'Turno cancelado'}]}});
+  await approve(app,target);let v=await command(app,{op:'prepare-projection',targetId:target});
+  assert.equal(v.projections.length,1);assert.equal(v.projections[0].status,'proposed');assert.equal(v.projections[0].proposal.mapping.status,'partial');
+  assert.match(v.projections[0].proposal.diff,/--- \/dev\/null/);assert.equal(v.canonicalSpecs.length,0);
+  const projection=v.projections[0].proposal,subject=await fingerprint(projection),version=v.version;
+  await assert.rejects(app.command(projectId,version,{op:'apply-projection',projectionId:projection.id,subjectSha256:'0'.repeat(64)}),/PROJECTION_STALE_APPROVAL/);
+  assert.equal((await app.view(projectId)).canonicalSpecs.length,0);
+  v=await app.command(projectId,version,{op:'apply-projection',projectionId:projection.id,subjectSha256:subject});
+  assert.equal(v.projections[0].status,'applied');assert.equal(v.canonicalSpecs.length,1);assert.equal(v.projectionReceipts.length,1);assert.equal(v.canonicalSpecs[0].path,'specs/cancelar-turno/spec.md');
+  await assert.rejects(command(app,{op:'apply-projection',projectionId:projection.id,subjectSha256:subject}),/PROJECTION_ALREADY_APPLIED/);
+});
+test('Phase 4 state remains valid and upgrades only on a Phase 5 mutation',async t=>{
+  const {store}=await setup(t),row=await store.load(projectId),legacy=structuredClone(row.state);
+  delete legacy.projections;delete legacy.canonicalSpecs;delete legacy.projectionReceipts;legacy.schemaVersion='1.0.0';await validateState(legacy);
+  const upgraded=phase5State(legacy);assert.equal(upgraded.schemaVersion,'1.1.0');assert.deepEqual(upgraded.projections,[]);assert.equal(legacy.schemaVersion,'1.0.0');
+});
+test('a stale or unwanted projection can be discarded without creating a canonical artifact',async t=>{
+  const {app}=await setup(t),target=await create(app),a=(await app.view(projectId)).artifacts[0];
+  await command(app,{op:'edit',targetId:target,title:'Descartable',content:{description:a.content.description,acceptanceCriteria:[{id:'ac-1',given:'A',when:'B',then:'C'}]}});await approve(app,target);
+  let v=await command(app,{op:'prepare-projection',targetId:target}),id=v.projections[0].proposal.id;v=await command(app,{op:'discard-projection',projectionId:id});
+  assert.equal(v.projections[0].status,'discarded');assert.equal(v.canonicalSpecs.length,0);await assert.rejects(command(app,{op:'discard-projection',projectionId:id}),/PROJECTION_NOT_PENDING/);
+  v=await command(app,{op:'prepare-projection',targetId:target});assert.equal(v.projections.filter(p=>p.status==='proposed').length,1);
 });
 test('late successful output after cancellation is ignored',async t=>{
   let finish;const runtime={label:'synthetic-delayed',execute(input){return new Promise(resolve=>{finish=async()=>resolve(await mock.execute(input));});}};

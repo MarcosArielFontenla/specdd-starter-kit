@@ -2,7 +2,9 @@
 
 Phase 4 is **accepted**: the automated browser regression uses an explicitly
 simulated runtime, and a separate bounded real-agent pilot plus an observed human
-approval flow completed on 2026-09-08. No projection, publication or deploy.
+approval flow completed on 2026-09-08. Phase 5 adds an accepted governed local
+SpecDD projection, including observed exact review and persistence after reload.
+No repository publication or deploy.
 
 See the [operator and BA guide](../../docs/specforge-workspace/usage.md),
 [spec](../../docs/specforge-workspace/specs/phase-4.md),
@@ -28,6 +30,9 @@ screenshots in `.specforge-workspace/evidence` when run through the root script.
   optimistic CAS, atomic adoption and approval, interrupted-run reconciliation.
 - `BAWorkspace`: human-owned create/edit/resolve/review/approve; consent-bound
   runtime analysis; proposals stored separately, selective adoption or discard.
+- Governed SpecDD projection: approved BA graph to deterministic
+  `specs/<slug>/spec.md` proposal, explicit mapping gaps, exact diff/subject,
+  discard or human canonicalization in SQLite. No filesystem/Git writer.
 - `createWorkspaceServer`: loopback HTTP, one-use bootstrap, session/CSRF/Origin,
   bounded JSON, CSP and no raw provider diagnostics in browser errors.
 - `CodexBARuntime`: opt-in structured transport, explicit executable/model/Windows

@@ -15,7 +15,7 @@ todas las fases posteriores.
 | 2 — Graph y traceability | Accepted | [Spec](specs/phase-2.md) y [ADR](adrs/0002-revision-bound-artifact-graph.md) | Implementación local terminada | [Evidencia](phases/phase-2.md) | Aceptación del usuario al indicar continuar Phase 3, 2026-09-07 |
 | 3 — Dominio BA | Accepted | [Spec](specs/phase-3.md) y [ADR](adrs/0003-ba-domain-and-capability-bound-actions.md) | Implementación local terminada | [Evidencia](phases/phase-3.md) | Aceptación del usuario al indicar continuar Phase 4, 2026-09-07 |
 | 4 — MVP BA | Accepted | [Spec](specs/phase-4.md) y [ADR](adrs/0004-local-ba-workspace.md) | UI local, SQLite y adaptador opt-in implementados | [Evidencia](phases/phase-4.md), piloto real y E2E simulado | Piloto real más aprobación humana observada, 2026-09-08 |
-| 5 — Proyección SpecDD | Planned | Transformación gobernada y diff | No iniciada | Pendientes | Proyección revisada, drift y mapping parcial probados |
+| 5 — Proyección SpecDD | Accepted | [Spec](specs/phase-5.md) y [ADR](adrs/0005-governed-specdd-projection.md) | Contrato, mapping, diff, gate y canonical local implementados | [Evidencia](phases/phase-5.md) | Aceptación humana observada y persistencia tras F5 verificadas; pausar antes de Phase 6 |
 | 6 — Dominio QA | Planned | Escenarios/casos/cobertura/riesgos/defectos | No iniciada | Pendientes | Inicia después del piloto BA validado |
 | 7 — MVP QA | Planned | Flujo QA operativo | No iniciada | Pendientes | Validación con usuario QA |
 | 8 — Lectura PM | Planned | Readiness derivada de evidencia | No iniciada | Pendientes | Desconocido/parcial/bloqueado explícitos |
@@ -66,4 +66,8 @@ Estado operativo Phase 4: **Accepted**. Los preflights fallidos se conservan com
 evidencia histórica; el backend elevado, aislamiento, contrato y receipt fueron
 verificados en el intento real exitoso. El usuario completó después el recorrido
 selectivo y la aprobación exacta documentados en
-[Phase 4 real pilot](phases/phase-4-real-pilot.md). Phase 5 no se inició.
+[Phase 4 real pilot](phases/phase-4-real-pilot.md).
+
+Actualización Phase 5: destino concreto `specs/<slug>/spec.md`, propuesta portable,
+mapping parcial explícito, diff/base hash, descarte y canonicalización local ya
+implementados. Falta la aceptación humana observada antes de marcarla Accepted.

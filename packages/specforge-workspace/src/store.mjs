@@ -38,7 +38,7 @@ export class WorkspaceStore {
   ids() { return this.#db.prepare('SELECT id FROM projects ORDER BY id').all().map(r=>r.id); }
   async register(bundle, actor) {
     exact(bundle,['project','capability']);
-    const state=copy({schemaVersion:'1.0.0',...bundle,histories:{},assertions:[],receipts:[],adoptions:[]});
+    const state=copy({schemaVersion:'1.1.0',...bundle,histories:{},assertions:[],receipts:[],adoptions:[],projections:[],canonicalSpecs:[],projectionReceipts:[]});
     await validateState(state); const projectId=id(state.project.metadata.id);
     if(this.ids().includes(projectId)) {
       const existing=await this.load(projectId);

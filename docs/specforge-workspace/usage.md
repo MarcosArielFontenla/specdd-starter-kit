@@ -1,8 +1,9 @@
 # Guía de uso — Workspace BA local
 
-Estado: Phase 4 **aceptada** el 2026-09-08. Además del runtime **simulado** de
-regresión, se completaron un piloto sintético con agente real y un recorrido humano
-observado hasta aprobación exacta. El [tracker](roadmap.md) conserva ambos gates.
+Estado: Phases 4 y 5 **aceptadas** el 2026-09-08. Además del runtime **simulado**
+de regresión, se completaron un piloto sintético con agente real, la aprobación
+exacta y la proyección humana observada a un artefacto SpecDD canónico local. El
+[tracker](roadmap.md) conserva los gates y límites.
 
 ## 1. Qué abre cada opción
 
@@ -114,7 +115,24 @@ La interfaz informa el impacto conocido dentro del grafo registrado. No demuestr
 que no haya otras reglas/requisitos ausentes del contexto. Los vínculos derivados
 se conservan; el MVP no ofrece un editor libre de relaciones ni de decisiones.
 
-## 5. Fallos y recuperación
+## 5. Proyección gobernada a SpecDD
+
+Un requisito con aprobación vigente muestra **Preparar propuesta SpecDD**. Esta
+operación es mecánica, no usa el agente y no escribe el repositorio:
+
+1. Prepará la propuesta. El destino será `specs/<slug>/spec.md`.
+2. Abrí contenido, diff y reporte de mapping. `partial` indica datos que el grafo BA
+   no puede completar sin decisión humana; no equivale a una spec lista.
+3. Elegí **Revisar y crear artefacto SpecDD**. Leé el subject, gaps y contenido.
+4. Al confirmar, se crea una revisión canónica sólo en el SQLite privado, con receipt
+   y trazabilidad. Recargá para verificar persistencia.
+5. Si la propuesta no corresponde o quedó stale, usá **Descartar propuesta SpecDD**
+   y prepará otra después de corregir y volver a aprobar el requisito.
+
+El hash base impide reemplazar silenciosamente otro contenido canónico. Phase 5 no
+exporta ni copia el Markdown a un checkout: esa integración necesitará otro gate.
+
+## 6. Fallos y recuperación
 
 - **Necesita atención:** el borrador se conserva; revisar causa/configuración con
   el operador. Nunca se reintenta automáticamente.
@@ -132,7 +150,7 @@ La carpeta contiene datos en texto plano; protegerla con permisos del sistema.
 Para respaldar, detener el servicio y copiar la carpeta completa. MVP acotado:
 valores JSON de hasta 2.000.000 bytes, sin poda automática, cifrado, multiusuario ni SSO.
 
-## 6. Pruebas y aceptación completada
+## 7. Pruebas y aceptación
 
 El [piloto real sintético](phases/phase-4-real-pilot.md) completó técnica y
 humanamente. El usuario revisó la propuesta separada, incorporó explícitamente tres
@@ -150,7 +168,8 @@ No usan un agente real. El segundo ejecuta el recorrido con la etiqueta **SIMULA
 incluyendo fallos/cancelación, y produce capturas locales. No instala navegadores
 si faltan; eso requiere una preparación aparte.
 
-Los dos gates se cumplieron: preflight más ejecución real acotada, y recorrido
-observado en la UI sin repo/IDE para el BA. El siguiente paso requiere autorización
-separada para Phase 5: proyección gobernada a SpecDD. Phase 4 no escribió specs
-canónicas, repositorios, PRs ni desplegó.
+Los dos gates de Phase 4 se cumplieron: preflight más ejecución real acotada, y
+recorrido observado en la UI sin repo/IDE para el BA. Phase 5 también quedó aceptada
+al revisar propuesta, diff, mapping, subject exacto y canonical local, incluido un
+reload que confirmó su persistencia. Phase 6 requiere autorización separada.
+Ninguna de estas fases escribió specs en repositorios, creó PRs ni desplegó.

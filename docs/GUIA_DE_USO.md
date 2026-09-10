@@ -29,7 +29,10 @@ humana desde el navegador. No necesita Git/IDE para el BA; el operador prepara y
 levanta el servicio. Seguí la [guía del Workspace BA](specforge-workspace/usage.md).
 La implementación, el E2E simulado y un piloto sintético con agente real y aprobación
 humana observada fueron aceptados en Phase 4. No confundirlo con instalar un
-Capability Pack ni con SpecControl. Proyección a SpecDD y otros roles todavía son
+Capability Pack ni con SpecControl. Phase 5, también aceptada mediante un recorrido
+humano observado, agrega una proyección gobernada al formato
+`specs/<feature>/spec.md`: muestra diff y gaps, exige aprobación y conserva el
+canónico en el store local, pero todavía no escribe el checkout. Otros roles son
 fases siguientes.
 
 ## 2. Levantá el portal
