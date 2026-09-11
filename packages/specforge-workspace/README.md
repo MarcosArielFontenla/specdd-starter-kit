@@ -1,6 +1,7 @@
-# SpecForge Workspace — BA local MVP
+# SpecForge Workspace — Role Workspaces locales
 
-Phase 4 is **accepted**: the automated browser regression uses an explicitly
+Phases 4–7 are **accepted locally**. Phase 7 adds a local QA Workspace MVP; its
+observed human gate completed on 2026-09-10. The automated browser regression uses an explicitly
 simulated runtime, and a separate bounded real-agent pilot plus an observed human
 approval flow completed on 2026-09-08. Phase 5 adds an accepted governed local
 SpecDD projection, including observed exact review and persistence after reload.
@@ -30,6 +31,9 @@ screenshots in `.specforge-workspace/evidence` when run through the root script.
   optimistic CAS, atomic adoption and approval, interrupted-run reconciliation.
 - `BAWorkspace`: human-owned create/edit/resolve/review/approve; consent-bound
   runtime analysis; proposals stored separately, selective adoption or discard.
+- QA view: approved/assigned specs, typed scenarios/cases/risks/defects, selective
+  QA proposals, deterministic declared-design coverage and exact human QA approval.
+  It does not execute tests or claim outcomes; defect evidence is human supplied.
 - Governed SpecDD projection: approved BA graph to deterministic
   `specs/<slug>/spec.md` proposal, explicit mapping gaps, exact diff/subject,
   discard or human canonicalization in SQLite. No filesystem/Git writer.
@@ -44,7 +48,8 @@ screenshots in `.specforge-workspace/evidence` when run through the root script.
 - No auto-install, repository import/scanning, arbitrary command endpoint, retry,
   multi-user identity, SSO, shared deployment, encryption or remote publishing.
 
-`{project, capability}` registration accepts a prepared canonical Project Definition
+`{project, capability, qaCapability}` registration enables both role workspaces and
+accepts a prepared canonical Project Definition
 and an exact enabled BA Capability Pack with all required content/dependencies.
 It does not derive missing project facts. `--demo true` explicitly creates a synthetic
 fixture, not an acceptance result or a substitute for production context.

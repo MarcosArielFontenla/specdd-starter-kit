@@ -37,12 +37,12 @@ export class WorkspaceStore {
   close() { if(this.#closed)return;this.#closed=true;this.#db.prepare('DELETE FROM lease WHERE token=?').run(this.#lease); this.#db.close(); }
   ids() { return this.#db.prepare('SELECT id FROM projects ORDER BY id').all().map(r=>r.id); }
   async register(bundle, actor) {
-    exact(bundle,['project','capability']);
-    const state=copy({schemaVersion:'1.1.0',...bundle,histories:{},assertions:[],receipts:[],adoptions:[],projections:[],canonicalSpecs:[],projectionReceipts:[]});
+    exact(bundle,Object.hasOwn(bundle,'qaCapability')?['project','capability','qaCapability']:['project','capability']);
+    const state=copy({schemaVersion:Object.hasOwn(bundle,'qaCapability')?'1.2.0':'1.1.0',...bundle,histories:{},assertions:[],receipts:[],adoptions:[],projections:[],canonicalSpecs:[],projectionReceipts:[],...(Object.hasOwn(bundle,'qaCapability')?{qaAssignments:[],qaReceipts:[],qaAdoptions:[]}:{})});
     await validateState(state); const projectId=id(state.project.metadata.id);
     if(this.ids().includes(projectId)) {
       const existing=await this.load(projectId);
-      if(canonicalJson(existing.state.project)!==canonicalJson(state.project) || canonicalJson(existing.state.capability)!==canonicalJson(state.capability)) fail('PROJECT_ALREADY_REGISTERED_DIFFERENT');
+      if(canonicalJson(existing.state.project)!==canonicalJson(state.project) || canonicalJson(existing.state.capability)!==canonicalJson(state.capability) || canonicalJson(existing.state.qaCapability??null)!==canonicalJson(state.qaCapability??null)) fail('PROJECT_ALREADY_REGISTERED_DIFFERENT');
       return existing;
     }
     return this.commit(projectId,0,state,{action:'register',actor,at:new Date().toISOString()});

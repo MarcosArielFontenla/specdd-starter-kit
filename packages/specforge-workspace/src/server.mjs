@@ -31,11 +31,12 @@ export function createWorkspaceServer(workspace,{port=4312,host='127.0.0.1'}={})
         const projects=[];for(const projectId of workspace.store.ids()){const row=await workspace.store.load(projectId);projects.push({id:projectId,name:row.state.project.metadata.name});}
         return send(res,200,{projects});
       }
-      const match=/^\/api\/projects\/([a-z0-9._-]+)(?:\/(command|approval|runs|cancel))?$/.exec(url.pathname);
+      const match=/^\/api\/projects\/([a-z0-9._-]+)(?:\/(command|approval|qa-approval|runs|cancel))?$/.exec(url.pathname);
       if(!match)return send(res,404,{error:'NOT_FOUND'});
       const [,projectId,route]=match;
       if(req.method==='GET'&&!route)return send(res,200,await workspace.view(projectId));
       if(req.method==='GET'&&route==='approval')return send(res,200,await workspace.approval(projectId,url.searchParams.get('target')));
+      if(req.method==='GET'&&route==='qa-approval')return send(res,200,await workspace.qaApproval(projectId,url.searchParams.get('target')));
       if(req.method!=='POST')return send(res,405,{error:'METHOD'});
       if(req.headers.origin!==origin||!equal(req.headers['x-specforge-csrf'],csrf))return send(res,403,{error:'CSRF'});
       if(!req.headers['content-type']?.startsWith('application/json'))return send(res,415,{error:'JSON_REQUIRED'});

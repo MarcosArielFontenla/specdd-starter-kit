@@ -106,8 +106,30 @@ test('approved requirement projects with visible gaps and requires an exact huma
 });
 test('Phase 4 state remains valid and upgrades only on a Phase 5 mutation',async t=>{
   const {store}=await setup(t),row=await store.load(projectId),legacy=structuredClone(row.state);
-  delete legacy.projections;delete legacy.canonicalSpecs;delete legacy.projectionReceipts;legacy.schemaVersion='1.0.0';await validateState(legacy);
+  for(const key of ['projections','canonicalSpecs','projectionReceipts','qaCapability','qaAssignments','qaReceipts','qaAdoptions'])delete legacy[key];legacy.project.capabilities=legacy.project.capabilities.filter(c=>c.id!=='role-qa');legacy.schemaVersion='1.0.0';await validateState(legacy);
   const upgraded=phase5State(legacy);assert.equal(upgraded.schemaVersion,'1.1.0');assert.deepEqual(upgraded.projections,[]);assert.equal(legacy.schemaVersion,'1.0.0');
+});
+test('Phase 7 QA workspace assigns approved specs and persists reviewable scenarios, cases and honest coverage',async t=>{
+  const {app}=await setup(t,null),target=await create(app),a=(await app.view(projectId)).artifacts[0];
+  await command(app,{op:'edit',targetId:target,title:'Cancelar turno',content:{description:a.content.description,acceptanceCriteria:[{id:'ac-1',given:'Turno futuro',when:'Cliente cancela',then:'Turno cancelado'}]}});await approve(app,target);
+  let v=await command(app,{op:'qa-assign',targetId:target});assert.deepEqual(v.qa.assignments,[target]);
+  v=await command(app,{op:'qa-create',targetId:target,type:'test-scenario',title:'Límite de cancelación',content:{objective:'Validar el límite',acceptanceCriterionIds:['ac-1'],technique:'boundary'}});
+  v=await command(app,{op:'qa-create',targetId:target,type:'test-case',title:'Cancelación válida',content:{acceptanceCriterionIds:['ac-1'],preconditions:['Turno futuro'],steps:[{action:'Cancelar',expected:'Queda cancelado'}],level:'manual',automationStatus:'manual'}});
+  v=await command(app,{op:'qa-refresh-coverage',targetId:target});const coverage=v.artifacts.find(x=>x.type==='coverage-assessment');assert.equal(coverage.content.scope,'declared-design-only');assert.equal(coverage.content.entries[0].testCaseRefs.length,1);assert.equal(JSON.stringify(coverage).includes('passed'),false);
+  const scenario=v.artifacts.find(x=>x.type==='test-scenario');await command(app,{op:'qa-request-review',targetId:scenario.id});const p=await app.qaApproval(projectId,scenario.id);
+  v=await app.command(projectId,p.version,{op:'qa-approve',targetId:scenario.id,subjectSha256:p.subjectSha256});assert.equal(v.artifacts.find(x=>x.id===scenario.id).status,'approved');assert.equal(v.qa.approvals.at(-1).valid,true);
+});
+test('Phase 7 QA defects require human evidence and exact hashes',async t=>{
+  const {app}=await setup(t,null),target=await create(app),a=(await app.view(projectId)).artifacts[0];await command(app,{op:'edit',targetId:target,title:a.title,content:{description:a.content.description,acceptanceCriteria:[{id:'ac-1',given:'A',when:'B',then:'C'}]}});await approve(app,target);
+  const base={op:'qa-create',targetId:target,type:'defect',title:'Fallo observado',content:{severity:'high',observed:'B',expected:'C',reproductionSteps:['Ejecutar paso local'],evidence:[{kind:'report',locator:'local-report:1',sha256:'0'.repeat(64)}]}};
+  let v=await command(app,base);assert.equal(v.artifacts.find(x=>x.type==='defect').provenance[0].actor.kind,'human');
+  await assert.rejects(command(app,{...base,title:'Sin evidencia',content:{...base.content,evidence:[]}}),/SCHEMA_CONSTRAINT/);
+});
+test('Phase 7 QA agent output stays separate until selective human adoption',async t=>{
+  const qaRuntime={label:'synthetic-qa-runtime',async execute({request,requestSha256}){return {output:{schemaVersion:'1.0.0',requestSha256,gaps:[{id:'gap',description:'Falta caso límite',supportArtifactIds:[request.target.artifactId]}],scenarios:[{id:'scenario',objective:'Validar borde',acceptanceCriterionIds:['ac-1'],technique:'boundary',supportArtifactIds:[request.target.artifactId]}],testCases:[],risks:[]},receipt:{simulated:true}};}};
+  const {app,store}=await setup(t,qaRuntime),target=await create(app),a=(await app.view(projectId)).artifacts[0];await command(app,{op:'edit',targetId:target,title:a.title,content:{description:a.content.description,acceptanceCriteria:[{id:'ac-1',given:'A',when:'B',then:'C'}]}});await approve(app,target);
+  const version=(await app.view(projectId)).version,runId=await app.start(projectId,version,{targetId:target,action:'suggest-test-scenarios',consent:true}),r=await terminal(store,runId);assert.equal(r.role,'qa');assert.equal((await app.view(projectId)).artifacts.filter(x=>x.ownerRole==='qa').length,0);
+  const v=await command(app,{op:'qa-adopt',runId,selectedIds:['scenario']});const scenario=v.artifacts.find(x=>x.type==='test-scenario');assert.equal(scenario.provenance.at(-1).actor.kind,'human');assert.equal(v.qa.adoptions[0].selectedIds[0],'scenario');
 });
 test('a stale or unwanted projection can be discarded without creating a canonical artifact',async t=>{
   const {app}=await setup(t),target=await create(app),a=(await app.view(projectId)).artifacts[0];

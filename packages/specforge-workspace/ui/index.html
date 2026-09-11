@@ -1,15 +1,16 @@
 <!doctype html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SpecForge · Workspace BA</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SpecForge · Role Workspaces</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
 <body>
-<header><div><span class="eyebrow">SPECFORGE / ROLE WORKSPACE</span><h1>De la idea al requisito revisado.</h1></div><span class="badge">BA · local</span></header>
+<header><div><span class="eyebrow">SPECFORGE / ROLE WORKSPACE</span><h1 id="workspace-title">De la idea al requisito revisado.</h1></div><span id="role-badge" class="badge">BA · local</span></header>
 <main>
+  <nav class="role-switch" aria-label="Workspace por rol"><button id="ba-mode">Business Analysis</button><button id="qa-mode" class="secondary">Quality Assurance</button></nav>
   <section class="context"><label>Proyecto preparado<select id="projects" aria-label="Proyecto preparado"></select></label><div><p id="operator"></p><p id="runtime"></p></div><button id="refresh" class="secondary">Actualizar</button></section>
-  <p class="notice">Las propuestas de IA son borradores. Vos decidís qué incorporar y qué aprobar. Las proyecciones SpecDD se guardan localmente; nada se escribe en un repositorio ni se publica.</p>
+  <p id="workspace-notice" class="notice">Las propuestas de IA son borradores. Vos decidís qué incorporar y qué aprobar. Las proyecciones SpecDD se guardan localmente; nada se escribe en un repositorio ni se publica.</p>
   <p id="message" role="status" aria-live="polite"></p>
   <details><summary>Contexto del proyecto</summary><div id="context"></div></details>
   <div class="workspace">
-    <aside><div class="section-head"><h2>Mis requisitos</h2><button id="new" class="secondary">Nuevo</button></div><div id="list"></div></aside>
+    <aside><div class="section-head"><h2 id="list-title">Mis requisitos</h2><button id="new" class="secondary">Nuevo</button></div><div id="list"></div></aside>
     <section id="detail" aria-label="Detalle del requisito"></section>
   </div>
   <section><h2>Actividad e historial</h2><div id="history"></div></section>

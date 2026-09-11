@@ -1,6 +1,7 @@
-# Guía de uso — Workspace BA local
+# Guía de uso — Role Workspaces locales
 
-Estado: Phases 4 y 5 **aceptadas** el 2026-09-08. Además del runtime **simulado**
+Estado: Phases 4–7 **aceptadas localmente**. El gate humano QA de Phase 7 se
+completó el 2026-09-10. Además del runtime **simulado**
 de regresión, se completaron un piloto sintético con agente real, la aprobación
 exacta y la proyección humana observada a un artefacto SpecDD canónico local. El
 [tracker](roadmap.md) conserva los gates y límites.
@@ -43,13 +44,18 @@ reales de Bloom ni modifica su checkout. No se ejecuta un agente al iniciar.
 La identidad `--operator` es una declaración local del operador, **no un login
 verificado**. No compartas esta sesión entre revisores que necesiten autoría distinta.
 
-Para un proyecto real, un operador debe revisar un bundle JSON `{project, capability}`
+Para un proyecto real BA, un operador debe revisar un bundle JSON `{project, capability}`
 y usar `--bundle` con su ruta absoluta en lugar de `--demo true`. `project` es un
 Project Definition canónico válido; `capability` contiene `{pack, files, dependencies}`
 según la [API BA](../../packages/artifact-model/BA.md). El binding debe estar habilitado,
 tener versión exacta y apuntar al manifest incluido. Faltantes se rechazan, no se
 completan con valores inventados. Todavía no hay wizard de importación ni editor del
 contexto de proyecto; una reinscripción diferente del mismo ID también se rechaza.
+
+Para habilitar además QA, el bundle debe ser
+`{project, capability, qaCapability}` y Project Definition debe contener el binding
+exacto y habilitado de `role-qa`. No se agrega o infiere QA al abrir un store BA
+anterior: hay que preparar y revisar el bundle completo.
 
 ## 3. Habilitar un agente — opt-in validado para el piloto
 
@@ -150,7 +156,33 @@ La carpeta contiene datos en texto plano; protegerla con permisos del sistema.
 Para respaldar, detener el servicio y copiar la carpeta completa. MVP acotado:
 valores JSON de hasta 2.000.000 bytes, sin poda automática, cifrado, multiusuario ni SSO.
 
-## 7. Pruebas y aceptación
+## 7. Recorrido QA local — gate Phase 7
+
+Con un bundle que incluya QA (la opción `--demo true` ya lo incluye):
+
+1. Abrí **Quality Assurance** y elegí una spec aprobada. Si aparece Disponible,
+   seleccioná **Tomar spec para QA**; es una asignación local, no multiusuario.
+2. Desplegá **Criterios aprobados e IDs**. Escenarios y casos sólo pueden referir
+   esos IDs. Si cambia el requisito, el MVP no retargetea relaciones en silencio.
+3. Opcionalmente autorizá una acción de agente. Revisá gaps y candidatos; incorporá
+   sólo escenarios, casos o riesgos elegidos. No se ejecuta ningún test.
+4. Registrá o revisá escenarios y casos. `manual` significa diseño manual;
+   `candidate` expresa candidato a automatización, nunca automatización ejecutada.
+5. Elegí **Recalcular cobertura declarada**. Cada criterio debe figurar, incluso
+   sin casos. La tarjeta no es evidencia de pass/fail ni cobertura de código.
+6. Para un defecto, aportá observado, esperado, pasos, localizador y SHA-256 de una
+   evidencia existente. El portal conserva la referencia; no captura ni verifica
+   disponibilidad o retención del archivo externo.
+7. En un artefacto borrador, solicitá revisión; abrí **Revisar aprobación QA**, leé
+   contenido y subject exactos y confirmá como humano sólo si corresponden.
+8. Recargá la página, volvé a QA y verificá asignación, artefactos, cobertura y
+   aprobación. Nuevos nodos del grafo pueden dejar un receipt anterior fuera de
+   vigencia; requiere una nueva revisión, no reparación automática.
+
+Phase 7 no incluye suites/runs, scheduler, CI, Playwright operativo, campañas,
+dashboards históricos, attachments gestionados ni integraciones Jira/GitHub.
+
+## 8. Pruebas y aceptación
 
 El [piloto real sintético](phases/phase-4-real-pilot.md) completó técnica y
 humanamente. El usuario revisó la propuesta separada, incorporó explícitamente tres
@@ -171,7 +203,7 @@ si faltan; eso requiere una preparación aparte.
 Los dos gates de Phase 4 se cumplieron: preflight más ejecución real acotada, y
 recorrido observado en la UI sin repo/IDE para el BA. Phase 5 también quedó aceptada
 al revisar propuesta, diff, mapping, subject exacto y canonical local, incluido un
-reload que confirmó su persistencia. Phase 6 fue autorizada después y agregó el
-dominio QA portable, todavía sin
-workspace QA ni ejecución de tests; su uso diario corresponde a Phase 7.
+reload que confirmó su persistencia. Phase 6 agregó el dominio QA portable. Phase 7
+materializa su uso diario local y su gate humano confirmó subject exacto, aprobación
+vigente y persistencia tras F5; tampoco agrega ejecución de tests.
 Ninguna de estas fases escribió specs en repositorios, creó PRs ni desplegó.

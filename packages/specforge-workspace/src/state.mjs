@@ -1,6 +1,7 @@
 import {canonicalJson, fingerprint, artifactSubject, assertRevisionHistory} from '@specdd/artifact-model';
 import {createArtifactGraph} from '@specdd/artifact-model/graph';
 import {resolveBACapability} from '@specdd/artifact-model/ba';
+import {resolveQACapability} from '@specdd/artifact-model/qa';
 import {assertSpecDDProjectionProposal,assertSpecDDProjectionReceipt} from '@specdd/artifact-model/projection';
 import {validateProjectDefinition} from '@specdd/project-model';
 
@@ -20,9 +21,10 @@ export async function graphInput(state, targetId) {
     nodes:await Promise.all(artifacts.map(reference)),assertions:state.assertions},context:{project:state.project,artifacts}};
 }
 export async function validateState(state) {
-  const phase5=state?.schemaVersion==='1.1.0';
-  exact(state,phase5?['schemaVersion','project','capability','histories','assertions','receipts','adoptions','projections','canonicalSpecs','projectionReceipts']:['schemaVersion','project','capability','histories','assertions','receipts','adoptions']);
-  if (!['1.0.0','1.1.0'].includes(state.schemaVersion) || !validateProjectDefinition(state.project).valid) fail('INVALID_PROJECT');
+  const phase5=['1.1.0','1.2.0'].includes(state?.schemaVersion),phase7=state?.schemaVersion==='1.2.0';
+  const fields=['schemaVersion','project','capability','histories','assertions','receipts','adoptions',...(phase5?['projections','canonicalSpecs','projectionReceipts']:[]),...(phase7?['qaCapability','qaAssignments','qaReceipts','qaAdoptions']:[])];
+  exact(state,fields);
+  if (!['1.0.0','1.1.0','1.2.0'].includes(state.schemaVersion) || !validateProjectDefinition(state.project).valid) fail('INVALID_PROJECT');
   await resolveBACapability(state.capability);
   const binding = state.project.capabilities.find(b=>b.id===state.capability.pack.metadata.id);
   if (!binding?.enabled || binding.version !== state.capability.pack.metadata.version ||
@@ -30,7 +32,7 @@ export async function validateState(state) {
   if (!state.histories || typeof state.histories !== 'object' || Array.isArray(state.histories) || !Array.isArray(state.assertions) || !Array.isArray(state.receipts) || !Array.isArray(state.adoptions)) fail('INVALID_STATE');
   for (const [key, history] of Object.entries(state.histories)) {
     id(key); await assertRevisionHistory(history);
-    if (history[0].id !== key || history.some(a=>a.ownerRole!=='ba')) fail('INVALID_HISTORY');
+    if (history[0].id !== key || history.some(a=>!['ba','qa'].includes(a.ownerRole))) fail('INVALID_HISTORY');
   }
   const artifacts = currentArtifacts(state);
   if (artifacts.length) { const g = await graphInput(state,artifacts[0].id); await createArtifactGraph(g.graph,g.context); }
@@ -45,9 +47,20 @@ export async function validateState(state) {
     if(state.canonicalSpecs.some(c=>!state.projectionReceipts.some(r=>r.path===c.path&&r.canonicalRevision===c.revision)))fail('INVALID_PROJECTION_STATE');
     const paths=new Set(state.canonicalSpecs.map(c=>c.path));for(const path of paths){const revisions=state.canonicalSpecs.filter(c=>c.path===path).sort((a,b)=>a.revision-b.revision);for(let i=0;i<revisions.length;i++)if(revisions[i].revision!==i+1||revisions[i].previousContentSha256!==(i?revisions[i-1].contentSha256:null))fail('INVALID_PROJECTION_STATE');}
   }
+  if(phase7){
+    await resolveQACapability(state.qaCapability);
+    const binding=state.project.capabilities.find(b=>b.id===state.qaCapability.pack.metadata.id);
+    if(!binding?.enabled||binding.version!==state.qaCapability.pack.metadata.version||canonicalJson(JSON.parse(state.qaCapability.files[binding.source]??'null'))!==canonicalJson(state.qaCapability.pack))fail('QA_PROJECT_CAPABILITY_NOT_REGISTERED');
+    if(!Array.isArray(state.qaAssignments)||new Set(state.qaAssignments).size!==state.qaAssignments.length||!Array.isArray(state.qaReceipts)||!Array.isArray(state.qaAdoptions))fail('INVALID_QA_STATE');
+    const byId=new Map(artifacts.map(a=>[a.id,a]));
+    if(state.qaAssignments.some(targetId=>{const a=byId.get(targetId);return !a||a.type!=='requirement'||!['approved','active'].includes(a.status);}))fail('INVALID_QA_ASSIGNMENT');
+    if(state.qaReceipts.some(r=>r?.kind!=='SpecForgeQAApproval'||r.actor?.kind!=='human'||!byId.has(r.targetId)))fail('INVALID_QA_RECEIPT');
+    if(state.qaAdoptions.some(a=>!a||typeof a!=='object'||!['adopt','discard'].includes(a.decision)||!Array.isArray(a.selectedIds)))fail('INVALID_QA_ADOPTION');
+  }
 }
 
-export function phase5State(state){return state.schemaVersion==='1.1.0'?state:{...state,schemaVersion:'1.1.0',projections:[],canonicalSpecs:[],projectionReceipts:[]};}
+export function phase5State(state){return ['1.1.0','1.2.0'].includes(state.schemaVersion)?state:{...state,schemaVersion:'1.1.0',projections:[],canonicalSpecs:[],projectionReceipts:[]};}
+export function phase7State(state){if(state.schemaVersion==='1.2.0')return state;if(!state.qaCapability)fail('QA_CAPABILITY_UNAVAILABLE');return {...phase5State(state),schemaVersion:'1.2.0',qaAssignments:[],qaReceipts:[],qaAdoptions:[]};}
 export function put(state, artifact) {
   const history = state.histories[artifact.id] ?? [];
   if (history.length && artifact.revision === history.length) history[history.length-1] = artifact;
