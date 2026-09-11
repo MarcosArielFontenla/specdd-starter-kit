@@ -51,4 +51,5 @@ conserva como evidencia histórica. Después de reiniciar el servidor local —q
 carga los assets UI en memoria al arrancar—, el usuario confirmó visualmente en la
 instancia real que el ID y `Dado` aparecen en bloques separados.
 
-No se realizó commit, push o deploy ni se inició Phase 8.
+Phase 7 se publicó en `main` mediante `aa69bf5`; su CI terminó 18/18 verde. No se
+realizó deploy. Phase 8 comenzó después bajo autorización separada.

@@ -1,7 +1,8 @@
 # Guía de uso — Role Workspaces locales
 
-Estado: Phases 4–7 **aceptadas localmente**. El gate humano QA de Phase 7 se
-completó el 2026-09-10. Además del runtime **simulado**
+Estado: Phases 4–7 **aceptadas y publicadas**. El gate humano QA de Phase 7 se
+completó el 2026-09-10. Phase 8 está aceptada localmente después de su gate humano;
+Product Management es una vista derivada de sólo lectura. Además del runtime **simulado**
 de regresión, se completaron un piloto sintético con agente real, la aprobación
 exacta y la proyección humana observada a un artefacto SpecDD canónico local. El
 [tracker](roadmap.md) conserva los gates y límites.
@@ -10,7 +11,8 @@ exacta y la proyección humana observada a un artefacto SpecDD canónico local. 
 
 - **SpecForge / Capability Builder:** el wizard existente genera un pack ZIP.
 - **SpecForge Workspace:** servicio local separado para el trabajo diario del BA.
-  Guarda requisitos, preguntas, reglas, criterios, propuestas, revisiones y receipts.
+  Guarda requisitos, preguntas, reglas, criterios, propuestas, revisiones y receipts;
+  ofrece QA operativo y una lectura PM derivada sin escritura.
 - **SpecControl:** flujo de implementación de ingeniería. No se ejecuta Developer
   para analizar un requisito BA y no se reutiliza su base de datos.
 
@@ -40,6 +42,11 @@ reales de Bloom ni modifica su checkout. No se ejecuta un agente al iniciar.
    estarán deshabilitados y explicarán que falta configurar el runtime.
 5. Cerrá el servicio con `Ctrl+C`. Reiniciar con la misma carpeta conserva el estado
    y genera otra sesión. No borres la base para volver a entrar.
+
+En **Product Management**, Project Health agrega el estado existente sin escribir
+en el store. Seleccioná una feature para inspeccionar su estado QA y evidence links.
+`Parcial` no significa listo para release: la evidencia de ejecución permanece
+desconocida en este Workspace.
 
 La identidad `--operator` es una declaración local del operador, **no un login
 verificado**. No compartas esta sesión entre revisores que necesiten autoría distinta.

@@ -1,11 +1,13 @@
 # SpecForge Workspace — Role Workspaces locales
 
-Phases 4–7 are **accepted locally**. Phase 7 adds a local QA Workspace MVP; its
-observed human gate completed on 2026-09-10. The automated browser regression uses an explicitly
+Phases 4–7 are **accepted and published**. Phase 7 adds a local QA Workspace MVP;
+its observed human gate completed on 2026-09-10. Phase 8 adds an accepted local read-only PM
+aggregation with evidence links and explicit unknown/partial/blocked semantics; it
+does not author PM artifacts or declare a release ready. The browser regression uses an explicitly
 simulated runtime, and a separate bounded real-agent pilot plus an observed human
 approval flow completed on 2026-09-08. Phase 5 adds an accepted governed local
 SpecDD projection, including observed exact review and persistence after reload.
-No repository publication or deploy.
+No deploy.
 
 See the [operator and BA guide](../../docs/specforge-workspace/usage.md),
 [spec](../../docs/specforge-workspace/specs/phase-4.md),

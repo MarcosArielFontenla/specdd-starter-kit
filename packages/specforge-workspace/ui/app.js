@@ -22,7 +22,7 @@ function render(){
   dirty=false;dirtyTargets.clear();$('detail').dataset.artifact=selected??'new';
   clearTimeout(timer);$('operator').textContent=`Revisor local: ${view.operator} · identidad local declarada`;$('runtime').textContent=`Agente: ${view.runtime}`;
   $('context').replaceChildren(el('p',view.project.project.description||'Sin descripción de contexto.'),el('p',`Principios: ${view.project.project.principles.join(' · ')||'No declarados'}`),detail('Contexto preparado y procedencia',JSON.stringify(view.project,null,2)));
-  if(role==='qa'){renderQA();return;}
+  if(role==='qa'){renderQA();return;}if(role==='pm'){renderPM();return;}
   $('workspace-title').textContent='De la idea al requisito revisado.';$('role-badge').textContent='BA · local';$('list-title').textContent='Mis requisitos';$('new').hidden=false;
   $('workspace-notice').textContent='Las propuestas de IA son borradores. Vos decidís qué incorporar y qué aprobar. Las proyecciones SpecDD se guardan localmente; nada se escribe en un repositorio ni se publica.';
   const reqs=view.artifacts.filter(a=>a.type==='requirement');$('list').replaceChildren();
@@ -49,6 +49,25 @@ function renderQA(){
   const running=view.runs.some(r=>r.status==='running');$('projects').disabled=running;
   if(running)for(const n of $('detail').querySelectorAll('input,textarea,button,select'))if(n.textContent!=='Cancelar análisis')n.disabled=true;
   if(running){const poll=()=>{if(!busy)task(refresh);else timer=setTimeout(poll,250);};timer=setTimeout(poll,1500);}
+}
+function pmStatus(value){return value==='blocked'?'Bloqueado':value==='partial'?'Parcial':'Desconocido';}
+function pmSection(root,title,items,empty,format){root.append(el('h3',title));if(!items.length){root.append(el('p',empty,'empty compact'));return;}const list=el('div',undefined,'pm-list');for(const item of items){const card=el('div',undefined,'card compact');card.append(el('strong',format(item)),detail('Evidencia',JSON.stringify(item,null,2)));list.append(card);}root.append(list);}
+function renderPM(){
+  $('workspace-title').textContent='De la evidencia compartida a una lectura honesta del proyecto.';$('role-badge').textContent='PM · sólo lectura';$('list-title').textContent='Feature readiness';$('new').hidden=true;
+  $('workspace-notice').textContent='Esta vista agrega evidencia existente. No crea artefactos, no ejecuta tests y no declara release ready: cobertura de diseño no equivale a ejecución.';
+  const pm=view.pm;$('list').replaceChildren();for(const feature of pm.features){const b=button(`${feature.title} · ${pmStatus(feature.status)}`,async()=>{selected=feature.requirement.artifactId;render();},true);if(feature.requirement.artifactId===selected)b.classList.add('selected');$('list').append(b);}if(!pm.features.length)$('list').append(el('p','No hay features derivables de requisitos registrados. La readiness es desconocida.','empty'));
+  if(selected&&!pm.features.some(feature=>feature.requirement.artifactId===selected))selected=null;const root=$('detail');root.replaceChildren(el('h2','Project Health / Release Readiness'));
+  const banner=el('div',undefined,`readiness ${pm.status}`);banner.append(el('strong',pmStatus(pm.status)),el('span',pm.semantics[pm.status]));root.append(banner);
+  const metrics=el('div',undefined,'coverage');for(const [name,value] of [['Features',pm.summary.features],['Preguntas abiertas',pm.summary.openQuestions],['Features bloqueadas',pm.summary.blockedFeatures],['Aprobaciones pendientes',pm.summary.pendingApprovals],['Riesgos',pm.summary.risks],['Defectos',pm.summary.defects]]){const metric=el('div',undefined,'metric');metric.append(el('strong',String(value)),el('span',name));metrics.append(metric);}root.append(metrics,el('p','Evidencia de ejecución: desconocida. Esta lectura no representa pass/fail ni autorización de release.','notice'));
+  const feature=pm.features.find(item=>item.requirement.artifactId===selected);if(feature){root.append(el('h3',feature.title),el('p',`Readiness ${pmStatus(feature.status).toLowerCase()} · ${feature.reasons.join(' · ')||'Sin señales adicionales'}`,'muted'));const qa=el('div',undefined,'card');qa.append(el('strong','Estado QA'),el('p',`${feature.qa.coveredCriteria}/${feature.qa.criteria} criterios con caso declarado · ${feature.qa.testCases} casos · ${feature.qa.scenarios} escenarios · ${feature.qa.defects} defectos`),el('p',feature.qa.coverage?`${feature.qa.coverageApproved?'Cobertura aprobada':'Cobertura sin aprobación vigente'} · ${feature.qa.coverageScope}`:'Cobertura desconocida'));root.append(qa,detail('Evidence links de la feature',JSON.stringify(feature,null,2)));}
+  else root.append(el('p','Seleccioná una feature para revisar su readiness y sus evidence links.','empty'));
+  pmSection(root,'Preguntas abiertas',pm.openQuestions,'No hay preguntas abiertas registradas.',item=>`${item.blocking?'Bloqueante':'No bloqueante'} · ${item.title}`);
+  pmSection(root,'Artefactos bloqueados',pm.features.filter(item=>item.status==='blocked'),'No hay features con bloqueos explícitos.',item=>item.title);
+  pmSection(root,'Aprobaciones pendientes',pm.pendingApprovals,'No hay artefactos bajo revisión ni aprobaciones fuera de vigencia.',item=>`${item.type} · ${item.title}`);
+  pmSection(root,'Riesgos',pm.risks,'No hay riesgos registrados; esto no demuestra ausencia de riesgo.',item=>`${item.impact}/${item.likelihood} · ${item.title}`);
+  pmSection(root,'Dependencias',pm.dependencies,'No hay dependencias causales registradas.',item=>`${item.kind} · ${item.from?.artifactId??'?'} → ${item.to?.artifactId??'?'}`);
+  root.append(detail('Read model exacto',JSON.stringify(pm,null,2)));
+  $('history').replaceChildren(...view.history.map(h=>el('p',`${new Date(h.event.at).toLocaleString()} · ${h.event.actor.id} · ${h.event.action} · versión ${h.version}`,'history-item')));$('projects').disabled=false;
 }
 function renderQASpec(req){const root=$('detail'),assigned=view.qa.assignments.includes(req.id),related=view.artifacts.filter(a=>a.ownerRole==='qa'&&requirementFor(a)?.id===req.id),cases=related.filter(a=>a.type==='test-case'),scenarios=related.filter(a=>a.type==='test-scenario'),risks=related.filter(a=>a.type==='quality-risk'),defects=related.filter(a=>a.type==='defect'),covered=new Set(cases.flatMap(c=>c.content.acceptanceCriterionIds));
   root.dataset.artifact=req.id;root.append(el('h2',req.title),el('p',`${assigned?'Asignada a QA':'Disponible para QA'} · requisito ${labels[req.status]} · revisión ${req.revision}`,'muted'),el('p',req.content.description));
@@ -151,7 +170,7 @@ $('detail').addEventListener('input',event=>{if(event.target.type!=='checkbox')m
 errors.UNSAVED_CHANGES='Tenés cambios sin guardar. Guardá la revisión antes de analizar, actualizar o aprobar.';
 errors.RUNTIME_CONSENT_REQUIRED='Marcá el consentimiento de envío de contexto para ejecutar esta acción.';
 $('approve-cancel').onclick=()=>$('approval').close();$('new').onclick=()=>{if(dirty){message(new Error('UNSAVED_CHANGES'));return;}selected=null;render();};$('refresh').onclick=()=>task(refresh);
-$('ba-mode').onclick=()=>{if(dirty){message(new Error('UNSAVED_CHANGES'));return;}role='ba';selected=null;$('ba-mode').className='';$('qa-mode').className='secondary';render();};
-$('qa-mode').onclick=()=>{if(dirty){message(new Error('UNSAVED_CHANGES'));return;}role='qa';selected=null;$('qa-mode').className='';$('ba-mode').className='secondary';render();};
+function selectRole(next){if(dirty){message(new Error('UNSAVED_CHANGES'));return;}role=next;selected=null;for(const name of ['ba','qa','pm'])$(`${name}-mode`).className=name===role?'':'secondary';render();}
+$('ba-mode').onclick=()=>selectRole('ba');$('qa-mode').onclick=()=>selectRole('qa');$('pm-mode').onclick=()=>selectRole('pm');
 $('projects').onchange=()=>task(async()=>{if(dirty){$('projects').value=projectId;throw new Error('UNSAVED_CHANGES');}projectId=$('projects').value;selected=null;await refresh();});
 task(async()=>{session=await api('/api/session');const data=await api('/api/projects');for(const p of data.projects){const o=el('option',p.name);o.value=p.id;$('projects').append(o);}projectId=data.projects[0]?.id;if(projectId)await refresh();else $('detail').append(el('p','No hay proyectos preparados. El operador debe registrar un bundle revisado.','empty'));});

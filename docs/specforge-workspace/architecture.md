@@ -3,7 +3,9 @@
 Fecha del baseline: 2026-09-07. Baseline inspeccionado:
 `bd7b8007b7e917317433a2c923e322561355e191`. Este documento conserva el análisis
 de partida de Phase 0. Estado actual al 2026-09-10: BA y proyección están aceptados,
-el dominio QA portable de Phase 6 y el Workspace QA local de Phase 7 están aceptados.
+el dominio QA portable de Phase 6 y el Workspace QA local de Phase 7 están aceptados
+y publicados. El read model PM derivado de Phase 8 está aceptado localmente después
+de su gate humano y verificación tras F5.
 El defecto visual de severidad baja descubierto durante el gate de Phase 7 fue
 corregido localmente y conserva su registro como evidencia histórica. Véanse el [roadmap vivo](roadmap.md)
 y la [evidencia Phase 7](phases/phase-7.md).

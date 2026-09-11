@@ -131,6 +131,15 @@ test('Phase 7 QA agent output stays separate until selective human adoption',asy
   const version=(await app.view(projectId)).version,runId=await app.start(projectId,version,{targetId:target,action:'suggest-test-scenarios',consent:true}),r=await terminal(store,runId);assert.equal(r.role,'qa');assert.equal((await app.view(projectId)).artifacts.filter(x=>x.ownerRole==='qa').length,0);
   const v=await command(app,{op:'qa-adopt',runId,selectedIds:['scenario']});const scenario=v.artifacts.find(x=>x.type==='test-scenario');assert.equal(scenario.provenance.at(-1).actor.kind,'human');assert.equal(v.qa.adoptions[0].selectedIds[0],'scenario');
 });
+test('Phase 8 PM read model derives blocked, unknown and partial states without claiming execution or mutating state',async t=>{
+  const {app,store}=await setup(t),initial=await app.view(projectId);assert.equal(initial.pm.status,'unknown');assert.equal(initial.pm.summary.features,0);
+  const target=await create(app),r=await terminal(store,await run(app,target));await command(app,{op:'adopt',runId:r.id,selectedIds:['q','c']});let v=await app.view(projectId);
+  assert.equal(v.pm.status,'blocked');assert.equal(v.pm.features[0].status,'blocked');assert.equal(v.pm.openQuestions.length,1);assert.ok(v.pm.features[0].evidence[0].sha256);
+  const question=v.artifacts.find(a=>a.type==='open-question');await command(app,{op:'resolve-question',targetId:question.id,answer:'Puede cancelar el titular autenticado.'});await approve(app,target);
+  await command(app,{op:'qa-create',targetId:target,type:'test-case',title:'Caso declarado',content:{acceptanceCriterionIds:[v.artifacts.find(a=>a.id===target).content.acceptanceCriteria[0].id],preconditions:['Turno futuro'],steps:[{action:'Cancelar',expected:'Queda cancelado'}],level:'manual',automationStatus:'manual'}});
+  v=await command(app,{op:'qa-refresh-coverage',targetId:target});const coverage=v.artifacts.find(a=>a.type==='coverage-assessment');await command(app,{op:'qa-request-review',targetId:coverage.id});const prepared=await app.qaApproval(projectId,coverage.id);await app.command(projectId,prepared.version,{op:'qa-approve',targetId:coverage.id,subjectSha256:prepared.subjectSha256});
+  const before=(await app.view(projectId)).version,pm=(await app.view(projectId)).pm;assert.equal(pm.status,'partial');assert.equal(pm.features[0].qa.coverageApproved,true);assert.equal(pm.features[0].qa.coverageScope,'declared-design-only');assert.equal(pm.semantics.executionEvidence,'unknown');assert.equal(JSON.stringify(pm).includes('"passed"'),false);assert.equal((await app.view(projectId)).version,before);
+});
 test('a stale or unwanted projection can be discarded without creating a canonical artifact',async t=>{
   const {app}=await setup(t),target=await create(app),a=(await app.view(projectId)).artifacts[0];
   await command(app,{op:'edit',targetId:target,title:'Descartable',content:{description:a.content.description,acceptanceCriteria:[{id:'ac-1',given:'A',when:'B',then:'C'}]}});await approve(app,target);

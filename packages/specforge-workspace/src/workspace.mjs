@@ -5,6 +5,7 @@ import {prepareQAAction,acceptQAActionOutput,prepareQAApproval,approveQA,assertQ
 import {createArtifactGraph} from '@specdd/artifact-model/graph';
 import {prepareSpecDDProjection,applySpecDDProjection,assertSpecDDProjectionReceipt,specDDPath} from '@specdd/artifact-model/projection';
 import {copy,exact,fail,id,text,put,currentArtifacts,graphInput,phase5State,phase7State} from './state.mjs';
+import {derivePMReadModel} from './readiness.mjs';
 
 const uid = prefix=>`${prefix}-${randomUUID()}`;
 const now = ()=>new Date().toISOString();
@@ -31,7 +32,8 @@ export class BAWorkspace {
     const p5=phase5State(state);
     const qa=state.schemaVersion==='1.2.0'?{available:true,assignments:state.qaAssignments,receipts:state.qaReceipts,adoptions:state.qaAdoptions}:{available:false,assignments:[],receipts:[],adoptions:[]};
     const qaApprovals=[];for(const r of qa.receipts){let valid=true;try{await assertQAApproval(await graphInput(state,r.targetId),r);}catch{valid=false;}qaApprovals.push({...r,valid});}
-    return {project:state.project,version:row.version,artifacts,histories:state.histories,approvals,graph,runs,projections:p5.projections,canonicalSpecs:p5.canonicalSpecs,projectionReceipts:p5.projectionReceipts,
+    const pm=await derivePMReadModel({artifacts,graph,approvals,qaApprovals,canonicalSpecs:p5.canonicalSpecs});
+    return {project:state.project,version:row.version,artifacts,histories:state.histories,approvals,graph,runs,projections:p5.projections,canonicalSpecs:p5.canonicalSpecs,projectionReceipts:p5.projectionReceipts,pm,
       qa:{...qa,approvals:qaApprovals},history:this.store.history(projectId),operator:this.actor.id,runtime:this.runtime?.label??'No configurado',runtimeAvailable:Boolean(this.runtime)};
   }
   async #load(projectId,version){const row=await this.store.load(projectId);if(row.version!==version)fail('STALE_STATE');return row;}
